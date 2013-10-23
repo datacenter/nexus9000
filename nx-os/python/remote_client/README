@@ -1,0 +1,7 @@
+N9K family switches provide python objects to access switch resources. 
+
+The python objects are on the switch. One can run python scripts using the objects on the switch. At the same time, we provide the capability to utilize the python objects off the switch based on NXAPI. 
+
+Please note, the python objects on the switch access switch resources in two ways: access through cli and access through native library. We replaced the python objects that access resources through cli with NXAPI as underneath transport. For those python objects that access through native libraries, off-box is NOT supported. We are improving.
+
+The utils folder contains the transport changes using NXAPI. You can copy over all the scripts located /isan/python/scripts/cisco on a N9K switch to a remote server. Example is provided on using the remote python objects feature.
