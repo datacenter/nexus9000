@@ -26,7 +26,7 @@ import base64
 import sys
 import socket
 
-sys.path.append("../../utils")
+sys.path.append("../utils")
 
 from nxapi_utils import NXAPI
 

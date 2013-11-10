@@ -1,20 +1,5 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 # Copyright (C) 2013 Cisco Systems Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
+# All rights reserved
 import urllib2
 
 import contextlib
@@ -27,6 +12,8 @@ from httplib import HTTPConnection, HTTPS_PORT
 import ssl
 
 from lxml import etree
+import json
+import xmltodict
 
 from errors import *
 
@@ -192,7 +179,7 @@ class RespFetcherHttps:
 
 
 class NXAPITransport:
-
+    '''N9000 Python objects off-the-box transport utilizing NX-API'''
     target_url = ''
     username = ''
     password = ''
@@ -206,42 +193,136 @@ class NXAPITransport:
 
     req_obj = RequestMsg()
 
-    @staticmethod
-    def init(target_url, username, password):
-        NXAPI.target_url = target_url
-        NXAPI.username = username
-        NXAPI.password = password
-        NXAPI.req_fetcher = RespFetcher(username=username,
+    @classmethod
+    def init(cls, target_url, username, password):
+        cls.target_url = target_url
+        cls.username = username
+        cls.password = password
+        cls.req_fetcher = RespFetcher(username=username,
                 password=password, url=target_url)
 
-    @staticmethod
-    def send_cmd(cmd, msg_type):
-        req_msg_str = NXAPI.req_obj.get_req_msg_str(msg_type=msg_type,
-                input_cmd=cmd, out_format=NXAPI.out_format,
-                do_chunk=NXAPI.do_chunk, sid=NXAPI.sid)
+    @classmethod
+    def send_cmd_int(cls, cmd, msg_type):
+        '''Construct NX-API message. Send commands through NX-API. Only single 
+           command for show commands. Internal usage'''
+        if msg_type == "cli_show" or msg_type == "cli_show_ascii":
+            if " ;" in cmd:
+                raise cmd_exec_error("Only single show command supported in internal api")
+
+        req_msg_str = cls.req_obj.get_req_msg_str(msg_type=msg_type,
+                input_cmd=cmd, out_format=cls.out_format,
+                do_chunk=cls.do_chunk, sid=cls.sid)
         (resp_headers, resp_str) = \
-            NXAPI.req_fetcher.get_resp(req_msg_str, NXAPI.cookie,
-                NXAPI.timeout)
+            cls.req_fetcher.get_resp(req_msg_str, cls.cookie,
+                cls.timeout)
+
         if 'Set-Cookie' in resp_headers:
-            NXAPI.cookie = resp_headers['Set-Cookie']
+            cls.cookie = resp_headers['Set-Cookie']
         content_type = resp_headers['Content-Type']
         root = etree.fromstring(resp_str)
         body = root.findall('.//body')
         code = root.findall('.//code')
         msg = root.findall('.//msg')
 
-        output = None
+        output = ""
+        status = 0
         if len(body) != 0:
             if msg_type == 'cli_show':
                 output = etree.tostring(body[0])
             else:
                 output = body[0].text
 
-        return [output, code[0].text, msg[0].text]
+        if output == None:
+            output = ""
+        if code[0].text == "200":
+            status = 0
+        else:
+            status = int(code[0].text)
+        return [output, status, msg[0].text]
+
+    @classmethod
+    def send_cmd(cls, cmd, msg_type):
+        '''Construct NX-API message. Send commands through NX-API. Multiple 
+           commands okay'''
+        req_msg_str = cls.req_obj.get_req_msg_str(msg_type=msg_type,
+                input_cmd=cmd, out_format=cls.out_format,
+                do_chunk=cls.do_chunk, sid=cls.sid)
+        (resp_headers, resp_str) = \
+            cls.req_fetcher.get_resp(req_msg_str, cls.cookie,
+                cls.timeout)
+        if 'Set-Cookie' in resp_headers:
+            cls.cookie = resp_headers['Set-Cookie']
+        content_type = resp_headers['Content-Type']
+        root = etree.fromstring(resp_str)
+        body = root.findall('.//body')
+        code = root.findall('.//code')
+        msg = root.findall('.//msg')
+
+        # Any command execution error will result in the entire thing fail
+        # This is to align with vsh multiple commands behavior
+        if len(code) == 0:
+            raise unexpected_error("Unexpected error")
+        for i in range(0, len(code)):
+            if code[i].text != "200":
+                raise cmd_exec_error("Command execution error: {0}".format(msg[i].text))
+
+        output = ""
+        if msg_type == 'cli_show':
+            for i in range(0, len(body)):
+                output += etree.tostring(body[i])
+        else:
+            for i in range(0, len(body)):
+                if body[i].text is None:
+                    continue
+                else:
+                    output += body[i].text
+
+        return output
+
+    @classmethod
+    def cli(cls, cmd):
+        '''Run cli show command. Return show output'''
+        try:
+            output = cls.send_cmd(cmd, "cli_show_ascii")
+            return output
+        except:
+            raise
+
+    @classmethod
+    def clip(cls, cmd):
+        '''Run cli show command. Print show output'''
+        try:
+            output = cls.send_cmd(cmd, "cli_show_ascii")
+            print output
+        except:
+            raise
+
+    @classmethod
+    def clic(cls, cmd):
+        '''Run cli configure command. Return configure output'''
+        try:
+            output = cls.send_cmd(cmd, "cli_conf")
+            return output
+        except:
+            raise
+
+    @classmethod
+    def clid(cls, cmd):
+        '''Run cli show command. Return JSON output. Only XMLized commands 
+           have outputs'''
+        if " ;" in cmd:
+            raise cmd_exec_error("Only single command is allowed in clid()")
+        try:
+            output = cls.send_cmd(cmd, "cli_show")
+            o = xmltodict.parse(output)
+            json_output = json.dumps(o["body"])
+            return json_output
+        except:
+            raise
 
 
 class NXAPI:
-
+    '''A better NX-API utility'''
     def __init__(self):
         self.target_url = 'http://localhost/ins'
         self.username = 'admin'
@@ -342,6 +423,3 @@ class NXAPI:
     def send_req(self):
          req = RespFetcher(self.username, self.password, self.target_url)
          return req.get_resp(self.req_to_string(), self.cookie, self.timeout)
-
-
-

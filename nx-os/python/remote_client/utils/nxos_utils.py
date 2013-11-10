@@ -1,17 +1,5 @@
 # Copyright (C) 2013 Cisco Systems Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); 
-# you may not use this file except in compliance with the License. 
-# You may obtain a copy of the License at 
-# 
-#      http://www.apache.org/licenses/LICENSE-2.0 
-# 
-# Unless required by applicable law or agreed to in writing, software 
-# distributed under the License is distributed on an "AS IS" BASIS, 
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-# See the License for the specific language governing permissions and 
-# limitations under the License. 
-
+# All rights reserved
 #$Id: eor_utils.py,v 1.427 2013/06/24 23:56:03 venksrin Exp $ 
 #ident $Source: /cvsroot/eor/systest/lib/eor_utils.py,v $ $Revision: 1.427 $
 
@@ -21,7 +9,7 @@
 # 3. Add author name, description of function, sample usage examples and return value
 # 4. Use python documentation format for #3 above, so that the documentation for all the functions can be pulled out easily
 
-from nxapi_utils import *
+from nxapi_utils import NXAPITransport
 
 import re                                                       
 import collections                               
@@ -34,17 +22,20 @@ import time
 
 MASKS=['0.0.0.0','128.0.0.0','192.0.0.0','224.0.0.0','240.0.0.0','248.0.0.0','252.0.0.0','254.0.0.0','255.0.0.0','255.128.0.0','255.192.0.0','255.224.0.0','255.240.0.0','255.248.0.0','255.252.0.0', '255.254.0.0', '255.255.0.0', '255.255.128.0', '255.255.192.0', '255.255.224.0', '255.255.240.0', '255.255.248.0', '255.255.252.0', '255.255.254.0', '255.255.255.0', '255.255.255.128', '255.255.255.192', '255.255.255.224', '255.255.255.240', '255.255.255.248', '255.255.255.252', '255.255.255.254', '255.255.255.255']
 
+####################################################################
+# Block that hijack on-box cli and convert into NX-API calls
+####################################################################
 def runNXAPIConf(cmd):
-    output,code,msg = NXAPI.send_cmd(cmd, "cli_conf")
+    output,code,msg = NXAPITransport.send_cmd_int(cmd, "cli_conf")
     return output,msg,code
 
 def runNXAPIShow(cmd):
     xml_index = cmd.find("| xml")
     if xml_index == -1:
-        output,code,msg = NXAPI.send_cmd(cmd, "cli_show_ascii")
+        output,code,msg = NXAPITransport.send_cmd_int(cmd, "cli_show_ascii")
     else:
         cmd = cmd[:xml_index]
-        output,code,msg = NXAPI.send_cmd(cmd, "cli_show")
+        output,code,msg = NXAPITransport.send_cmd_int(cmd, "cli_show")
     return output
 
 def runVshCmdEx(cmd, _shell = False, _stdout = None):                                
@@ -52,7 +43,11 @@ def runVshCmdEx(cmd, _shell = False, _stdout = None):
    return output,error,status 
 
 def cli_ex(cmd):
-    return runNXAPIShow(cmd)
+    if "config" in cmd:
+      return runNXAPIConf(cmd)
+    else:
+      return runNXAPIShow(cmd)
+####################################################################
     
 class rex:
    INTERFACE_TYPE="[Ff]ast[Ee]thernet|[Ff][Ee]th|[Gg]igabit[Ee]thernet|[Gg]ig[Ee]|[Ee]thernet|[Ee]th|[Tt]unnel ?|[Ll]oopback ?|[Pp]ort-channel ?|[Oo]verlay ?|[Nn]ull|[Mm]gmt|[Vv]lan ?|[Pp]o ?|[Ll]o ?|[Oo]vl ?|[Vv][Ll]|[Rr]epl|[Rr]eplicator|[Ff]as|[Ss]up-eth"
