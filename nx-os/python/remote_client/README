@@ -5,12 +5,12 @@ The Nexus 9000 family switches provide python objects to access switch resources
 Please note, the python objects on the switch access switch resources in two ways: access through cli and access through native library. We replaced the python objects that access resources through cli with NXAPI as underneath transport. For those python objects that access through native libraries, off-box is NOT supported yet.
 
 Install instructions:
-1. Make sure nginx is running on your switch.
+1. Make sure nxapi is running on your switch.
   
   SWITCH-1# conf
-  SWITCH-1(config)# feature nginx
-  SWITCH-1(config)# show nginx
-  nginx enabled
+  SWITCH-1(config)# feature nxapi
+  SWITCH-1(config)# show nxapi
+  nxapi enabled
   Listen on port 80
   Listen on port 443
 
