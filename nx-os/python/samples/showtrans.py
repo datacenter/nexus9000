@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 
-# This script is provided by Cisco for your use for reference only as a customer courtesy.  
-# It is intended to facilitate development of your own scripts and software that interoperate with Cisco switches 
-# and software.  Although Cisco has made efforts to create script examples that will be effective as aids to script 
-# or software development,  Cisco assumes no liability for or support obligations related to the use of this script 
-# or any results obtained using or referring to this script. 
+# code verified with NXOS image file n9000-dk9.6.1.2.I1.0.1.bin
 #
-# verified with  NXOS image file is: bootflash:///n9000-dk9.6.1.2.I1.0.1.bin
 #
-
-
+# Copyright (C) 2013 Cisco Systems Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at 
+#
+#      http://www.apache.org/licenses/LICENSE-2.0 
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+# v1.0
 
 import re
 import sys
