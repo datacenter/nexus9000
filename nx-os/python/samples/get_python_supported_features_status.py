@@ -50,7 +50,7 @@ for afeature in Feature.allSupportedFeatures():
     # Build the output string, start by adding the feature name to it, left
     # justified, padded by white space to ensure 11 characters
     temp_string += string.ljust(afeature, 11)
-    # Now add the word "is", centered and padded with space to ensure 3 
+    # Now add the word "is", centered and padded with space to ensure 3
     # characters
     temp_string += string.center("is", 3)
     # Now add the 'Enabled' or 'Disabled' string depending on the status
