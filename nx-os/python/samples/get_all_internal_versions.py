@@ -45,7 +45,7 @@ if len(modlist) > 0:
     print "-" * 68
     
 for mod in modlist:
-    # Label each out put so we know which output goes where.
+    # Label each output so we know which output goes where.
     print "Internal version for module " + mod
     print "-" * 68
     clip("slot " + mod + " show hardware internal dev-version")
