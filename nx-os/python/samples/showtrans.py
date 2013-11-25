@@ -17,17 +17,23 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License.
 #
-# v1.0
+# v1.1
+# verified with  NXOS image file is: bootflash:///n9000-dk9.6.1.2.I1.0.1.bin
+#
 
 import re
 import sys
 from cli import *
 from xml.dom import minidom 
 
-'''This script first obtains a list of all interfaces present on the system.
-   The 2nd section of the script parses that file and retrieves transceiver information for each interface.
-   For each entry the script also looks for CDP neighbor information.
-   The scripts takes no arguments.
+# color escape sequences
+color_red="\x1b[31;01m"
+color_green="\x1b[00;32m"
+color_blue="\x1b[34;01m"
+color_normal="\x1b[00m"
+
+'''This script creates a pretty table with transceiver information and CDP neighbor detail 
+   for each Ethernet interface present in the system
    '''
 
 def nxos_help_string(args):
@@ -35,7 +41,7 @@ def nxos_help_string(args):
     # either in config mode or at the exec prompt, if users type "source <script> ?" then help_string appears
     nb_args = len(args)
     if nb_args > 1:
-        help_string = "Returns a list of interfaces with transceiver information. No arguments required."
+        help_string = color_green + "Returns a list of interfaces with transceiver information. No arguments required." + color_normal
         m = re.match('__cli_script.*help', args[1])
         if m:
                 # user entered "source ?" with no parameters: display script help
@@ -61,15 +67,32 @@ def NodeAsText(node):
     except IndexError:
      return "__na__"   
 
+def strip_netconf_trailer(x):
+    # remove NETCONF's trailing delimiter
+    x=x.strip('\\n]]>]]>')
+    x+='>'
+    return x
+	 
 def get_CDP(xml):
-    neighbors = xml.getElementsByTagName("ROW_cdp_neighbor_brief_info")
     # build a dictionary of CDP neighbors with key = interface
     # the format of the dictionary is as follows:
     # neighbors = {'intf': {neighbor: 'foo', remoteport: 'x/y', model: 'bar'}}    
+	# this is what NXOS returns:
+    # <ROW_cdp_neighbor_brief_info>
+          # <ifindex>438829568</ifindex>
+          # <device_id>ts-n6k-2(FOC1712R0RX)</device_id>
+          # <intf_id>Ethernet6/2</intf_id>
+          # <ttl>164</ttl>
+          # <capability>router</capability>
+          # <capability>switch</capability>
+          # <capability>IGMP_cnd_filtering</capability>
+          # <capability>Supports-STP-Dispute</capability>
+          # <platform_id>N6K-C6004-96Q</platform_id>
+          # <port_id>Ethernet1/2</port_id>
+    # </ROW_cdp_neighbor_brief_info>
+    neighbors = xml.getElementsByTagName("ROW_cdp_neighbor_brief_info")
     cdpdict = {}
     for neighbor in neighbors:
-        # intf_id format is : <intf_id>Ethernet4/1/1</intf_id>
-        # however in show int brief, it is Eth4/1/1. We need to adapt Ethernet4/1/1 to Eth4/1/1.
         cdpintf  =  NodeAsText(neighbor.getElementsByTagName("intf_id"))
         cdpintf  =  cdpintf.replace("Ethernet","Eth")
         cdpneig  =  NodeAsText(neighbor.getElementsByTagName("device_id"))
@@ -82,58 +105,101 @@ def get_CDP(xml):
                           'ipaddr': cdpipaddr}
     return cdpdict
 
+def get_intf(xml):
+    # build a dictionary of interface details with key = interface
+    # the format of the dictionary is as follows:
+    # interfaces = {'interface': {iomodule: 'foo', transtype: 'foo', transname: 'foo', transpart: 'foo', transsn: 'foo', bitrate: '100', length: '5'}}    
+	# this is what NXOS returns:
+    # <ROW_interface>
+          # <interface>Ethernet4/1/1</interface>
+          # <sfp>present</sfp>
+          # <type>QSFP40G-4SFP10G-CU5M</type>
+          # <name>CISCO-AMPHENOL  </name>
+          # <partnum>605410005       </partnum>
+          # <rev>A </rev>
+          # <serialnum>APF154300V9     </serialnum>
+          # <nom_bitrate>10300</nom_bitrate>
+          # <len_cu>5</len_cu>
+          # <ciscoid>--</ciscoid>
+          # <ciscoid_1>0</ciscoid_1>
+    # </ROW_interface>
+    interfaces = xml.getElementsByTagName("ROW_interface")
+    intfdict = {}
+    for intf in interfaces:
+        if NodeAsText(intf.getElementsByTagName("sfp"))=="present":
+            interface   =  NodeAsText(intf.getElementsByTagName("interface"))
+            interface   =  interface.replace("Ethernet","Eth")
+            slot        =  re.search("\d",interface)                               # find slot number            
+            iomodule    =  mod_dict[slot.group(0)]['model']                        # and use it to find io_module
+            transtype   =  NodeAsText(intf.getElementsByTagName("type"))
+            transname   =  NodeAsText(intf.getElementsByTagName("name"))
+            transpart   =  NodeAsText(intf.getElementsByTagName("partnum"))
+            transsn     =  NodeAsText(intf.getElementsByTagName("serialnum"))
+            bitrate     =  NodeAsText(intf.getElementsByTagName("nom_bitrate"))
+            length      =  NodeAsText(intf.getElementsByTagName("len_cu"))
+            intfdict[interface]={'iomodule': iomodule,\
+                                 'transtype': transtype, \
+                                 'transname': transname, \
+                                 'transpart': transpart,\
+                                 'transsn': transsn,\
+				 'bitrate': bitrate,\
+				 'length': length}
+    return intfdict
 
+def get_modules(xml):
+    # build a dictionary of i/o modules details with key = slot_number
+    # the format of the dictionary is as follows:
+    # modules = {'slot_number': {model: 'foo'}}    
+	# this is what NXOS returns:
+	# <ROW_modinfo>
+         # <modinf>6</modinf>
+         # <ports>36</ports>
+         # <modtype>36p 40G Ethernet Module</modtype>
+         # <model>N9K-X9636PQ</model>
+         # <status>ok</status>
+    # </ROW_modinfo>
+    modules = xml.getElementsByTagName("ROW_modinfo")
+    moddict = {}
+    for mod in modules:
+        slot    =  NodeAsText(mod.getElementsByTagName("modinf"))
+        model   =  NodeAsText(mod.getElementsByTagName("model"))
+        moddict[slot]={'model': model}
+    return moddict
+	
 # Main
 nxos_help_string(sys.argv)
-raw_intf = cli('show int brief')
-intf_list = raw_intf.split('\n')
+intf_list     = cli('show int transceiver detail | xml').replace("\n", '')
 cdp_neighbors = cli('show cdp neighbor | xml').replace("\n", '')
+io_modules    = cli('show module | xml').replace("\n", '')
 
 # current NXOS and eNXOS versions return NETCONF-friendly XML. We must remove the delimiter.
-cdp_neighbors = cdp_neighbors.strip('\\n]]>]]>')
-cdp_neighbors = cdp_neighbors + '>'
+cdp_neighbors = strip_netconf_trailer(cdp_neighbors)
+intf_list     = strip_netconf_trailer(intf_list)
+io_modules    = strip_netconf_trailer(io_modules)
 
-cdp_xml = minidom.parseString(cdp_neighbors)
-cdp_dict = get_CDP(cdp_xml)
+cdp_xml   = minidom.parseString(cdp_neighbors)
+cdp_dict  = get_CDP(cdp_xml)
+mod_xml   = minidom.parseString(io_modules)
+mod_dict  = get_modules(mod_xml)
+intf_xml  = minidom.parseString(intf_list)
+intf_dict = get_intf(intf_xml)
 
-
-header1 = 'Interface  Model          Type                   Name               Part               Speed    Len   CDP Neighbor          '     
+header1 = 'Interface  Model          Type                   Name               Part               Speed    Len      CDP Neighbor          '     
 header2 = '=========================================================================================================================================='
 
 print header1
 print header2
-for interface in intf_list:
-    # find lines that begin with EthX/Y or EthX/Y/Z
-    t= re.findall('[Ee]th\d+\/\d+ |[Ee]th\d+\/\d+\/\d+',interface)
-    if len(t):
-        intf = t[0].strip(' ')
-        try:
-            cdp = cdp_dict[intf]['neighbor'] + '@' + cdp_dict[intf]['remoteport']
-        except KeyError:
-            cdp = 'NA'
-        tr =  cli('show int %s transceiver detail' % intf)
-        if not len(re.findall('transceiver is not (present|applicable)',tr)):
-            trc = cli('show int %s capabilities' % intf)
-            match1 = re.search('type is\s+(.*)',tr)
-            match2 = re.search('name is\s+(.*)',tr)
-            match3 = re.search('Model:\s+(.*)',trc)
-            match4 = re.search('part number is\s+(.*)',tr)
-            match5 = re.search('Speed:\s+(.*)',trc)
-            match6 = re.search('Link length supported for copper is\s+(.*)',tr)
-            type   = match1.group(1)
-            name   = match2.group(1).strip(' ')
-            #model  = match3.group(1)
-            part   = match4.group(1)
-            speed  = match5.group(1)
-            if match6:
-               len_copper = match6.group(1)
-            else:
-               len_copper = 'NA'
-            if match3:
-		model = match3.group(1)
-	    else:
-		model = 'NA'  
-            interface = t[0]
-            str = '{0: <8} | {1: <12} | {2: <20} | {3: <16} | {4: <16} | {5: <6} | {6: <3} | {7:16}'.format(interface,model,type,name,part,speed,len_copper,cdp)
-            print str
 
+for interface in sorted(intf_dict):
+    model = intf_dict[interface]['iomodule']
+    type  = intf_dict[interface]['transtype']
+    name  = intf_dict[interface]['transname']
+    part  = intf_dict[interface]['transpart']
+    speed = intf_dict[interface]['bitrate']
+    lencu = intf_dict[interface]['length']
+    try:
+        cdp = cdp_dict[interface]['neighbor'] + '@' + cdp_dict[interface]['remoteport']
+    except KeyError:
+            cdp = 'n.a.'
+    str = '{0: <8} | {1: <12} | {2: <20} | {3: <16} | {4: <16} | {5: <6} | {6: <6} | {7:16}'.format(interface,model,type,name,part,speed,lencu,cdp)
+    print str
