@@ -1,6 +1,4 @@
 #!/usr/bin/env python
-
-# code verified with NXOS image file n9000-dk9.6.1.2.I1.0.1.bin
 #
 #
 # Copyright (C) 2013 Cisco Systems Inc.
@@ -62,10 +60,10 @@ def nxos_help_string(args):
 def NodeAsText(node):
     # convert a XML element to a string
     try:
-     nodetext=node[0].firstChild.data.strip()
-     return nodetext
+        nodetext=node[0].firstChild.data.strip()
+        return nodetext
     except IndexError:
-     return "__na__"   
+        return "__na__"   
 
 def strip_netconf_trailer(x):
     # remove NETCONF's trailing delimiter
@@ -146,6 +144,45 @@ def get_intf(xml):
 				 'length': length}
     return intfdict
 
+def get_intf_capa(xml):
+	# <ROW_interface>
+         # <interface>Ethernet4/1/4</interface>
+         # <model>N9K-X9636PQ</model>
+         # <type>QSFP40G-4SFP10G-CU5M</type>
+         # <speed>10000</speed>
+         # <duplex>full</duplex>
+         # <trunk_encap>802.1Q</trunk_encap>
+         # <dce_capable>no</dce_capable>
+         # <channel>yes</channel>
+         # <bcast_supp>percentage(0-100)</bcast_supp>
+         # <flo_ctrl>rx-(off/on/desired),tx-(off/on/desired)</flo_ctrl>
+         # <rate_mode>dedicated</rate_mode>
+         # <port_mode>Routed,Switched</port_mode>
+         # <qos_scheduling>rx-(none),tx-(4q)</qos_scheduling>
+         # <cos_rewrite>yes</cos_rewrite>
+         # <tos_rewrite>yes</tos_rewrite>
+         # <span>yes</span>
+         # <udld>yes</udld>
+         # <mdix>no</mdix>
+         # <tdr>no</tdr>
+         # <lnk_debounce>yes</lnk_debounce>
+         # <lnk_debounce_time>yes</lnk_debounce_time>
+         # <fex_fabric>yes</fex_fabric>
+         # <dot1q_tunnel>yes</dot1q_tunnel>
+         # <pvlan_trunk_mode>yes</pvlan_trunk_mode>
+         # <port_group_members>4</port_group_members>
+         # <eee_capable>no</eee_capable>
+         # <pfc_capable>yes</pfc_capable>
+        # </ROW_interface>
+    interfaces = xml.getElementsByTagName("ROW_interface")
+    capadict = {}
+    for intf in interfaces:
+        interface   =  NodeAsText(intf.getElementsByTagName("interface"))
+        interface   =  interface.replace("Ethernet","Eth")
+        speed       =  NodeAsText(intf.getElementsByTagName("speed"))
+        capadict[interface]={'speed': speed}
+    return capadict
+	
 def get_modules(xml):
     # build a dictionary of i/o modules details with key = slot_number
     # the format of the dictionary is as follows:
@@ -171,11 +208,13 @@ nxos_help_string(sys.argv)
 intf_list     = cli('show int transceiver detail | xml').replace("\n", '')
 cdp_neighbors = cli('show cdp neighbor | xml').replace("\n", '')
 io_modules    = cli('show module | xml').replace("\n", '')
+intf_capa     = cli('show int capa | xml').replace("\n", '')
 
 # current NXOS and eNXOS versions return NETCONF-friendly XML. We must remove the delimiter.
 cdp_neighbors = strip_netconf_trailer(cdp_neighbors)
 intf_list     = strip_netconf_trailer(intf_list)
 io_modules    = strip_netconf_trailer(io_modules)
+intf_capa     = strip_netconf_trailer(intf_capa)
 
 cdp_xml   = minidom.parseString(cdp_neighbors)
 cdp_dict  = get_CDP(cdp_xml)
@@ -183,23 +222,26 @@ mod_xml   = minidom.parseString(io_modules)
 mod_dict  = get_modules(mod_xml)
 intf_xml  = minidom.parseString(intf_list)
 intf_dict = get_intf(intf_xml)
+capa_xml  = minidom.parseString(intf_capa)
+capa_dict = get_intf_capa(capa_xml)
 
 header1 = 'Interface  Model          Type                   Name               Part               Speed    Len      CDP Neighbor          '     
 header2 = '=========================================================================================================================================='
 
-print header1
-print header2
+print color_green+header1
+print header2+color_normal
 
 for interface in sorted(intf_dict):
     model = intf_dict[interface]['iomodule']
     type  = intf_dict[interface]['transtype']
     name  = intf_dict[interface]['transname']
     part  = intf_dict[interface]['transpart']
-    speed = intf_dict[interface]['bitrate']
+    speed = capa_dict[interface]['speed']
     lencu = intf_dict[interface]['length']
     try:
         cdp = cdp_dict[interface]['neighbor'] + '@' + cdp_dict[interface]['remoteport']
     except KeyError:
-            cdp = 'n.a.'
+            cdp = '__na__'
     str = '{0: <8} | {1: <12} | {2: <20} | {3: <16} | {4: <16} | {5: <6} | {6: <6} | {7:16}'.format(interface,model,type,name,part,speed,lencu,cdp)
-    print str
+    print color_blue+str
+print color_normal
