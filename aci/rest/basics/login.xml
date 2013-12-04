@@ -1,0 +1,3 @@
+<!-- POST http://apic:8000/api/aaaLogin.xml -->
+      
+<aaaUser name="admin" pwd="password" />
