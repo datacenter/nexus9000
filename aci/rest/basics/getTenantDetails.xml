@@ -1,0 +1,4 @@
+<-- GET http://apic:8000/api/node/mo/uni/tn-T1.xml?rsp-subtree=full 
+    Assumes tenant "T1" has been created in advance.  
+-->
+

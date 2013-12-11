@@ -1,0 +1,6 @@
+<!-- POST http://apic:8000/api/node/mo/uni.xml  -->
+
+<fvTenant name='Tenant1' status='created,modified'>
+  <fvAp name='WebApp'>
+  </fvAp>
+</fvTenant>
