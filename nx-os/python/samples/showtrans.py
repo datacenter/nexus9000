@@ -198,9 +198,13 @@ def get_modules(xml):
     modules = xml.getElementsByTagName("ROW_modinfo")
     moddict = {}
     for mod in modules:
-        slot    =  NodeAsText(mod.getElementsByTagName("modinf"))
-        model   =  NodeAsText(mod.getElementsByTagName("model"))
-        moddict[slot]={'model': model}
+        slot=NodeAsText(mod.getElementsByTagName("modinf"))
+        try:
+	    # fix for a condition where a module reports no model
+	    model=NodeAsText(mod.getElementsByTagName("model"))
+        except:
+	    model=''
+	moddict[slot]={'model': model}
     return moddict
 	
 # Main
