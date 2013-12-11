@@ -15,7 +15,7 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License.
 #
-# v1.1
+# v1.2
 # verified with  NXOS image file is: bootflash:///n9000-dk9.6.1.2.I1.0.1.bin
 #
 
