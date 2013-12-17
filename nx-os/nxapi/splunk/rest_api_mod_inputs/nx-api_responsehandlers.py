@@ -79,6 +79,7 @@ class NxApiResponseHandler:
             try: os.unlink(self.cookiefilename)
             except: pass
             self._save_cookie(response_object.cookies)
+        print_xml_stream(raw_response_output)
 
     def _get_cookiefilename(self, cookiefilename):
         """ Obtains the absolute path for the cookie filename.  
