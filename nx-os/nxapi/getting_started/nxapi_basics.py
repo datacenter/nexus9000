@@ -156,9 +156,9 @@ def getCDP(xml):
 #################
 
 # First things first: credentials. They should be parsed through sys.argv[] ideally ..
-ip="10.48.50.163"
-user="cpaggen"
-password="cisco"
+ip=".."
+user=".."
+password=".."
 
 basicauth=CreateAuthHeader(user, password)
 cookie=GetiAPICookie(ip, basicauth, user, password)
