@@ -25,23 +25,22 @@ server.
 The required custom authentication handler configuration in the Rest API
 action data input is as follows:
 
-    Custom Authentication Handler: NxApiAuthHandler
-    Custom Authentication Handler Arguments:
-        username=<username>,password=<password>,name=<name>
+Custom Authentication Handler: ```NxApiAuthHandler```<br />
+Custom Authentication Handler Required Arguments (comma separated):
+
+    username=<username>
+    password=<password>
+    name=<name>
 
 Where:
 
-```param username``` The username used to authenticate the user.<br />
-```param password``` The password used to authenticate the user.<br />
-```param name``` A unique name for the Rest API action configured as a
-    data input, the common practice is to set this to the "Rest API
-    Input Name" and this must match the name from the "Response
-    Handler Arguments" configuration.
+* ```username``` The username used to authenticate the user.
+* ```password``` The password used to authenticate the user.
+* ```name``` A unique name for the Rest API action configured as a data input, the common practice is to set this to the "Rest API Input Name" and this must match the name from the "Response Handler Arguments" configuration.
 
-    This custom authentication handler should be merged into:
-        rest_ta/bin/authhandlers.py
+This custom authentication handler should be merged into: ```rest_ta/bin/authhandlers.py```
 
-    Tested with Splunk version 6.0 & Rest API Modular Input v1.3.2
+Tested with Splunk version 6.0 & Rest API Modular Input v1.3.2
 
 ### nx-api_responsehandlers.py
 
@@ -60,20 +59,21 @@ the splunk server.
 The required custom response handler configuration in the Rest API action
 data input is as follows:
 
-Custom Response Handler: NxApiResponseHandler
-Custom Authentication Handler Arguments:
-    name=\<ame> 
+>Custom Response Handler: ```NxApiResponseHandler```
+>Custom Authentication Handler Required Arguments (comma separated):
+
+    name=\<name> 
 
 Where:
 
-```name``` A unique name for the Rest API action configured as a data input, the common practice is to set this to the "Rest API Input Name" and this must match the name from the "Custom Authentication Handler Arguments" configuration. 
+* ```name``` A unique name for the Rest API action configured as a data input, the common practice is to set this to the "Rest API Input Name" and this must match the name from the "Custom Authentication Handler Arguments" configuration. 
 
 This response handler should be merged into:
     rest_ta/bin/responsehandlers.py
 
 Tested with Splunk version 6.0 & Rest API Modular Input v1.3.2
     
-### debugging issues with this code
+### Debugging issues with this code
 
 The only way I have found to get debugging output from Splunk and the [REST API Modular Input](http://apps.splunk.com/app/1546/) code is to set things up as follows:
 
@@ -106,3 +106,8 @@ The only way I have found to get debugging output from Splunk and the [REST API 
  * Restart the Splunk server - Settings -> System -> Server controls: Restart Splunk
  * If you need to get more info out of exceptions you can import the traceback module into rest.py and print a traceback where `except Exception as e:` is used.
 
+### Limitations and other information
+
+* This is for the standalone Nexus 9000 products, it has no relation to ACI which is based on a different code and not yet available as of December 2013.
+* The response handler represented here and the default response handler do not handle chunks.
+* The response handler could return just the body if the response was a success but it does not for completeness.  This could be left to the user/adjusted with a nerd knob.
