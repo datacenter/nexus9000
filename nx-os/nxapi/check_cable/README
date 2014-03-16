@@ -1,4 +1,0 @@
-Author: Xin Liu
-
-This code sample demonstrates the NX-API to check connectivities on a switch.  
-It uses the connectivity.json datafile as input and is intended to be run off-the-switch.
