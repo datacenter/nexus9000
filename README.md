@@ -10,3 +10,13 @@ The site is structured into two sections:
 
 For detailed developer documentation, please visit http://developer.cisco.com/web/n9k.
 
+Install
+======================
+
+You can build this library into a python module by navigating into the "nexus9000" directory and running:
+
+    python setup.py install
+    
+You can then import a module in your own scripts, like so:
+
+    from nxos.nxapi.utils.nxapi_utils import *
