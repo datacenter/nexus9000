@@ -24,7 +24,6 @@ from cli import *
 # **** Here are all variables that parametrize this script **** 
 # These parameters should be updated with the real values used 
 # in your automation environment
-# *************************************************************
 
 # system and kickstart images, configuration: location on server (src) and target (dst)
 n9k_image_version       = "6.1.2"
