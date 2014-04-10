@@ -1,5 +1,5 @@
 #!/bin/env python
-#md5sum=4c90cfc24f2942b45c03575adc904afa
+#md5sum=84b7ea4b15f4ef274e47fe76daa9f606
 # Still needs to be implemented.
 # Return Values:
 # 0 : Reboot and reapply configuration
@@ -24,29 +24,29 @@ from cli import *
 # *************************************************************
 
 # system and kickstart images, configuration: location on server (src) and target (dst)
-eor_image_version       = "6.1.2.I1.1" # N9K release version
-image_dir_src       = "/tftpb"
-ftp_image_dir_src_root    = "/tftpb" # part of path to remove during copy
-tftp_image_dir_src_root   = "/tftpb" # part of path to remove during copy
-eor_system_image_src      = "n9000-dk9.%s.bin"         % eor_image_version
-config_file_src     = "/tftpb/poap.cfg" 
-image_dir_dst       = "bootflash:poap"
-system_image_dst    = "system.img"
-config_file_dst     = "volatile:poap.cfg" # special copy command will copy to persistent location
-md5sum_ext_src      = "md5" # extension of file containing md5sum of the one without ext.
+# n9000-dk9.6.1.2.I2.1.23.bin
+n9k_image_version       = "6.1.2.I2.1.23" # N9K release version
+image_dir_src           = "/tftpb"
+ftp_image_dir_src_root  = "/tftpb" # part of path to remove during copy
+tftp_image_dir_src_root = "/tftpb" # part of path to remove during copy
+n9k_system_image_src    = "n9000-dk9.%s.bin"         % n9k_image_version
+config_file_src         = "/tftpb/poap.cfg" 
+image_dir_dst           = "bootflash:poap"
+system_image_dst        = n9k_system_image_src  # use this variable to use fixed destination image name
+config_file_dst         = "volatile:poap.cfg" # special copy command will copy to persistent location
+md5sum_ext_src          = "md5" # extension of file containing md5sum of the one without ext.
 # there is no md5sum_ext_dst because one the target it is a temp file
-required_space = 300000 # Required space on /bootflash (for config and system images)
+required_space          = 350000 # Required space on /bootflash (for config and system images)
 
-protocol="scp" # protocol to use to download images/config
-#protocol="tftp" # protocol to use to download images/config
-#protocol="ftp" # protocol to use to download images/config
-#protocol="sftp" # protocol to use to download images/config
+# copy protocol to download images and config
+# scp/http/tftp/ftp/sftp
+protocol                = "scp" # protocol to use to download images/config
 
 # Host name and user credentials
-username = "root" # tftp server account
-ftp_username = "anonymous" # ftp server account
-password = "root"
-hostname = "172.23.1.1"
+username                = "root" # tftp server account
+ftp_username            = "anonymous" # ftp server account
+password                = "root"
+hostname                = "1.1.1.1"
 
 # vrf info
 vrf = "management"
@@ -54,9 +54,9 @@ if os.environ.has_key('POAP_VRF'):
     vrf=os.environ['POAP_VRF']
 
 # Timeout info (from biggest to smallest image, should be f(image-size, protocol))
-system_timeout    = 2100 
-config_timeout    = 120 
-md5sum_timeout    = 120  
+system_timeout          = 2100 
+config_timeout          = 120 
+md5sum_timeout          = 120  
 
 # POAP can use 3 modes to obtain the config file.
 # - 'static' - filename is static
@@ -66,7 +66,7 @@ md5sum_timeout    = 120
 # if serial-number is abc, then filename is $config_file_src.abc
 # if cdp neighbor's device_id=abc and port_id=111, then filename is config_file_src.abc_111
 # Note: the next line can be overwritten by command-line arg processing later
-config_file_type = "static"
+config_file_type        = "static"
 
 # parameters passed through environment:
 # TODO: use good old argv[] instead, using env is bad idea.
@@ -233,35 +233,36 @@ try:
   r=clid("show version")
   m = re.match('Nexus9000', r["chassis_id/1"])
   if m:
-    box="eor"
+    box="n9k"
   else:
     m = re.match('Nexus7000', r["chassis_id"])
     if m: 
       box="n7k"
       m = re.match('.*module-2', r["module_id"])
       if m: box="n7k2"
-    else: box="eor"
-except: box="eor"
+    else: box="n9k"
+except: box="n9k"
 print "box is", box
 
 # get final image name based on actual box
-system_image_src = eval("%s_%s" %(box , "system_image_src"), globals())
-try: root_path = eval("%s_%s" %(protocol , "image_dir_src_root"), globals())
-except: root_path = ""
-try: username = eval("%s_%s" %(protocol , "username"), globals())
+system_image_src    = eval("%s_%s" % (box , "system_image_src"), globals())
+try: root_path      = eval("%s_%s" % (protocol , "image_dir_src_root"), globals())
+except: root_path   = ""
+try: username       = eval("%s_%s" % (protocol , "username"), globals())
 except: pass
 
 # images are copied to temporary location first (dont want to 
 # overwrite good images with bad ones).
-system_image_dst_tmp    = "%s%s/system.img"    % (image_dir_dst, ".new")
-system_image_dst        = "%s/system.img"      %  image_dir_dst
+system_image_dst_tmp    = "%s%s/%s"     % (image_dir_dst, ".new", system_image_dst)
+system_image_dst        = "%s/%s"       % (image_dir_dst, system_image_dst)
 
-system_image_src    = "%s/%s" % (image_dir_src, system_image_src)
+system_image_src        = "%s/%s"       % (image_dir_src, system_image_src)
 
 # cleanup stuff from a previous run
 # by deleting the tmp destination for image files and then recreating the
 # directory
 image_dir_dst_u="/%s" % image_dir_dst.replace(":", "/") # unix path: cli's rmdir not working!
+
 import shutil
 try: shutil.rmtree("%s.new" % image_dir_dst_u)
 except: pass
@@ -273,13 +274,6 @@ if not os.path.exists(image_dir_dst_u):
 import signal
 import string
 
-
-# setup the cli session
-#cli("no terminal color");
-#cli("terminal dont-ask");
-#cli("terminal password %s" % password);
-
-
 # utility functions
 
 def run_cli (cmd):
@@ -289,7 +283,6 @@ def run_cli (cmd):
 def rm_rf (filename): 
     try: cli("delete %s" % filename)
     except: pass
-
 
 # signal handling
 
@@ -303,18 +296,16 @@ def sigterm_handler (signum, frame):
 
 signal.signal(signal.SIGTERM, sigterm_handler)
 
-
-
 # transfers file, return True on success; on error exits unless 'fatal' is False in which case we return False
-def doCopy(protocol = "", host = "", source = "", dest = "", vrf = "management", login_timeout=10, user = "", password = "", fatal=True):
+def doCopy (protocol = "", host = "", source = "", dest = "", vrf = "management", login_timeout=10, user = "", password = "", fatal=True):
     rm_rf(dest)
 
     # mess with source paths (tftp does not like full paths)
     global username, root_path
-    source=source[len(root_path):]
+    source = source[len(root_path):]
 
     cmd = "terminal dont-ask ; terminal password %s ; " % password
-    cmd+="copy %s://%s@%s%s %s vrf %s" % (protocol, username, host, source, dest, vrf)
+    cmd += "copy %s://%s@%s%s %s vrf %s" % (protocol, username, host, source, dest, vrf)
 
     try: run_cli(cmd)
     except:
@@ -372,17 +363,27 @@ def get_md5sum_dst (filename):
 def check_md5sum (filename_src, filename_dst, lname):
     md5sum_src = get_md5sum_src(filename_src)
     if md5sum_src: # we found a .md5 file on the server
+        md5sum_dst = get_md5sum_dst(filename_dst)
+        if md5sum_dst != md5sum_src:
+            poap_log("ERR : MD5 verification failed for %s! (%s)" % (lname, filename_dst))
+            abort_cleanup_exit()
+
+def same_images (filename_src, filename_dst):
+    if os.path.exists(image_dir_dst_u):
+        md5sum_src = get_md5sum_src(filename_src)
+        if md5sum_src:
             md5sum_dst = get_md5sum_dst(filename_dst)
-            if md5sum_dst != md5sum_src:
-                 poap_log("ERR : MD5 verification failed for %s! (%s)" % (lname, filename_dst))
-                 abort_cleanup_exit()
+            if md5sum_dst == md5sum_src:
+                poap_log("INFO: Same source and destination images" ) 
+                return True
+    poap_log("INFO: Different source and destination images" ) 
+    return False
 
 # Will run our CLI command to test MD5 checksum and if files are valid images
 # This check is also performed while setting the boot variables, but this is an
 # additional check
 
 def get_version (msg):
-   
     lines=msg.split("\n") 
     for line in lines:
         index=line.find("MD5")
@@ -429,10 +430,6 @@ def verify_images ():
     print "system image Values v10 is : %s" % (sys_v[10])
     if (sys_v[2] == "Passed"):
         poap_log("INFO: Verification passed. (system : %s)" % (sys_v[10]))
-        # MD5 verification passed
-        #if(kick_v[8] != sys_v[10]):
-        #   poap_log("ERR : Image version mismatch. (kickstart : %s) (system : %s)" % (kick_v[8], sys_v[10]))
-        #    abort_cleanup_exit()
     else:
         poap_log("ERR : MD5 verification failed!")
         poap_log("%s" % (sys_msg))
@@ -442,27 +439,23 @@ def verify_images ():
 
 # get config file from server
 def get_config ():
-
-    doCopy (protocol, hostname, config_file_src, config_file_dst, vrf, config_timeout, username, password)
+    doCopy(protocol, hostname, config_file_src, config_file_dst, vrf, config_timeout, username, password)
     poap_log("INFO: Completed Copy of Config File") 
-        
     # get file's md5 from server (if any) and verify it, failure is fatal (exit)
     check_md5sum (config_file_src, config_file_dst, "config file")
 
 
 # get system image file from server
 def get_system_image ():
-
-    doCopy (protocol, hostname, system_image_src, system_image_dst_tmp, vrf, system_timeout, username, password)  
-    poap_log("INFO: Completed Copy of System Image" ) 
-    
-    # get file's md5 from server (if any) and verify it, failure is fatal (exit)
-    check_md5sum (system_image_src, system_image_dst_tmp, "system image")
-    run_cli ("move %s %s" % (system_image_dst_tmp, system_image_dst))
+    if not same_images(system_image_src, system_image_dst):
+        doCopy(protocol, hostname, system_image_src, system_image_dst_tmp, vrf, system_timeout, username, password)  
+        poap_log("INFO: Completed Copy of System Image" ) 
+        # get file's md5 from server (if any) and verify it, failure is fatal (exit)
+        check_md5sum(system_image_src, system_image_dst_tmp, "system image")
+        run_cli("move %s %s" % (system_image_dst_tmp, system_image_dst))
 
 
 def wait_box_online ():
-
     while 1:
         r=int(run_cli("show system internal platform internal info | grep box_online | sed 's/[^0-9]*//g'").strip('\n'))
         if r==1: break
@@ -486,9 +479,9 @@ def install_it ():
     try: shutil.rmtree("%s.new" % image_dir_dst_u)
     except: pass
     try:
-        run_cli ("config terminal ; boot nxos %s" % system_image_dst)
-        run_cli ("copy running-config startup-config")
-        run_cli ('copy %s scheduled-config' % config_file_dst)
+        run_cli("config terminal ; boot nxos %s" % system_image_dst)
+        run_cli("copy running-config startup-config")
+        run_cli('copy %s scheduled-config' % config_file_dst)
     except:
         poap_log("ERR : setting bootvars or copy run start failed!")
         abort_cleanup_exit()
@@ -500,12 +493,8 @@ def install_it ():
         
 # Verify if free space is available to download config, kickstart and system images
 def verify_freespace (): 
-    
-    freespace=int(cli("dir bootflash: | last 3 | grep free | sed 's/[^0-9]*//g'").strip('\n'))
-    freespace=freespace / 1024
-
-    #s = os.statvfs("/bootflash/")
-    #reespace = (s.f_bavail * s.f_frsize) / 1024
+    freespace = int(cli("dir bootflash: | last 3 | grep free | sed 's/[^0-9]*//g'").strip('\n'))
+    freespace = freespace / 1024
     poap_log("INFO: free space is %s kB"  % freespace )
 
     if required_space > freespace:
