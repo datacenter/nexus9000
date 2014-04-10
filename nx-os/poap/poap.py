@@ -1,5 +1,5 @@
 #!/bin/env python
-#md5sum=84b7ea4b15f4ef274e47fe76daa9f606
+#md5sum=5fddae8efacfc3b6acff9beb2a9e8bf3
 # Still needs to be implemented.
 # Return Values:
 # 0 : Reboot and reapply configuration
@@ -20,26 +20,28 @@
 import os
 import time
 from cli import *
+
 # **** Here are all variables that parametrize this script **** 
+# These parameters should be updated with the real values used 
+# in your automation environment
 # *************************************************************
 
 # system and kickstart images, configuration: location on server (src) and target (dst)
-# n9000-dk9.6.1.2.I2.1.23.bin
-n9k_image_version       = "6.1.2.I2.1.23" # N9K release version
+n9k_image_version       = "6.1.2"
 image_dir_src           = "/tftpb"
-ftp_image_dir_src_root  = "/tftpb" # part of path to remove during copy
-tftp_image_dir_src_root = "/tftpb" # part of path to remove during copy
-n9k_system_image_src    = "n9000-dk9.%s.bin"         % n9k_image_version
+ftp_image_dir_src_root  = image_dir_src
+tftp_image_dir_src_root = image_dir_src
+n9k_system_image_src    = "n9000-dk9.%s.bin" % n9k_image_version
 config_file_src         = "/tftpb/poap.cfg" 
 image_dir_dst           = "bootflash:poap"
-system_image_dst        = n9k_system_image_src  # use this variable to use fixed destination image name
-config_file_dst         = "volatile:poap.cfg" # special copy command will copy to persistent location
-md5sum_ext_src          = "md5" # extension of file containing md5sum of the one without ext.
-# there is no md5sum_ext_dst because one the target it is a temp file
-required_space          = 350000 # Required space on /bootflash (for config and system images)
+system_image_dst        = n9k_system_image_src
+config_file_dst         = "volatile:poap.cfg"
+md5sum_ext_src          = "md5"
+# Required space on /bootflash (for config and system images)
+required_space          = 350000
 
 # copy protocol to download images and config
-# scp/http/tftp/ftp/sftp
+# options are: scp/http/tftp/ftp/sftp
 protocol                = "scp" # protocol to use to download images/config
 
 # Host name and user credentials
@@ -473,9 +475,6 @@ def install_it ():
     wait_box_online()
 
     poap_log("INFO: Setting the boot variables")
-    # TODO: check image first, else if second image bad we are dead
-    # We moved the images from the tmp dir to the dest dir so we can now delete
-    # the tmp directory
     try: shutil.rmtree("%s.new" % image_dir_dst_u)
     except: pass
     try:
