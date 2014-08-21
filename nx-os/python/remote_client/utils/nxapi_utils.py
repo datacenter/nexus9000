@@ -184,7 +184,7 @@ class NXAPITransport:
     username = ''
     password = ''
 
-    timeout = 10
+    timeout = ''
 
     out_format = 'xml'
     do_chunk = '0'
@@ -194,7 +194,7 @@ class NXAPITransport:
     req_obj = RequestMsg()
 
     @classmethod
-    def init(cls, target_url, username, password):
+    def init(cls, target_url, username, password,timeout=10):
         cls.target_url = target_url
         cls.username = username
         cls.password = password
