@@ -1,0 +1,15 @@
+{% for devicedata in devicesdata %}
+  <tr>
+    <td> <div title="Logged-in by user {{ devicedata.username }}"> <a href="{{ devicedata.url }}" target="_blank"> {{ devicedata.url }} </a></div> </td>
+    {% if devicedata.is_online %}
+    	<td> <i class="icon-ok-circle icon-4x" style="color: #7eb216;"></i></td>
+    {% else %}
+    	<td> <i class="icon-remove-circle icon-4x" style="color: #db3325;"></i></td>
+    {% endif %}
+    {% if devicedata.is_healthy %}
+    	<td> <a href="./{{ devicedata.hostname }}/dash/" class="btn btn-mini btn-success" style="display: block;"><i class="icon-ok icon-large"></i> OK</a> </td>
+    {% else %}
+    	<td> <a href="./{{ devicedata.hostname }}/dash/" class="btn btn-mini btn-danger" style="display: block;"><i class="icon-exclamation icon-large"></i> ERROR</a> </td>
+    {% endif %}
+  </tr>
+{% endfor %}
