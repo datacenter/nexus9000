@@ -48,6 +48,7 @@ Follow these CLI commands to install all dependencies::
     $ ## Use following args for pip if server doesn't allow SSL: --index-url http://pypi.gocept.com/simple/ --allow-all-external --timeout 60
     $ pip install -r requirements.txt
 
+NOTE: Get the latest nexusdash from here: https://bitbucket.org/abarik1981/nexusdash
 
 2) Start the Django Server
 --------------------------
