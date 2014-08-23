@@ -1,0 +1,11 @@
+{% if error_online %}
+	<tr><td style="color: #db3325;">{{ error_online }}</td></tr>
+{% endif %}
+
+{% for htxt, hsts in health_statuses %}
+   {% if hsts %}
+   	<tr style="color: #7eb216;"><td>{{ htxt }}</td></tr>
+   {% else %}
+   	<tr style="color: #db3325;"><td>{{ htxt }}</td></tr>
+   {% endif %}
+{% endfor %}

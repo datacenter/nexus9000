@@ -1,0 +1,44 @@
+/* base_homepage CSS Start */
+
+/* 
+* Login Modal CSS 
+*/
+/* Workaround to avoid fixed Nav covering up modal */
+@media (max-width: 979px) {
+  #signin-modal {
+	top: 20%;
+	bottom: auto;
+  }
+}
+
+.modal {
+    width: 30%; /* respsonsive width */
+}
+
+#url, #username, #password {
+	width: 100%; /* respsonsive width */
+}
+
+/*#For signin form errors*/
+.tooltip-inner {
+    min-width: 200px;
+}/*#Because tooltip is shown on the right, increase width to make it readable*/
+
+label.error {
+font-weight: bold;
+color: red;
+padding: 2px 8px;
+margin-top: 2px;
+text-shadow: none;
+text-align: left;
+}/*#Displays signin error messages on modal*/
+
+.login_error {
+    text-align: left;
+}
+
+.has-error > input {
+ outline: none;
+ box-shadow: 0px 0px 7px #FF0000;
+ border-color: #FF0000;
+}

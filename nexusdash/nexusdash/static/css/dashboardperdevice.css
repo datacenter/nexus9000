@@ -1,0 +1,14 @@
+/* For dashboardperdevice.html */
+
+#intstats_graph-modal.modal {
+  height: 90%;
+  width: 90%;
+  left: 5%; /* (100%-width)/2 */
+  /* place center */
+  margin-left:auto;
+  margin-right:auto; 
+} /* Make modal full screen */
+
+span.add-on.dropdown-toggle {
+	position: absolute;
+} /* To align the dropdown button with textbox in Combobox */

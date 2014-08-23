@@ -1,0 +1,98 @@
+{% comment "readme" %}
+    This template is base_homepage.html
+    This is the base (parent) template that will get used by all other pages/templates
+        * base_homepage CSS and JS should also include only necessary generic code that
+          all other templates need, nothing specific to a page.
+        * base_homepage HTML will include only the header and footer
+    This template must include template tags without any contents, as content will be
+    filled when its inherited by child templates
+    
+    Parent Template to:     all other templates created by dev team
+    Child Template to:      None
+{% endcomment %}
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+{# Importing necessary templates #}
+{% load static %}
+{% load url from future %}
+
+<head>
+    <meta charset="utf-8">
+    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge" /><![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="{% static ''|add:SITE_NAME|add:'/img/Matrix.ico' %}" type="image/x-icon">
+    <link rel="icon" href="{% static ''|add:SITE_NAME|add:'/img/Matrix.ico' %}" type="image/x-icon">
+    <title>{% block base_homepage_title %}{% endblock base_homepage_title %}</title>
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/bootstrap.min.css' %}" />
+    <!-- Responsive Modal: https://github.com/jschr/bootstrap-modal -->
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/bootstrap-modal.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/bootstrap-responsive.min.css' %}" />
+    <!-- Fonts -->
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/font-awesome/css/font-awesome.min.css' %}" />
+    <!-- Admin Template CSS -->
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/style.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/dashboard.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static ''|add:SITE_NAME|add:'/css/odometer.css' %}" />
+    {% block base_homepage_extra_head %}{% endblock base_homepage_extra_head %}
+</head>
+
+<body>
+    {% block base_homepage_content_header %}
+	<div id="navbarid" class="navbar navbar-fixed-top">
+	    <div class="navbar-inner">
+	        <div class="container" align="center">
+		        <a class="brand" href="/" style="float: none;">{{SITE_NAME}}</a>
+	        </div>
+	    </div>
+	</div>
+    {% endblock base_homepage_content_header %}
+    
+    
+    {% block base_homepage_content_body %}
+    {% endblock base_homepage_content_body %}
+    {% block extra_body %}{% endblock extra_body %}
+    
+    <!-- Javascript-->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{% static ''|add:SITE_NAME|add:'/js/jquery.js' %}" type="text/javascript"></script>
+    <script src="{% static ''|add:SITE_NAME|add:'/js/jquery-ui.min.js' %}" type="text/javascript"></script>
+    <script src="{% static ''|add:SITE_NAME|add:'/js/bootstrap.js' %}" type="text/javascript"></script>
+    <!-- Responsive Modal: https://github.com/jschr/bootstrap-modal -->
+    <script src="{% static ''|add:SITE_NAME|add:'/js/bootstrap-modalmanager.js' %}" type="text/javascript"></script>
+    <script src="{% static ''|add:SITE_NAME|add:'/js/bootstrap-modal.js' %}" type="text/javascript"></script>
+    <script src="{% static ''|add:SITE_NAME|add:'/js/jquery.dataTables.min.js' %}" type="text/javascript"></script>
+    <script src="{% static ''|add:SITE_NAME|add:'/js/odometer.js' %}" type="text/javascript"></script>
+    <script src="{% static ''|add:SITE_NAME|add:'/js/dashboard.common.js' %}" type="text/javascript"></script>
+    {% block dashboard_specific_js %}{% endblock dashboard_specific_js %}
+    <script src="{% static ''|add:SITE_NAME|add:'/js/base.js' %}" type="text/javascript"></script>
+    {% block base_homepage_extra_script %}{% endblock base_homepage_extra_script %}
+	
+    {% block base_homepage_content_footer %}
+    <!-- Footer -->
+	<div class="footer">
+	    <div class="footer-inner">
+	        <div class="container">
+	            <div class="row" align="center">
+					<div class="span12"> <a href="http://www.cisco.com/" target="_blank"> © 2014 Cisco Systems</a></div>
+					<div class="span12">
+						<a target="_blank" href="https://bitbucket.org/abarik1981/nexusdash" target="_blank"><i class="icon-bitbucket-sign"></i>
+							Contribute on Bitbucket
+						</a>
+					</div>
+	            </div><!-- /row -->
+	        </div><!-- /container -->
+	    </div><!-- /footer-inner -->
+	</div><!-- /footer -->
+    {% endblock base_homepage_content_footer %}
+</body>
+
+</html>
