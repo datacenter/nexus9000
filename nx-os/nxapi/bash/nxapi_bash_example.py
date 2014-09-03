@@ -4,9 +4,9 @@ import json
 """
 Modify these please
 """
-url='http://10.201.30.194/ins'
-switchuser='ewibowo'
-switchpassword='Maryani75'
+url='http://IP_ADDRESS/ins'
+switchuser='username'
+switchpassword='password'
 
 myheaders={'content-type':'application/json'}
 payload={
