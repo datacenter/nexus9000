@@ -1,13 +1,9 @@
-import os
-import sys
-import subprocess
 import base64
 from xml.dom import minidom
-from xml.dom.minidom import Node
 import urllib2
 
-username='YourCECUser'
-password='YourCECPassword'
+username='CEC_User'
+password='CEC_Passwor'
 ip_addr='10.201.30.194'
 
 base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
@@ -57,7 +53,7 @@ xml_string="<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> \
      <type>cli_show</type>      \
      <chunk>0</chunk>                   \
      <sid>session1</sid>                \
-     <input>show mod</input>         \
+     <input>show cdp neighbor</input>         \
      <output_format>xml</output_format> \
      </ins_api>"
 
@@ -76,7 +72,7 @@ except urllib2.URLError, e:
 #i = 0
 #doc = xml.dom.minidom.parseString(data)
 
-for title in doc.getElementsByTagName('modinf'):
+for title in doc.getElementsByTagName('device_id'):
     print(title.firstChild.nodeValue)
 
 #titles = doc.getElementsByTagName('Title')
