@@ -1,9 +1,9 @@
 import base64
-from xml.dom import minidom
+import getpass
 import urllib2
 
-username='CEC_User'
-password='CEC_Password'
+username='ewibowo'
+password=getpass.getpass()
 ip_addr='10.201.30.194'
 
 base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
