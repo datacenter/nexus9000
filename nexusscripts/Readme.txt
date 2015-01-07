@@ -2,6 +2,8 @@
 #Nexus 9000 Switch Automation tasks
 
 #Automation of Switch Monitoring Category
+Pre-requisites: Install jinja2 template engine e.g pip install jinja2
+Note: If pip does not exist then install it with the command 'sudo apt-get install python-pip'
 
 1. Interface monitoring 
 
