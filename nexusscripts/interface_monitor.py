@@ -19,7 +19,7 @@ import os
 import requests
 import json
 import ConfigParser
-
+import datetime
 
 from jinja2 import Template
 from jinja2 import Environment, FileSystemLoader
@@ -174,12 +174,12 @@ class Interface_Monit:
         username = 'nexus9000.adm@gmail.com';
         password = '!cisco123';
         server = 'smtp.gmail.com:587';
-
+        timestamp = datetime.datetime.now()
 
         msg = MIMEMultipart()
         msg['From'] = username
         msg['To'] = to_addresses
-        msg['Subject'] = 'Nexus 9000 Interface Monitoring Email'
+        msg['Subject'] = 'Nexus 9000 Interface Monitoring Email' + 'on' + timestamp.strftime("%d/%m/%Y") + '@' + timestamp.strftime("%H:%M:%S")
 
         fp = open(out_html, 'rb')
         content = fp.read()
