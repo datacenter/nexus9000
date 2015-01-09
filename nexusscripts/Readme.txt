@@ -6,6 +6,7 @@ Pre-requisites: Install jinja2 template engine e.g pip install jinja2
 Python version > 2.7.*
 
 Scripts are tested on Ubuntu 14.04 release machine.
+Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
 Note: If pip does not exist then install it with the command 'sudo apt-get install python-pip'
 
