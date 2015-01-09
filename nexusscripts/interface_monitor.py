@@ -150,6 +150,35 @@ class Interface_Monit:
                 cmd = "show interface ethernet"+str(i)+"/"+str(j)
                 interfaceob.monit(cmd, i, j)
 
+    #interface monitoring status with details about input and output errors
+    def status(self):
+        global input_counter, output_counter, inerr_interface, outerr_interface
+        input_counter = 0; output_counter=0; inerr_interface = []; outerr_interface = [];
+        
+        for key,value in Interface_Monit.in_err.items():
+            if (value == "Yes"):
+                input_counter = input_counter + 1;
+                inerr_interface.append(key)
+
+        for key,value in Interface_Monit.out_err.items():
+            if (value == "Yes"):
+                output_counter = output_counter + 1;
+                outerr_interface.append(key)
+
+        if (input_counter == 0):
+            print "Number of Interfaces with Input Errors is : " + ' ' + str(input_counter)
+        else:
+            print "Number of Interfaces with Input Errors is : " + ' ' + str(input_counter)
+            for key in inerr_interface:
+                print key
+
+        if (output_counter == 0):
+            print "Number of Interfaces with Output Errors is : " + ' ' + str(output_counter)
+        else:
+            print "Number of Interfaces with Output Errors is : " + ' ' + str(output_counter)
+            for key in outerr_interface:
+                print key 
+
 
     def updatetemp(self):
         interfaceob = Interface_Monit()
@@ -162,7 +191,12 @@ class Interface_Monit:
                          "slotoneend" : int(slotoneend),
                          "slottwoend" : int(slottwoend),
                          "in_err" : Interface_Monit.in_err,
-                         "out_err" : Interface_Monit.out_err
+                         "out_err" : Interface_Monit.out_err,
+                         "input_counter" : input_counter,
+                         "output_counter" : output_counter,
+                         "inerr_interface" : inerr_interface,
+                         "outerr_interface" : outerr_interface
+
         }
         with open(out_html, 'a') as f:
              outputText = interfaceob.render_template(out_template, templateVars)
@@ -212,5 +246,6 @@ if __name__ == '__main__':
     interfaceobj = Interface_Monit()
     interfaceobj.nexus_version()
     interfaceobj.interfacemonit()
+    interfaceobj.status()
     interfaceobj.updatetemp()
     interfaceobj.send_mail()
