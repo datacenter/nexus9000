@@ -19,6 +19,7 @@ import requests
 import json
 import ConfigParser
 import datetime
+import math
 
 from jinja2 import Template
 from jinja2 import Environment, FileSystemLoader
@@ -61,7 +62,7 @@ if ((username and password) == ''):
     print "Please update the configuration file with Switch User Credentials"
     exit(1)
 elif (username == ''):
-    print "Please update the configuration file with Switch User Creentials "
+    print "Please update the configuration file with Switch User Credentials "
     exit(1)
 elif (password == ''):
     print "Please update the configuration file with Switch User Credentials "
@@ -123,12 +124,31 @@ class System_Monit:
         System_Monit.mem_usage.update({'Memory_Usage_Total':self.mem_total})
         System_Monit.mem_usage.update({'Current_Memory_Status':self.mem_status})   
 
+    #overall cpu utilization and memory usage in percentage
+    def status(self):
+        global cpu_percent,mem_percent
+        total_cpu = float(System_Monit.cpu_utilization['Cpu_state_kernel']) + float(System_Monit.cpu_utilization['Cpu_state_user'])
+        cpu_percent = (total_cpu)/2
+        print "Overall CPU Utilization is : " + str(cpu_percent) + "%"
+
+        
+        mem_used = float(System_Monit.mem_usage['Memory_Usage_Used']) / float(System_Monit.mem_usage['Memory_Usage_Total'])
+        
+        memory_per = mem_used*100
+        mem_percent = round(memory_per,2)
+
+        print "Overall Memory Usage is : " + str(mem_percent) + "%" + ' '+ "(" + str(System_Monit.mem_usage['Memory_Usage_Used']) + \
+          ' ' + "Used in Bytes" + "/" + ' ' + str(System_Monit.mem_usage['Memory_Usage_Free']) + ' ' + "Free in Bytes" + ")"
+
+
     def updatetemp(self):
         systemob = System_Monit()
         templateVars = { "title" : "Nexus Switch System monitoring",
                          "description" : "System-Level resources monitoring",
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
+                         "cpu_percent" : cpu_percent,
+                         "mem_percent" : mem_percent,
                          "cpu_util" : System_Monit.cpu_utilization,
                          "mem_usage" : System_Monit.mem_usage
         }
@@ -183,5 +203,6 @@ if __name__ == '__main__':
     systemob = System_Monit()
     systemob.nexus_version()
     systemob.monit_data()
+    systemob.status()
     systemob.updatetemp()
     systemob.send_mail()
