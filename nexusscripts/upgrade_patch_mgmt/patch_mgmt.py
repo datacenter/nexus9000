@@ -134,7 +134,7 @@ def initialize_args():
             help='Username to login to Nexus 9XXX switch', required=True)
         parser.add_argument('--password', '-p', dest='password',
             help='Password to login to UCS Manager')
-        parser.add_argument('--tftp_address', '-t', dest='tftp_address',
+        parser.add_argument('--tftp_address', '-a', dest='tftp_address',
             help='Tftp server ip-address.')
         parser.add_argument('--smu_filename', '-f', dest='smu_filename',
             help='SMU filename.', required=True)

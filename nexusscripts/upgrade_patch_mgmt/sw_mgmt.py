@@ -121,10 +121,12 @@ def initialize_args():
         help='Username to login to Nexus 9XXX switch', required=True)
     parser.add_argument('--password', '-p', dest='password',
         help='Password to login to UCS Manager')
-    parser.add_argument('--tftp-address', '-t', dest='tftp_address',
+    parser.add_argument('--tftp-address', '-a', dest='tftp_address',
         help='Tftp server ip-address.')
     parser.add_argument('--image_filename', '-f', dest='image_filename',
         help='Image filename.', required=True)
+    parser.add_argument('--timeout', '-t', dest='timeout',
+        help='Connection Timeout.', default=600)
     parser.add_argument('--action', '-o', dest='action',
         help='Action Upgrade/Downgrade switch image.',
         required=True, choices = ['copy', 'upgrade', 'downgrade', 'remove'])
