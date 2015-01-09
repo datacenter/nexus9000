@@ -148,7 +148,7 @@ class System_Monit:
         msg = MIMEMultipart()
         msg['From'] = username
         msg['To'] = to_addresses
-        msg['Subject'] = 'Nexus 9000 System-Level Resources Monitoring Email'  + 'on' + timestamp.strftime("%d/%m/%Y") + '@' + timestamp.strftime("%H:%M:%S")
+        msg['Subject'] = 'Nexus 9000 System-Level Resources Monitoring Email' + ' ' + 'on' + ' ' + timestamp.strftime("%d/%m/%Y") + '@' + timestamp.strftime("%H:%M:%S")
 
         fp = open(out_html, 'rb')
         content = fp.read()
