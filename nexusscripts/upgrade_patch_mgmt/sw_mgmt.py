@@ -27,6 +27,7 @@ class Args(object):
         if not self.password:
             self.password = getpass.getpass()
         self.tftp_address = args.tftp_address
+        self.timeout = args.timeout
         self.image_filename = args.image_filename
         self.action = args.action
 
@@ -37,7 +38,7 @@ def initialize_nxapi_handler(params):
     thisNXAPI.set_target_url('http://' + params.n9k +'/ins')
     thisNXAPI.set_username(params.username)
     thisNXAPI.set_password(params.password)
-    thisNXAPI.set_timeout(1200)
+    thisNXAPI.set_timeout(params.timeout)
     thisNXAPI.set_msg_type('cli_conf')
     return thisNXAPI
 
@@ -115,12 +116,12 @@ def initialize_args():
                 description='Nexus 9000 OS software patch management utility.',
                 epilog="""   """)
 
-    parser.add_argument('--n9k', '-i', dest='hostname',
+    parser.add_argument('--n9k', '-a', dest='hostname',
         help='Nexus 9XXX hostname or ip address', required=True)
     parser.add_argument('--user', '-u', dest='username',
         help='Username to login to Nexus 9XXX switch', required=True)
     parser.add_argument('--password', '-p', dest='password',
-        help='Password to login to UCS Manager')
+        help='Password to login to Nexus 9XXX switch')
     parser.add_argument('--tftp-address', '-a', dest='tftp_address',
         help='Tftp server ip-address.')
     parser.add_argument('--image_filename', '-f', dest='image_filename',

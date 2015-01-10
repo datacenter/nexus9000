@@ -128,12 +128,12 @@ def initialize_args():
               description='Nexus 9000 OS software patch management utility.',
               epilog="""to openstack cluster.""")
 
-        parser.add_argument('--n9k', '-i', dest='hostname',
+        parser.add_argument('--n9k', '-a', dest='hostname',
             help='Nexus 9XXX hostname or ip address', required=True)
         parser.add_argument('--user', '-u', dest='username',
             help='Username to login to Nexus 9XXX switch', required=True)
         parser.add_argument('--password', '-p', dest='password',
-            help='Password to login to UCS Manager')
+            help='Password to login to Nexus 9XXX switch')
         parser.add_argument('--tftp_address', '-a', dest='tftp_address',
             help='Tftp server ip-address.')
         parser.add_argument('--smu_filename', '-f', dest='smu_filename',
