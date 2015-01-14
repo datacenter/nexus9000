@@ -116,7 +116,7 @@ def initialize_args():
                 description='Nexus 9000 OS software patch management utility.',
                 epilog="""   """)
 
-    parser.add_argument('--n9k', '-a', dest='hostname',
+    parser.add_argument('--n9k', '-i', dest='hostname',
         help='Nexus 9XXX hostname or ip address', required=True)
     parser.add_argument('--user', '-u', dest='username',
         help='Username to login to Nexus 9XXX switch', required=True)
