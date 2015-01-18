@@ -19,6 +19,7 @@ from xmltodict import *
 
 cmd_config_terminal = "config terminal ;"
 cmd_vlan_id_range = "vlan %s ;"
+cmd_no_vlan_id_range = "no vlan %s ;"
 cmd_vlan_media = "media enet ;"
 cmd_vlan_name = "name %s ;"
 cmd_vlan_state = "state %s ;"
@@ -85,13 +86,17 @@ def initialize_nxapi_handler(params):
 
 def configure_vlan(params, nxapi_handler):
 
-    cmd_str = cmd_config_terminal + cmd_vlan_id_range % (params.vlan)
-    if params.vlan_name:
-        cmd_str += cmd_vlan_name % (params.vlan_name)
-    if params.vlan_state:
-        cmd_str += cmd_vlan_state % (params.vlan_state)
-    if not params.vlan_shutdown:
-        cmd_str += cmd_vlan_no_shutdown
+    cmd_str = cmd_config_terminal 
+    if params.action == 'configure':
+        cmd_str += cmd_vlan_id_range % (params.vlan)
+        if params.vlan_name:
+            cmd_str += cmd_vlan_name % (params.vlan_name)
+        if params.vlan_state:
+            cmd_str += cmd_vlan_state % (params.vlan_state)
+        if not params.vlan_shutdown:
+            cmd_str += cmd_vlan_no_shutdown
+    elif params.action == 'remove':
+        cmd_str += cmd_no_vlan_id_range % (params.vlan)
 
     cmd_str += cmd_copy_running_startup
 
@@ -133,7 +138,7 @@ def initialize_args():
     parser.add_argument('--shutdown', '-d', dest='vlan_shutdown',
         help='VLAN state', type=bool, default=False)
     parser.add_argument('--action', '-o', dest='action',
-        help='VLAN state', choices={'configure', 'show'}, default='configure')
+        help='VLAN state', choices={'configure', 'remove', 'show'})
 
     args = parser.parse_args()
     return Args(args)
@@ -143,7 +148,7 @@ if __name__ == '__main__':
 
     params = initialize_args()
     nxapi_handler = initialize_nxapi_handler(params)
-    if params.action == 'configure':
+    if params.action in {'remove', 'configure'}:
         configure_vlan(params, nxapi_handler)
         show_vlan(params, nxapi_handler)
     else:
