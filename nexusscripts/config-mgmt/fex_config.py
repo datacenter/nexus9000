@@ -108,7 +108,7 @@ class FEX_Config:
 
     def fex_update(self, stat):
     
-        if (stat == 'disabled') :
+        if ((stat == 'disabled') or (stat == 'installed')) :
              payload = [
 
         {"jsonrpc": "2.0","method": "cli","params": {"cmd": "conf t","version": 1},"id": 1},
