@@ -136,7 +136,7 @@ class Interface_Desc:
 
                          ]
                 response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
-                print "Interface " + data['intf_id'] + "updated description -------" + "Connected to device " + data['platform_id'] +  ' ' + "on" + ' ' + data['port_id']
+                print "Interface " + data['intf_id'] + ' ' + "updated description -------" + "Connected to device " + data['platform_id'] +  ' ' + "on" + ' ' + data['port_id']
         
     #update the jinja template with the data
     def updatetemp(self):
