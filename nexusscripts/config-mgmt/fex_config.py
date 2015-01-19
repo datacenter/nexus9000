@@ -93,7 +93,6 @@ class FEX_Config:
         response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
         chassis_id = response['result']['body']['chassis_id']
         sys_version = response['result']['body']['rr_sys_ver']
-        #initialize the html file and update with version and chassis details
 
     def fex_status(self):
         fexob = FEX_Config()
