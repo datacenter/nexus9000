@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+  <style>thead {color:green;} tbody {color:blue;text-align:center;} table,th,td {border:1px solid black; text-align:center;margin-top:50px;margin-left:100px;} </style>
+</head>
+
+<body>
+
+<center>
+<div id="nexusver">
+  <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
+  <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+
+</div>
+
+
+<div id="nexusinterstatus">
+
+{% if input_counter == 0 %}
+<label><font size=4 color=coral>Number of Interfaces with Input Errors is : {{ input_counter }}</font></label><br>
+{% else %}
+<label><font size=4 color=brown>Number of Interfaces with Input Errors is : {{ input_counter }}</font></label><br>
+{% for i in inerr_interface %}
+<label><font size=3 color=black>{{ i }}</font></label><br>
+
+{% endfor %}
+{% endif %}
+
+{% if output_counter == 0 %}
+<label><font size=4 color=coral>Number of Interfaces with Output Errors is : {{ output_counter }}</font></label><br>
+{% else %}
+<label><font size=4 color=brown>Number of Interfaces with Ouput Errors is : {{ output_counter }}</font></label><br>
+{% for j in outerr_interface %}
+<label><font size=3 color=black>{{ j }}</font></label><br>
+
+{% endfor %}
+{% endif %}
+
+</div>
+
+<div id="nexusinter">
+
+<table border=1 style=width:300px><thead><tr><th><font size=3 color=green>Interface</font></th><th><font size=3 color=green>Input Error</font></th><th><font size=3 color=green>Output Error</font></th></tr></thead>
+<tbody>
+
+{% for i in slot %}
+{% if i == '1' %}
+{% set endport = slotoneend %}
+{% endif %}
+{% if i == '2' %}
+{% set endport = slottwoend %}
+{% endif %}
+
+{% for j in range( startport , endport) %}
+
+<tr><td>
+<label><font size=2 color=blue> Ethernet {{ i }} / {{ j }}</font></label>
+</td>
+<td>
+{% set inerr = (i , j)|join("/") %}
+{% for key,value in in_err.items() %}
+
+{% if key == inerr %}
+{% if value == "No" %}
+<label><font size=2 color=blue>{{ value }}</font></label>
+{% endif %}
+
+{% if value == "Yes" %}
+<label><font size=2 color=red>{{ value }}</font></label>
+{% endif %}
+
+{% endif %}
+
+{%endfor %}
+ </td>
+
+<td>
+{% set outerr = (i , j)|join("/") %}
+{% for key,value in out_err.items() %}
+
+{% if key == outerr %}
+{% if value == "No" %}
+<label><font size=2 color=blue>{{ value }}</font></label>
+{% endif %}
+
+{% if value == "Yes" %}
+<label><font size=2 color=red>{{ value }}</font></label>
+{% endif %}
+
+{% endif %}
+
+
+
+{%endfor %}
+ </td>
+
+
+
+</tr>
+{% endfor %}
+
+{% endfor %}
+
+
+
+
+</tbody>
+
+</table>
+</div>
+
+</center>
+
+</body>
+</html>
+
