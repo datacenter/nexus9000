@@ -96,7 +96,6 @@ class System_Monit:
         response = requests.post(System_Monit.url,data=json.dumps(payload),headers=System_Monit.myheaders,auth=(username,password)).json()
         chassis_id = response['result']['body']['chassis_id']
         sys_version = response['result']['body']['rr_sys_ver']
-        #initialize the html file and update with version and chassis details
 
     #get the monitoring data from the nexus switch 
     def monit_data(self):
