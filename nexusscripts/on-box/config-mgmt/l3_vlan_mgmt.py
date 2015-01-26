@@ -10,12 +10,8 @@
 """
 
 import argparse
-import getpass
+from cli import *
 import sys
-
-sys.path.append("../../nx-os/nxapi/utils")
-from nxapi_utils import *
-from xmltodict import *
 
 cmd_negate_option = "no"
 cmd_config_terminal = "config terminal ;"
@@ -48,12 +44,6 @@ cmd_copy_running_startup = "copy running-config startup-config ;"
 class Args(object):
 
     def __init__(self, args):
-        self.n9k = args.hostname
-        self.username = args.username
-        self.password = args.password
-        if not self.password:
-            self.password = getpass.getpass()
-
         self.vlan_id = args.vlan_id
         self.int_type = args.int_type
         self.slot = args.slot
@@ -69,42 +59,7 @@ class Args(object):
         self.vrf_member = args.vrf_member
 
 
-def check_show_status(dict_res):
-
-    if dict_res['ins_api']['outputs']['output']['code'] == '200' and \
-        dict_res['ins_api']['outputs']['output']['msg'] == 'Success':
-        print dict_res['ins_api']['outputs']['output']['body']
-        return True
-    else:
-        print 'Error Msg:' + dict_res['ins_api']['outputs']['output']['msg']
-        print 'Code:' + dict_res['ins_api']['outputs']['output']['code']
-        return False
-
-
-def check_status(dict_res):
-    print dict_res
-    for output in dict_res['ins_api']['outputs']['output']:
-        if output['code'] == '200' and \
-            output['msg'] == 'Success':
-            print output['body']
-        else:
-            print 'Error Msg:' + output['msg']
-            print 'Code:' + output['code']
-            return False
-    return True
-
-
-def initialize_nxapi_handler(params):
-
-    thisNXAPI = NXAPI()
-    thisNXAPI.set_target_url('http://' + params.n9k +'/ins')
-    thisNXAPI.set_username(params.username)
-    thisNXAPI.set_password(params.password)
-    thisNXAPI.set_msg_type('cli_conf')
-    return thisNXAPI
-
-
-def create_l3_interface(params, nxapi_handler):
+def create_l3_interface(params):
 
     cmd_str = cmd_config_terminal
     if params.int_type == 'ethernet':
@@ -137,13 +92,11 @@ def create_l3_interface(params, nxapi_handler):
     cmd_str += cmd_copy_running_startup
 
     print cmd_str
-    nxapi_handler.set_cmd(cmd_str)
-    return_xml = nxapi_handler.send_req()
-    dict_res = xmltodict.parse(return_xml[1])
-    return check_status(dict_res)
+    return_xml = cli(cmd_str)
+    print return_xml
 
 
-def show_interface(params, nxapi_handler):
+def show_interface(params):
     cmd_str = ''
     if params.int_type == 'ethernet':
         cmd_str += cmd_show_interface %\
@@ -155,10 +108,9 @@ def show_interface(params, nxapi_handler):
     elif params.int_type == 'loopback':
         cmd_str += cmd_show_interface % params.int_type, params.loopback_instance
     print cmd_str
-    nxapi_handler.set_cmd(cmd_str)
-    return_xml = nxapi_handler.send_req()
-    dict_res = xmltodict.parse(return_xml[1])
-    return check_show_status(dict_res)
+    return_xml = cli(cmd_str)
+    print return_xml
+
 
 def initialize_args():
 
@@ -166,12 +118,6 @@ def initialize_args():
                 description='Nexus 9000 L3 VLAN interface configuration mgmt.',
                 epilog="""   """)
 
-    parser.add_argument('--n9k', '-a', dest='hostname',
-        help='Nexus 9XXX hostname or ip address', required=True)
-    parser.add_argument('--user', '-u', dest='username',
-        help='Username to login to Nexus 9XXX switch', required=True)
-    parser.add_argument('--password', '-c', dest='password',
-        help='Password to login to Nexus 9XXX switch')
     parser.add_argument('--interface_type', '-t', dest='int_type',
         help='Interface type',
         choices={'ethernet', 'port-channel', 'vlan', 'loopback'})
@@ -209,7 +155,6 @@ def initialize_args():
 if __name__ == '__main__':
 
     params = initialize_args()
-    nxapi_handler = initialize_nxapi_handler(params)
-    create_l3_interface(params, nxapi_handler)
-    show_interface(params, nxapi_handler)
+    create_l3_interface(params)
+    show_interface(params)
     exit(0)
