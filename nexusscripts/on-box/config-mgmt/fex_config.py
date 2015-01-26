@@ -64,7 +64,6 @@ class FEX_Config:
 
     def fex_status(self):
         fexob = FEX_Config()
-        global cdp_dict
 
         out = json.loads(clid("show feature-set fex"))
         status = out['TABLE-cfcFeatureSetTable']['cfcFeatureSetOpStatus']
