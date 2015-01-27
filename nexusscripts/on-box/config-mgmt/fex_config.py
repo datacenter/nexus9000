@@ -14,32 +14,8 @@ Output : FEX should be enabled
 
 import os,sys
 import json
-import ConfigParser
+
 from cli import *
-
-#read the nexus configuration file
-config=ConfigParser.ConfigParser()
-config.read('nexus_automation.cfg')
-
-ipaddress = config.get('HostDetails', 'ipaddress')
-username = config.get('HostDetails', 'username')
-password = config.get('HostDetails', 'password')
-
-
-#check the configuration details
-if (ipaddress == ''):
-    print "Please update the configuration file with Switch IPAddress"
-    exit(1)
-
-if ((username and password) == ''):
-    print "Please update the configuration file with Switch User Credentials"
-    exit(1)
-elif (username == ''):
-    print "Please update the configuration file with Switch User Creentials "
-    exit(1)
-elif (password == ''):
-    print "Please update the configuration file with Switch User Credentials "
-    exit(1)
 
 
 """
