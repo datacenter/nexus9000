@@ -10,12 +10,11 @@ Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
   Steps :
 
-     a. Edit the nexus_automation.cfg configuration file with switch host details i.e username,password and email address.
+     a. Execute the script on the required switch to update the interface description based on the cdp status. 
 
 
 2. FEX Configuration
 
   Steps :
 
-     a. Configuration file is reused from the interface description update (check the host details and email address)
-
+     a. Execute the script on the required switch to check the FEX configuration status. 
