@@ -9,11 +9,138 @@
 :Output:status/result of the patch management action
 """
 
+"""Examples
+
+(1) install activate
+(2) install commit (active)
+(3) install deactivate
+(4) install commit (inactive)
+(5) install remove
+
+(1) install activate 
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action activate
+install add bootflash:n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 179 completed successfully at Tue Jan 27 09:13:02 2015
+show install inactive
+Inactive Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+install activate n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 180 completed successfully at Tue Jan 27 09:13:08 2015
+Active Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Tue Jan 27 09:13:08 2015
+Install operation 180 by user  admin  at Tue Jan 27 09:13:02 2015
+Install activate n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 180 completed successfully at Tue Jan 27 09:13:08 2015
+
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action status
+Inactive Packages:
+Active Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Committed Packages:
+Tue Jan 27 09:13:39 2015
+Install operation 180 by user  admin  at Tue Jan 27 09:13:02 2015
+Install activate n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 180 completed successfully at Tue Jan 27 09:13:08 2015
+
+(2) install commit (active)
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --use r admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action commit_active
+Active Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+install commit n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 181 completed successfully at Tue Jan 27 09:14:09 2015
+Tue Jan 27 09:14:09 2015
+Install operation 181 by user  admin  at Tue Jan 27 09:14:07 2015
+Install commit n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 181 completed successfully at Tue Jan 27 09:14:09 2015
+
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --use r admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action status
+Inactive Packages:
+Active Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Committed Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Tue Jan 27 09:14:17 2015
+Install operation 181 by user  admin  at Tue Jan 27 09:14:07 2015
+Install commit n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 181 completed successfully at Tue Jan 27 09:14:09 2015
+
+(3) install deactivate 
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action deactivate
+Active Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+install deactivate n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 182 completed successfully at Tue Jan 27 09:15:10 2015
+show install inactive
+Inactive Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Tue Jan 27 09:15:10 2015
+Install operation 182 by user  admin  at Tue Jan 27 09:15:04 2015
+Install deactivate n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 182 completed successfully at Tue Jan 27 09:15:10 2015
+
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action status
+Inactive Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Active Packages:
+Committed Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Tue Jan 27 09:15:18 2015
+Install operation 182 by user  admin  at Tue Jan 27 09:15:04 2015
+Install deactivate n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 182 completed successfully at Tue Jan 27 09:15:10 2015
+
+(4) install commit (inactive)
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action commit_inactive
+show install inactive
+Inactive Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+install commit n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 184 completed successfully at Tue Jan 27 09:16:03 2015
+Tue Jan 27 09:16:03 2015
+Install operation 184 by user  admin  at Tue Jan 27 09:16:01 2015
+Install commit n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 184 completed successfully at Tue Jan 27 09:16:03 2015
+
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action status
+Inactive Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Active Packages:
+Committed Packages:
+Tue Jan 27 09:16:10 2015
+Install operation 184 by user  admin  at Tue Jan 27 09:16:01 2015
+Install commit n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 184 completed successfully at Tue Jan 27 09:16:03 2015
+
+(5) install remove
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action remove
+show install inactive
+Inactive Packages:
+        n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 185 completed successfully at Tue Jan 27 09:16:46 2015
+Tue Jan 27 09:16:46 2015
+Install operation 185 by user  admin  at Tue Jan 27 09:16:46 2015
+Install remove n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 185 completed successfully at Tue Jan 27 09:16:46 2015
+
+root@aio178:/home/localadmin/nexus9000/nexusscripts/off-box/upgrade_patch_mgmt# python patch_mgmt.py --n9k 10.1.150.11 --user admin --password \!cisco123 --smu_filename n9000-dk9.6.1.2.I3.1.CSCur02700.bin --action status
+Inactive Packages:
+Active Packages:
+Committed Packages:
+Tue Jan 27 09:16:50 2015
+Install operation 185 by user  admin  at Tue Jan 27 09:16:46 2015
+Install remove n9000-dk9.6.1.2.I3.1.CSCur02700.bin
+Install operation 185 completed successfully at Tue Jan 27 09:16:46 2015
+
+End of Examples
+"""
+
+
 import argparse
 import getpass
 import sys
 
-sys.path.append("../../nx-os/nxapi/utils")
+sys.path.append("../../../nx-os/nxapi/utils")
 
 from nxapi_utils import NXAPI
 import xmltodict
@@ -92,7 +219,37 @@ def activate_patch_file(params, nxapi_handler):
     dict_res = xmltodict.parse(returnData[1])
     return check_status(dict_res)
 
- 
+def commit_active_patch_file(params, nxapi_handler):
+    print 'install commit ' + params.smu_filename
+    nxapi_handler.set_cmd('install commit ' + params.smu_filename)
+    returnData = nxapi_handler.send_req()
+    dict_res = xmltodict.parse(returnData[1])
+    return check_status(dict_res)
+
+def commit_inactive_patch_file(params, nxapi_handler):
+    print 'install commit ' + params.smu_filename
+    nxapi_handler.set_cmd('install commit ' + params.smu_filename)
+    returnData = nxapi_handler.send_req()
+    dict_res = xmltodict.parse(returnData[1])
+    return check_status(dict_res)
+
+def list_modules_status(nxapi_handler):
+#    print 'show install inactive'
+    nxapi_handler.set_cmd('show install inactive')
+    returnData = nxapi_handler.send_req()
+    dict_res_inactive = xmltodict.parse(returnData[1])
+
+#    print 'show install active'
+    nxapi_handler.set_cmd('show install active')
+    returnData = nxapi_handler.send_req()
+    dict_res_active = xmltodict.parse(returnData[1])
+
+#    print 'show install committed'
+    nxapi_handler.set_cmd('show install committed')
+    returnData = nxapi_handler.send_req()
+    dict_res_committed = xmltodict.parse(returnData[1])
+    return check_status(dict_res_inactive), check_status(dict_res_active), check_status(dict_res_committed)
+    
 def list_active_modules(nxapi_handler):
     nxapi_handler.set_cmd('show install active')
     returnData = nxapi_handler.send_req()
@@ -116,7 +273,7 @@ def remove_modules(params, nxapi_handler):
 
 
 def show_install_log(nxapi_handler):
-    nxapi_handler.set_cmd('show install log detail')
+    nxapi_handler.set_cmd('show install log last')
     returnData = nxapi_handler.send_req()
     dict_res = xmltodict.parse(returnData[1])
     return check_status(dict_res)
@@ -140,7 +297,7 @@ def initialize_args():
             help='SMU filename.', required=True)
         parser.add_argument('--action', '-o', dest='action', 
             help='Action Install/Remove patch file.', required=True, 
-            choices = ['copy', 'activate', 'deactivate', 'remove'])
+            choices = ['copy', 'activate', 'deactivate', 'commit_active', 'commit_inactive', 'remove', 'status'])
         args = parser.parse_args()
         return Args(args)
 
@@ -194,8 +351,25 @@ if __name__ == '__main__':
         if not remove_modules(params, nxapi_handler):
             print 'Failed to remove module.'
             exit(-1)
-
-    if not show_install_log(nxap_handleri):
+    elif params.action == 'commit_active':
+        if not list_active_modules(nxapi_handler):
+           print 'Failed to list active modules'
+           exit(-1)
+        if not commit_active_patch_file(params, nxapi_handler):
+           print 'Failed to commit active modules'
+           exit(-1)
+    elif params.action == 'commit_inactive':
+        if not list_inactive_modules(nxapi_handler):
+           print 'Failed to commit inactive modules'
+           exit(-1)
+        if not commit_inactive_patch_file(params, nxapi_handler):
+           print 'Failed to commit active modules'
+           exit(-1)
+    elif params.action == 'status':
+        if not list_modules_status(nxapi_handler):
+           print 'No modules were found to be inactive, active, or committed'
+           exit(-1)
+    if not show_install_log(nxapi_handler):
         print 'Failed to get install log.'
         exit(-1)
     exit(0)
