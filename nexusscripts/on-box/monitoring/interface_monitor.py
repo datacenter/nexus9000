@@ -7,7 +7,9 @@
 Errors etc.
 Input: command to check the interface status
      e.g show interface ethernet 1/1
-Output : parse the json output and update the html file
+Output : Number of Input/Output Errors along with the interface
+details if errorrs exists
+
 
 """
 
@@ -17,47 +19,28 @@ import ConfigParser
 from cli import *
 
 
+
 #read the nexus configuration file
 config=ConfigParser.ConfigParser()
 config.read('nexus_automation.cfg')
 
-#switch host details
-ipaddress = config.get('HostDetails', 'ipaddress')
-username = config.get('HostDetails', 'username')
-password = config.get('HostDetails', 'password')
+
 #interface slot and port details
 slot = config.get('InterfaceDetails', 'slot')
 startport = config.get('InterfaceDetails', 'startport')
 slotoneend = config.get('InterfaceDetails', 'slotoneend')
 slottwoend = config.get('InterfaceDetails', 'slottwoend')
 
-
 #check the configuration details
-if (ipaddress == ''):
-    print "Please update the configuration file with Switch IPAddress"
-    exit(1)
-
-if ((username and password) == ''):
-    print "Please update the configuration file with Switch User Credentials"
-    exit(1)
-elif (username == ''):
-    print "Please update the configuration file with Switch User Creentials "
-    exit(1)
-elif (password == ''):
-    print "Please update the configuration file with Switch User Credentials "
-    exit(1)
-
-
 if (slot == ''):
     print "Please update the configuration file with Interface Slot details"
     exit(1)
 
 
-
 """
-class to monitor the inteface counters
-like errors etc
 
+Class to monitor Interfaces for Input/Output
+errors  on the Nexus Switch
 """
 
 class Interface_Monit:
@@ -71,14 +54,27 @@ class Interface_Monit:
 
     #get the nexus switch version and chassis details
     def nexus_version(self):
+        global osversion;
         versioncmd = "show version"
         out = json.loads(clid(versioncmd))
         chassis_id = out['chassis_id']
         osversion = out['rr_sys_ver']
-        print "Nexus Switch Chassis ID is :" , chassis_id
-        print "OS Version is :", osversion
+        cpu_name = out['cpu_name']
+        memory =  out['memory']
+        processor_board =  out['proc_board_id']
+        device = out['host_name']
+        bootflash = out['bootflash_size']
 
-    """
+        print "Nexus Switch OS version is :" , osversion
+        print "Chassis ID is :", chassis_id
+        print  cpu_name + "with" + str(memory) + "KB of memory"
+        print "Processor Board ID is " + processor_board
+
+        print "Device Name : " + device
+        print "Bootflash : " + str(bootflash)
+
+
+        """
        Input: command to check the interface status
               e.g show interface ethernet 1/1
        Output : parse the json output and update the html file

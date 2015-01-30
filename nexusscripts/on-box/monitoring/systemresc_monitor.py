@@ -13,39 +13,14 @@ Output : parse the json output and update the html file
 
 import os,sys
 import json
-import ConfigParser
 from cli import *
 
-#read the nexus configuration file
-config=ConfigParser.ConfigParser()
-config.read('nexus_automation.cfg')
-
-ipaddress = config.get('HostDetails', 'ipaddress')
-username = config.get('HostDetails', 'username')
-password = config.get('HostDetails', 'password')
-
-
-#check the configuration details
-if (ipaddress == ''):
-    print "Please update the configuration file with Switch IPAddress"
-    exit(1)
-
-if ((username and password) == ''):
-    print "Please update the configuration file with Switch User Credentials"
-    exit(1)
-elif (username == ''):
-    print "Please update the configuration file with Switch User Credentials "
-    exit(1)
-elif (password == ''):
-    print "Please update the configuration file with Switch User Credentials "
-    exit(1)
 
 """
 class to monitor system-level resources
 cpu-utilization, memory usage
 
 """
-
 class System_Monit:
 
 
@@ -61,8 +36,20 @@ class System_Monit:
         out = json.loads(clid(versioncmd))
         chassis_id = out['chassis_id']
         osversion = out['rr_sys_ver']
-        print "Nexus Switch Chassis ID is :" , chassis_id
-        print "OS Version is :", osversion
+        cpu_name = out['cpu_name']
+        memory =  out['memory']
+        processor_board =  out['proc_board_id']
+        device = out['host_name']
+        bootflash = out['bootflash_size']
+
+        print "Nexus Switch OS version is :" , osversion
+        print "Chassis ID is :", chassis_id
+        print  cpu_name + "with" + str(memory) + "KB of memory"
+        print "Processor Board ID is " + processor_board
+
+        print "Device Name : " + device
+        print "Bootflash : " + str(bootflash)
+
 
     #get the monitoring data from the nexus switch
     def monit_data(self):
@@ -111,5 +98,4 @@ if __name__ == '__main__':
     systemob.nexus_version()
     systemob.monit_data()
     systemob.status()
-
 

@@ -10,7 +10,8 @@ Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
   Steps :
 
-     a. Edit the nexus_automation.cfg configuration file with switch host details,slot/port details.
+     a. Edit the nexus_automation.cfg configuration file with switch slot/port details.
+     b. execute the script (interface_monitor.py) with the command  "python filename"
 
   Note :
 
@@ -21,5 +22,5 @@ Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
   Steps :
 
-     a. Configuration file is reused from the interface monitoring (check the host details)
+     a. execute the script(systemresc_monitor.py) with the command  "python filename"
 
