@@ -10,11 +10,12 @@ Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
   Steps :
 
-     a. Execute the script on the required switch to update the interface description based on the cdp status. 
+     a. Execute the script(interface_desc.py) on the required switch to update the interface description based on the cdp status. 
+     b. command to execute : python filename
 
 
 2. FEX Configuration
 
   Steps :
 
-     a. Execute the script on the required switch to check the FEX configuration status. 
+     a. Execute the script(fex_config.py) on the required switch to check the FEX configuration status. 
