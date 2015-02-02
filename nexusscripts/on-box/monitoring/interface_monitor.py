@@ -70,8 +70,8 @@ class Interface_Monit:
         print  cpu_name + "with" + str(memory) + "KB of memory"
         print "Processor Board ID is " + processor_board
 
-        print "Device Name : " + device
-        print "Bootflash : " + str(bootflash)
+        print "Host Name : " + device
+        print "Bootflash : " + str(bootflash) + ' ' + "KB"
 
 
         """
