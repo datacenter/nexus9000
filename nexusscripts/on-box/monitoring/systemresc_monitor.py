@@ -47,8 +47,8 @@ class System_Monit:
         print  cpu_name + "with" + str(memory) + "KB of memory"
         print "Processor Board ID is " + processor_board
 
-        print "Device Name : " + device
-        print "Bootflash : " + str(bootflash)
+        print "Host Name : " + device
+        print "Bootflash : " + str(bootflash) + ' ' + "KB"
 
 
     #get the monitoring data from the nexus switch
@@ -89,8 +89,10 @@ class System_Monit:
         memory_per = mem_used*100
         mem_percent = round(memory_per,2)
 
-        print "Overall Memory Usage is : " + str(mem_percent) + "%" + ' '+ "(" + str(System_Monit.mem_usage['Memory_Usage_Used']) + \
-          ' ' + "Used in Bytes" + "/" + ' ' + str(System_Monit.mem_usage['Memory_Usage_Free']) + ' ' + "Free in Bytes" + ")"
+        print "Overall Memory Usage (%) : " + str(mem_percent) + "%" 
+        print "Overall Memory Usage (Bytes) : " + str(System_Monit.mem_usage['Memory_Usage_Used']) + \
+          ' ' + "Used " + "," + ' ' + str(System_Monit.mem_usage['Memory_Usage_Free']) + ' ' + "Free " + "," + str(System_Monit.mem_usage['Memory_Usage_Total']) + \
+        ' ' + "Total"
 
 
 if __name__ == '__main__':
