@@ -10,13 +10,9 @@ Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
   Steps :
 
-     a. Edit the nexus_automation.cfg configuration file with switch slot/port details.
-     b. execute the script (interface_monitor.py) to monitor the interfaces for the input and output errors.
-     c. command to execute: "python filename"
+     a. execute the script (interface_monitor.py) to monitor the interfaces for the input and output errors.
+     b. command to execute: "python filename"
 
-  Note :
-
-       The existing script is to monitor interface slots 1&2 with the specified port range(config file).If there are more slots then modify the source code 'interface_m
 
 
 2. Sytem-Level Resources monitoring
