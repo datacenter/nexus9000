@@ -41,8 +41,9 @@ class Interface_Desc:
         print  cpu_name + "with" + str(memory) + "KB of memory"
         print "Processor Board ID is " + processor_board
 
-        print "Device Name : " + device
-        print "Bootflash : " + str(bootflash)
+        print "Host Name : " + device
+        print "Bootflash : " + str(bootflash) + ' ' + "KB"
+        print "\n"
 
     def cdp_status(self):
         intob = Interface_Desc()
@@ -53,26 +54,65 @@ class Interface_Desc:
 
         if (stat['cdp_global_enabled'] == 'enabled'):
             print "CDP is enabled on the Host Switch"
+            cdp_nei = "show cdp nei"
+            status = json.loads(clid(cdp_nei))
+            status_list = status['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
+            cdp_dict = {}
+
+            if (status_list):
+                for i in status_list:
+                    for key,value in i.items():
+                        if (key == 'device_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'intf_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'port_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'capability'):
+                            cdp_dict.update({key:value})
+                    intob.updateinterface(cdp_dict)
+            else:
+                intob.lldp_status()
+
         else:
-            print "CDP is not enabled on the Host Switch and will be enabled"
-            cli('config terminal; cdp enable')
+            print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
+            exit(1)
 
-        cdp_nei = "show cdp nei"
-        status = json.loads(clid(cdp_nei))
-        status_list = status['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
-#        print (status_list)
-        cdp_dict = {}
+     def lldp_status(self):
 
-        for i in status_list:
-            for key,value in i.items():
-                if (key == 'device_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'intf_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'port_id'):
-                    cdp_dict.update({key:value})
+        intob = Interface_Desc()
+        #check lldp is enabled or not
+        lldp_stat = "show lldp neighbors"
+        try:
+            stat = json.loads(clid(lldp_stat))
+        except:
+            print "LLDP is not enabled on the host switch"
+            exit(1)
+        if (stat):
+            print "LLDP is enabled on the host switch"
+            lldp_nei = "show lldp neighbors"
+            status = json.loads(clid(lldp_nei))
+            #print status
+            status_list = status['TABLE_nbor']['ROW_nbor']
+            lldp_dict = {}
 
-            intob.updateinterface(cdp_dict)
+            for i in status_list:
+                for key,value in i.items():
+                   if (key == 'chassis_id'):
+                       lldp_dict.update({'device_id':value})
+                   if (key == 'l_port_id'):
+                       lldp_dict.update({'intf_id':value})
+                   if (key == 'port_id'):
+                       lldp_dict.update({key:value})
+                   if (key == 'capability'):
+                       lldp_dict.update({key:''})
+
+                intob.updateinterface(lldp_dict)
+
+        else:
+            print "LLDP is not enabled on the Host Switch.Please check the LLDP manual to enable it. "
+            exit(1)
+
 
     #update the interface description
     def updateinterface(self, data):
@@ -83,9 +123,13 @@ class Interface_Desc:
                 msg = "Connected to device" + '  ' + data['device_id'] + '  ' + "on" + '   ' + data['port_id']
 
                 cmd = "conf t" + ' ' + " ;" + ' ' + cmd1 + ' ' + ";" + ' ' + desc
-                #cli("conf t ; interface Ethernet 1/1 ; description testmessage ; exit")
                 cli(cmd)
+                print "\n"
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
+                if (data['capability']):
+                    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                    for i in data['capability']:
+                        print i;
 
 
 
