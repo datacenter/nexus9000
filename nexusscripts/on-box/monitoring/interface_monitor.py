@@ -49,7 +49,7 @@ class Interface_Monit:
 
         print "Nexus Switch OS version is :" , osversion
         print "Chassis ID is :", chassis_id
-        print  cpu_name + "with" + str(memory) + "KB of memory"
+        print  cpu_name + ' ' + "with" + ' ' + str(memory) + ' ' + "KB of memory"
         print "Processor Board ID is " + processor_board
 
         print "Host Name : " + device
