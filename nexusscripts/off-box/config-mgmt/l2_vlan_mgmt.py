@@ -13,19 +13,20 @@ import argparse
 import getpass
 import sys
 
-sys.path.append("../../nx-os/nxapi/utils")
+sys.path.append("../../../nx-os/nxapi/utils")
 from nxapi_utils import *
 from xmltodict import *
 
 cmd_config_terminal = "config terminal ;"
 cmd_int_ethernet = "interface ethernet %s/%s ;"
 cmd_int_port_channel = "interface port-channel %s ;"
+cmd_int_no_shutdown = "no shutdown ;"
 cmd_switchport_mode = "switchport mode %s ;"
 cmd_switchport_access_vlan = "switchport access vlan %s ;"
 cmd_switchport = "switchport ;"
 cmd_switchport_host = "switchport host ;"
 cmd_switchport_trunk_native = "switchport trunk native vlan %s ;"
-cmd_switchport_trunk_allowed_vlan = "switchport trunk allowed vlan %s %s;"
+cmd_switchport_trunk_allowed_vlan = "switchport trunk allowed vlan %s %s ;"
 cmd_default_int = "default interface int-if %s ;"
 cmd_switchport_autostate_exclude = "switchport autostate exclude ;"
 cmd_switchport_autostate_exclude_vlan =\
@@ -101,7 +102,7 @@ def create_l2_interface(params, nxapi_handler):
     if params.int_type == 'ethernet':
         cmd_str += cmd_int_ethernet % (params.slot, params.port)
     if params.int_type == 'port-channel':
-        cmd_str += cmd_int_port_channel % (params.slot, params.port)
+        cmd_str += cmd_int_port_channel % (params.port_channel_id)
 
     cmd_str += cmd_switchport
 
@@ -114,16 +115,17 @@ def create_l2_interface(params, nxapi_handler):
         cmd_str += cmd_switchport_mode % (params.switchport_mode)
         if params.trunk_native_id:
             cmd_str += cmd_switchport_trunk_native % (params.trunk_native_id)
-        if params.trunk_allowed_vlan_oper == {'add', 'remove', 'except'}:
+        if params.trunk_allowed_vlan_oper in {'add', 'remove', 'except'}:
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.trunk_allowed_vlan_oper, params.vlan_list)
-        elif params.trunk_allowed_vlan_oper == {'all', 'none'}:
+        elif params.trunk_allowed_vlan_oper in {'all', 'none'}:
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.trunk_allowed_vlan_oper, ' ')
         else:
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.vlan_list, ' ')
 
+    cmd_str += cmd_int_no_shutdown
     cmd_str += cmd_copy_running_startup
 
     print cmd_str
@@ -139,7 +141,8 @@ def show_interface(params, nxapi_handler):
         cmd_str += cmd_show_interface %\
             (params.int_type, "%s/%s" %(params.slot, params.port))
     elif params.int_type == 'port-channel':
-        cmd_str += cmd_show_interface % params.int_type, params.port_channel_id
+        cmd_str += cmd_show_interface % (params.int_type,\
+            params.port_channel_id)
     print cmd_str
     nxapi_handler.set_cmd(cmd_str)
     return_xml = nxapi_handler.send_req()

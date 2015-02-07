@@ -13,7 +13,7 @@ import argparse
 import getpass
 import sys
 
-sys.path.append("../../nx-os/nxapi/utils")
+sys.path.append("../../../nx-os/nxapi/utils")
 from nxapi_utils import *
 from xmltodict import *
 
