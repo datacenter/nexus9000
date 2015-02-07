@@ -16,6 +16,7 @@ from cli import *
 cmd_config_terminal = "config terminal ;"
 cmd_int_ethernet = "interface ethernet %s/%s ;"
 cmd_int_port_channel = "interface port-channel %s ;"
+cmd_int_no_shutdown = "no shutdown ;"
 cmd_switchport_mode = "switchport mode %s ;"
 cmd_switchport_access_vlan = "switchport access vlan %s ;"
 cmd_switchport_host = "switchport host ;"
@@ -69,16 +70,17 @@ def create_l2_interface(params):
         cmd_str += cmd_switchport_mode % (params.switchport_mode)
         if params.trunk_native_id:
             cmd_str += cmd_switchport_trunk_native % (params.trunk_native_id)
-        if params.trunk_allowed_vlan_oper == {'add', 'remove', 'except'}:
+        if params.trunk_allowed_vlan_oper in {'add', 'remove', 'except'}:
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.trunk_allowed_vlan_oper, params.vlan_list)
-        elif params.trunk_allowed_vlan_oper == {'all', 'none'}:
+        elif params.trunk_allowed_vlan_oper in {'all', 'none'}:
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.trunk_allowed_vlan_oper, ' ')
         else:
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.vlan_list, ' ')
 
+    cmd_str += cmd_int_no_shutdown
     cmd_str += cmd_copy_running_startup
 
     print cmd_str

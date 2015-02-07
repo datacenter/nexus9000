@@ -16,6 +16,7 @@ import sys
 cmd_negate_option = "no"
 cmd_config_terminal = "config terminal ;"
 cmd_int_ethernet = "interface ethernet %s ;"
+cmd_int_no_shutdown = "no shutdown ;"
 cmd_no_switchport = "no switchport ;"
 cmd_feature_int_vlan = "feature interface-vlan ;"
 cmd_create_svi_int = "interface vlan %s ;"
@@ -55,6 +56,7 @@ class Args(object):
         self.ip_len = args.ip_len
         self.ip_mask = args.ip_mask
         self.ipv6_addr = args.ipv6_addr
+        self.ipv6_len = args.ipv6_len
         self.ipv6_link_local = args.ipv6_link_local
         self.vrf_member = args.vrf_member
 
@@ -89,6 +91,7 @@ def create_l3_interface(params):
     if params.vrf_member:
         cmd_str += cmd_add_vrf_member % (params.vrf_member)
 
+    cmd_str += cmd_int_no_shutdown
     cmd_str += cmd_copy_running_startup
 
     print cmd_str
