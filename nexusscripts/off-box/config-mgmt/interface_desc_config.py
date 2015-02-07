@@ -108,7 +108,7 @@ class Interface_Desc:
         #print status_list
         for i in status_list:
             for key,value in i.items():
-                if (key == 'platform_id'):
+                if (key == 'device_id'):
                     cdp_dict.update({key:value})
                 if (key == 'intf_id'):
                     cdp_dict.update({key:value})
@@ -123,8 +123,8 @@ class Interface_Desc:
         for key,value in data.iteritems():
             if (key == 'intf_id'):
                 cmd1 = "interface" + ' ' + value 
-                desc = "description" + '  ' + "Connected to device" + ' ' + data['platform_id'] + ' ' + "on" + ' ' + data['port_id']
-                msg = "Connected to device" + '  ' + data['platform_id'] + '  ' + "on" + '   ' + data['port_id']
+                desc = "description" + '  ' + "Connected to device" + ' ' + data['device_id'] + ' ' + "on" + ' ' + data['port_id']
+                msg = "Connected to device" + '  ' + data['device_id'] + '  ' + "on" + '   ' + data['port_id']
                 Interface_Desc.interface_message.update({data['intf_id']:msg})
                 payload = [
 
@@ -136,7 +136,7 @@ class Interface_Desc:
 
                          ]
                 response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
-                print "Interface " + data['intf_id'] + ' ' + "updated description -------" + "Connected to device " + data['platform_id'] +  ' ' + "on" + ' ' + data['port_id']
+                print "Interface " + data['intf_id'] + ' ' + "updated description -------" + msg
         
     #update the jinja template with the data
     def updatetemp(self):

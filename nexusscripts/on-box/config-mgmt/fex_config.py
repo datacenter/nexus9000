@@ -34,12 +34,24 @@ class FEX_Config:
         out = json.loads(clid(versioncmd))
         chassis_id = out['chassis_id']
         osversion = out['rr_sys_ver']
-        print "Nexus Switch Chassis ID is :" , chassis_id
-        print "OS Version is :", osversion
+        cpu_name = out['cpu_name']
+        memory =  out['memory']
+        processor_board =  out['proc_board_id']
+        device = out['host_name']
+        bootflash = out['bootflash_size']
+
+        print "Nexus Switch OS version is :" , osversion
+        print "Chassis ID is :", chassis_id
+        print  cpu_name + "with" + str(memory) + "KB of memory"
+        print "Processor Board ID is " + processor_board
+
+        print "Device Name : " + device
+        print "Bootflash : " + str(bootflash)
 
 
     def fex_status(self):
         fexob = FEX_Config()
+        global cdp_dict
 
         out = json.loads(clid("show feature-set fex"))
         status = out['TABLE-cfcFeatureSetTable']['cfcFeatureSetOpStatus']
