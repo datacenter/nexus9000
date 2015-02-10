@@ -20,6 +20,8 @@ import requests
 import json
 import ConfigParser
 import datetime
+import sys
+import re
 
 from jinja2 import Template
 from jinja2 import Environment, FileSystemLoader
@@ -39,11 +41,7 @@ config.read('nexus_automation.cfg')
 ipaddress = config.get('HostDetails', 'ipaddress')
 username = config.get('HostDetails', 'username')
 password = config.get('HostDetails', 'password')
-#interface slot and port details
-slot = config.get('InterfaceDetails', 'slot')
-startport = config.get('InterfaceDetails', 'startport')
-slotoneend = config.get('InterfaceDetails', 'slotoneend')
-slottwoend = config.get('InterfaceDetails', 'slottwoend')
+
 #list of to addresses for the email
 to_addresses = config.get('EmailDetails', 'to_addresses')
 
@@ -74,13 +72,10 @@ elif (password == ''):
     exit(1)
 
 
-if (slot == ''):
-    print "Please update the configuration file with Interface Slot details"
-    exit(1)
 
 
 """
-class to monitor the inteface counters
+class to monitor the interface counters
 like errors etc
 
 """
@@ -91,8 +86,6 @@ class Interface_Monit:
 
     url = "http://"+ipaddress+"/ins"
 
-    interfaceslot = slot.split(',')
-    interfaceport = []
 
     in_err = {}
     out_err = {}
@@ -134,21 +127,42 @@ class Interface_Monit:
 
 
     
-    #read the configuration file for the slot and port details
     #create a command to get the interface status
     def interfacemonit(self):
         interfaceob = Interface_Monit()
-        for i in slot:
-            endport = 0
-            if (i == ','):
-                pass
-            if (i == '1'):
-                endport = slotoneend 
-            if (i == '2'):
-                endport = slottwoend
-            for j in range(int(startport), int(endport)):
-                cmd = "show interface ethernet"+str(i)+"/"+str(j)
-                interfaceob.monit(cmd, i, j)
+
+        out = json.loads(clid("show interface status"))
+        interface_list = out['TABLE_interface']['ROW_interface']
+        for i in interface_list:
+            for key,value in i.items():
+                if (key == 'interface'):
+                    m = re.search('Ethernet(.*)', value)
+                    if m:
+                        found = m.group(1)
+                        slotport = found.split('/')
+
+                        cmd = "show interface ethernet"+str(slotport[0])+"/"+str(slotport[1])
+                        interfaceob.monit(cmd, slotport[0], slotport[1])
+
+
+
+    def interfacemonit(self):
+        interfaceob = Interface_Monit()
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show interface status","version":1},"id":1},]
+        response = requests.post(Interface_Monit.url,data=json.dumps(payload),headers=Interface_Monit.myheaders,auth=(username,password)).json()
+
+        interface_list = response['result']['body']['TABLE_interface']['ROW_interface']
+        for i in interface_list:
+            for key,value in i.items():
+                if (key == 'interface'):
+                    m = re.search('Ethernet(.*)', value)
+                    if m:
+                        found = m.group(1)
+                        slotport = found.split('/')
+
+                        cmd = "show interface ethernet"+str(slotport[0])+"/"+str(slotport[1])
+                        interfaceob.monit(cmd, slotport[0], slotport[1])
+
 
     #interface monitoring status with details about input and output errors
     def status(self):
@@ -186,10 +200,6 @@ class Interface_Monit:
                          "description" : "Interface monitoring",
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
-                         "slot" : Interface_Monit.interfaceslot,
-                         "startport" : int(startport),
-                         "slotoneend" : int(slotoneend),
-                         "slottwoend" : int(slottwoend),
                          "in_err" : Interface_Monit.in_err,
                          "out_err" : Interface_Monit.out_err,
                          "input_counter" : input_counter,
