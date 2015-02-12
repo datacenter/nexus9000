@@ -90,8 +90,7 @@ class Interface_Desc:
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
                 if (data['capability']):
                     print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
-                    for i in data['capability']:
-                        print i;
+                    print  data['capability']
 
 
 
