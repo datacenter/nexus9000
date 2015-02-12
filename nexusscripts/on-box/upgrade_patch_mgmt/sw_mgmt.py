@@ -36,10 +36,10 @@ def verify_active_sessions():
     print return_xml
 
 
-def check_image_incompatability(params):
-    print 'show incompatability nxos bootflash:' +\
+def check_image_incompatibility(params):
+    print 'show incompatibility nxos bootflash:' +\
         params.image_filename
-    return_xml = cli('show incompatability nxos bootflash:' +\
+    return_xml = cli('show incompatibility nxos bootflash:' +\
         params.image_filename)
     print return_xml
 
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     elif params.action == 'upgrade':
         verify_active_sessions()
     elif params.action == 'downgrade':
-        check_image_incompatability(params)
+        check_image_incompatibility(params)
     elif params.action == 'remove':
         remove_image(params)
 
