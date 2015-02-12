@@ -5,9 +5,9 @@
 :Short Description:This script is to monitor Interface counters.
 :Long Description:This script is to monitor Interface counters like
 Errors etc.
-Input: command to check the interface status
+:Input: command to check the interface status
      e.g show interface ethernet 1/1
-Output : parse the json output and update the html file
+:Output : parse the json output and update the html file
 
 """
 
@@ -15,6 +15,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
+from collections import OrderedDict
 import os
 import requests
 import json
@@ -65,7 +66,7 @@ if ((username and password) == ''):
     print "Please update the configuration file with Switch User Credentials"
     exit(1)
 elif (username == ''):
-    print "Please update the configuration file with Switch User Creentials "
+    print "Please update the configuration file with Switch User Credentials "
     exit(1)
 elif (password == ''):
     print "Please update the configuration file with Switch User Credentials "
@@ -87,8 +88,7 @@ class Interface_Monit:
     url = "http://"+ipaddress+"/ins"
 
 
-    in_err = {}
-    out_err = {}
+    in_err = {};  out_err = {}; interface_list = []; rx_tx_dict = {}; 
 
     def render_template(self, template_filename, context):
         return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
@@ -102,6 +102,8 @@ class Interface_Monit:
         chassis_id = response['result']['body']['chassis_id']
         sys_version = response['result']['body']['rr_sys_ver']
 
+
+
     """
        Input: command to check the interface status
               e.g show interface ethernet 1/1
@@ -113,46 +115,77 @@ class Interface_Monit:
         payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":cmd,"version":1},"id":1},]
 
         response = requests.post(Interface_Monit.url,data=json.dumps(payload),headers=Interface_Monit.myheaders,auth=(username,password)).json()
-        in_err = response['result']['body']['TABLE_interface']['ROW_interface']['eth_inerr']
-        out_err = response['result']['body']['TABLE_interface']['ROW_interface']['eth_outerr']
+        
+
+        in_err = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_inerr'])
+        out_err = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_outerr'])
         key = str(i)+"/"+str(j)
-        if (int(in_err) == 0):
+
+
+        if ((in_err) == 0):
             Interface_Monit.in_err.update({key:"No"})
         else:
             Interface_Monit.in_err.update({key:"Yes"})
-        if (int(out_err) == 0):
+        if ((out_err) == 0):
             Interface_Monit.out_err.update({key:"No"})
         else:
             Interface_Monit.in_err.update({key:"Yes"})
 
 
-    
-    #create a command to get the interface status
-    def interfacemonit(self):
-        interfaceob = Interface_Monit()
-
-        out = json.loads(clid("show interface status"))
-        interface_list = out['TABLE_interface']['ROW_interface']
-        for i in interface_list:
-            for key,value in i.items():
-                if (key == 'interface'):
-                    m = re.search('Ethernet(.*)', value)
-                    if m:
-                        found = m.group(1)
-                        slotport = found.split('/')
-
-                        cmd = "show interface ethernet"+str(slotport[0])+"/"+str(slotport[1])
-                        interfaceob.monit(cmd, slotport[0], slotport[1])
 
 
-
-    def interfacemonit(self):
-        interfaceob = Interface_Monit()
+    def interface_rx_tx(self):
+        table = "{0:16}{1:9}{2:9}{3:9}{4:9}{5:9}{6:9}{7:9}{8:9}"
         payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show interface status","version":1},"id":1},]
         response = requests.post(Interface_Monit.url,data=json.dumps(payload),headers=Interface_Monit.myheaders,auth=(username,password)).json()
 
-        interface_list = response['result']['body']['TABLE_interface']['ROW_interface']
-        for i in interface_list:
+        Interface_Monit.interface_list = response['result']['body']['TABLE_interface']['ROW_interface']
+        print '----------------------------------------------------------------------------------------------------------'
+        print table.format("Interface", "Rx Mbps", "Rx %", "Rx pps", "Tx Mbps", "Tx %", "Tx pps", "In Error", "Out Error")
+        print '----------------------------------------------------------------------------------------------------------'
+
+        counter = 0;
+        for i in Interface_Monit.interface_list:
+            for key,value in i.items():
+                counter = counter+1;
+                if (key == 'interface'):
+                    m = re.search('Ethernet(.*)', value)
+                    if m:
+                        found = m.group(1)
+                        slotport = found.split('/')
+
+                        cmd = "show interface ethernet"+str(slotport[0])+"/"+str(slotport[1])
+                        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":cmd,"version":1},"id":1},]
+
+                        response = requests.post(Interface_Monit.url,data=json.dumps(payload),headers=Interface_Monit.myheaders,auth=(username,password)).json()
+
+                        bw = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_bw'])
+                        rx_bps = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_inrate1_bits'])
+                        rx_mbps = round((rx_bps / 1000000), 1)
+                        rx_pcnt = round((rx_bps / 1000) * 100 / bw, 1)
+                        rx_pps = response['result']['body']['TABLE_interface']['ROW_interface']['eth_inrate1_pkts']
+
+                        tx_bps = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_outrate1_bits'])
+                        tx_mbps = round((tx_bps / 1000000), 1)
+                        tx_pcnt = round((tx_bps / 1000) * 100 / bw, 1)
+                        tx_pps = response['result']['body']['TABLE_interface']['ROW_interface']['eth_outrate1_pkts']
+
+                        in_err = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_inerr'])
+                        out_err = int(response['result']['body']['TABLE_interface']['ROW_interface']['eth_outerr'])
+
+
+                        print table.format(value, str(rx_mbps), str(rx_pcnt) + '%', rx_pps, str(tx_mbps), str(tx_pcnt) + '%', tx_pps, in_err, out_err)
+                        sys.stdout.flush()
+                        Interface_Monit.rx_tx_dict.update({value:{'counter':counter, 'rx_mbps':rx_mbps, 'rx_pcnt':rx_pcnt, 'rx_pps':rx_pps, 'tx_mbps':tx_mbps, 'tx_pcnt':tx_pcnt, 'tx_pps':tx_pps, 'in_err':in_err, 'out_err':out_err}})
+ 
+
+
+
+    
+    #create a command to get the interface status
+    def interface_err(self):
+        interfaceob = Interface_Monit()
+        for i in Interface_Monit.interface_list:
             for key,value in i.items():
                 if (key == 'interface'):
                     m = re.search('Ethernet(.*)', value)
@@ -164,7 +197,6 @@ class Interface_Monit:
                         interfaceob.monit(cmd, slotport[0], slotport[1])
 
 
-    #interface monitoring status with details about input and output errors
     def status(self):
         global input_counter, output_counter, inerr_interface, outerr_interface
         input_counter = 0; output_counter=0; inerr_interface = []; outerr_interface = [];
@@ -178,6 +210,7 @@ class Interface_Monit:
             if (value == "Yes"):
                 output_counter = output_counter + 1;
                 outerr_interface.append(key)
+
 
         if (input_counter == 0):
             print "Number of Interfaces with Input Errors is : " + ' ' + str(input_counter)
@@ -196,16 +229,22 @@ class Interface_Monit:
 
     def updatetemp(self):
         interfaceob = Interface_Monit()
+        
+        Interface_Monit.rx_tx_dict = OrderedDict(sorted(Interface_Monit.rx_tx_dict.items(), key= lambda x: x[1]['counter']))
+
+
         templateVars = { "title" : "Nexus Switch Interface monitoring",
                          "description" : "Interface monitoring",
                          "chassis_id" : chassis_id,
-                         "os_version" : sys_version,
+                         "os_version" : sys_version, 
                          "in_err" : Interface_Monit.in_err,
                          "out_err" : Interface_Monit.out_err,
                          "input_counter" : input_counter,
                          "output_counter" : output_counter,
                          "inerr_interface" : inerr_interface,
-                         "outerr_interface" : outerr_interface
+                         "outerr_interface" : outerr_interface,
+                         "rx_tx_dict" : Interface_Monit.rx_tx_dict
+                         
 
         }
         with open(out_html, 'a') as f:
@@ -255,7 +294,8 @@ class Interface_Monit:
 if __name__ == '__main__':
     interfaceobj = Interface_Monit()
     interfaceobj.nexus_version()
-    interfaceobj.interfacemonit()
+    interfaceobj.interface_rx_tx()
+    interfaceobj.interface_err()
     interfaceobj.status()
     interfaceobj.updatetemp()
     interfaceobj.send_mail()
