@@ -4,11 +4,10 @@
 :Title:Interface Monitoring
 :Short Description:This script is to monitor Interface counters.
 :Long Description:This script is to monitor Interface counters like
-Errors etc.
-Input: command to check the interface status
+Errors, Drops, Utilization etc.
+:Input: command to check the interface status
      e.g show interface ethernet 1/1
-Output : Number of Input/Output Errors along with the interface
-details if errorrs exists
+:Output : Details of Drops,Errors and Utilization for all the interfaces
 
 
 """
@@ -30,8 +29,7 @@ errors  on the Nexus Switch
 class Interface_Monit:
 
 
-    in_err = {}
-    out_err = {}
+    in_err = {};   out_err = {}; interface_list = []; rx_tx_dict = {};
 
 
     #get the nexus switch version and chassis details
@@ -78,13 +76,58 @@ class Interface_Monit:
             Interface_Monit.in_err.update({key:"Yes"})
 
 
+    def interface_rx_tx(self):
+        table = "{0:16}{1:9}{2:9}{3:9}{4:9}{5:9}{6:9}{7:9}{8:9}"
+
+        out = json.loads(clid("show interface status"))
+        Interface_Monit.interface_list = out['TABLE_interface']['ROW_interface']
+
+
+        print '----------------------------------------------------------------------------------------------------------'
+        print table.format("Interface", "Rx Mbps", "Rx %", "Rx pps", "Tx Mbps", "Tx %", "Tx pps", "In Error", "Out Error")
+        print '----------------------------------------------------------------------------------------------------------'
+
+        counter = 0;
+        for i in Interface_Monit.interface_list:
+            for key,value in i.items():
+                counter = counter+1;
+                if (key == 'interface'):
+                    m = re.search('Ethernet(.*)', value)
+                    if m:
+                        found = m.group(1)
+                        slotport = found.split('/')
+
+                        cmd = "show interface ethernet"+str(slotport[0])+"/"+str(slotport[1])
+                        out = json.loads(clid(cmd))
+                       
+                        bw = int(out['TABLE_interface']['ROW_interface']['eth_bw'])
+                        rx_bps = int(out['TABLE_interface']['ROW_interface']['eth_inrate1_bits'])
+                        rx_mbps = round((rx_bps / 1000000), 1)
+                        rx_pcnt = round((rx_bps / 1000) * 100 / bw, 1)
+                        rx_pps = out['TABLE_interface']['ROW_interface']['eth_inrate1_pkts']
+
+                        tx_bps = int(out['TABLE_interface']['ROW_interface']['eth_outrate1_bits'])
+                        tx_mbps = round((tx_bps / 1000000), 1)
+                        tx_pcnt = round((tx_bps / 1000) * 100 / bw, 1)
+                        tx_pps = out['TABLE_interface']['ROW_interface']['eth_outrate1_pkts']
+
+                        in_err = int(out['TABLE_interface']['ROW_interface']['eth_inerr'])
+                        out_err = int(out['TABLE_interface']['ROW_interface']['eth_outerr'])
+
+
+                        print table.format(value, str(rx_mbps), str(rx_pcnt) + '%', rx_pps, str(tx_mbps), str(tx_pcnt) + '%', tx_pps, in_err, out_err)
+                        sys.stdout.flush()
+               
+
+
+
+
+
     #create a command to get the interface status
     def interfacemonit(self):
         interfaceob = Interface_Monit()
 
-        out = json.loads(clid("show interface status"))
-        interface_list = out['TABLE_interface']['ROW_interface']
-        for i in interface_list:
+        for i in Interface_Monit.interface_list:
             for key,value in i.items():
                 if (key == 'interface'):
                     m = re.search('Ethernet(.*)', value)
@@ -111,6 +154,7 @@ class Interface_Monit:
                 output_counter = output_counter + 1;
                 outerr_interface.append(key)
 
+
         if (input_counter == 0):
             print "Number of Interfaces with Input Errors is : " + ' ' + str(input_counter)
         else:
@@ -131,6 +175,7 @@ class Interface_Monit:
 if __name__ == '__main__':
     interfaceobj = Interface_Monit()
     interfaceobj.nexus_version()
+    interfaceobj.interface_rx_tx()
     interfaceobj.interfacemonit()
     interfaceobj.status()
 
