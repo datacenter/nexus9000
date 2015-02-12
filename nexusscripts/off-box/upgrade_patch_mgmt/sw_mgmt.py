@@ -13,7 +13,7 @@ import argparse
 import getpass
 import sys
 
-sys.path.append("../../nx-os/nxapi/utils")
+sys.path.append("../../../nx-os/nxapi/utils")
 from nxapi_utils import *
 from xmltodict import *
 
@@ -82,6 +82,15 @@ def check_image_incompatability(params, nxapi_handler):
     return check_status(dict_res)
 
 
+def remove_image(params, nxapi_handler):
+    print 'delete bootflash:' + params.image_filename + " no-prompt"
+    nxapi_handler.set_cmd('delete bootflash:' +\
+        params.image_filename + " no-prompt")
+    return_xml = nxapi_handler.send_req()
+    dict_res = xmltodict.parse(return_xml[1])
+    return check_status(dict_res)
+
+
 def check_install_all_impact(params, nxapi_handler):
     print 'show install all impact nxos bootflash:' +\
         params.image_filename
@@ -127,7 +136,7 @@ def initialize_args():
     parser.add_argument('--image_filename', '-f', dest='image_filename',
         help='Image filename.', required=True)
     parser.add_argument('--timeout', '-t', dest='timeout',
-        help='Connection Timeout.', default=600)
+        help='Connection Timeout.', type=int, default=600)
     parser.add_argument('--action', '-o', dest='action',
         help='Action Upgrade/Downgrade switch image.',
         required=True, choices = ['copy', 'upgrade', 'downgrade', 'remove'])
@@ -151,6 +160,10 @@ if __name__ == '__main__':
     elif params.action == 'downgrade':
         if not check_image_incompatability(params, nxapi_handler):
             print 'Failed to check image incompatability'
+            exit(-1)
+    elif params.action == 'remove':
+        if not remove_image(params, nxapi_handler):
+            print 'Failed to remove image'
             exit(-1)
 
     if params.action in {'upgrade','downgrade'}:
