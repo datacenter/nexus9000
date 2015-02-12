@@ -22,7 +22,7 @@ cmd_switchport_access_vlan = "switchport access vlan %s ;"
 cmd_switchport_host = "switchport host ;"
 cmd_switchport = "switchport ;"
 cmd_switchport_trunk_native = "switchport trunk native vlan %s ;"
-cmd_switchport_trunk_allowed_vlan = "switchport trunk allowed vlan %s %s;"
+cmd_switchport_trunk_allowed_vlan = "switchport trunk allowed vlan %s %s ;"
 cmd_default_int = "default interface int-if %s ;"
 cmd_switchport_autostate_exclude = "switchport autostate exclude ;"
 cmd_switchport_autostate_exclude_vlan =\
@@ -58,7 +58,7 @@ def create_l2_interface(params):
     if params.int_type == 'ethernet':
         cmd_str += cmd_int_ethernet % (params.slot, params.port)
     if params.int_type == 'port-channel':
-        cmd_str += cmd_int_port_channel % (params.slot, params.port)
+        cmd_str += cmd_int_port_channel % (params.port_channel_id)
     cmd_str += cmd_switchport
 
     if params.switchport_mode == 'access':
