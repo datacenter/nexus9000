@@ -10,7 +10,7 @@ Nexus Switch version is NXOS: version 6.1(2)I3(1)
 
   Steps :
 
-     a. Execute the script(interface_desc.py) on the required switch to update the interface description based on the cdp status. 
+     a. Execute the script(interface_desc_cdp.py) on the required switch to update the interface description based on the cdp protocol status for the cisco devices as neighbours. 
      b. command to execute : python filename
 
 
