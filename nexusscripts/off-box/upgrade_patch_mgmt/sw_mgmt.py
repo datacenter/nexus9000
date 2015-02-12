@@ -74,8 +74,8 @@ def verify_active_sessions(nxapi_handler):
     return check_status(dict_res)
 
 
-def check_image_incompatability(params, nxapi_handler):
-    nxapi_handler.set_cmd('show incompatability nxos bootflash:' +\
+def check_image_incompatibility(params, nxapi_handler):
+    nxapi_handler.set_cmd('show incompatibility nxos bootflash:' +\
         params.image_filename)
     return_xml = nxapi_handler.send_req()
     dict_res = xmltodict.parse(return_xml[1])
@@ -158,8 +158,8 @@ if __name__ == '__main__':
             print 'Failed to verify active sessions'
             exit(-1)
     elif params.action == 'downgrade':
-        if not check_image_incompatability(params, nxapi_handler):
-            print 'Failed to check image incompatability'
+        if not check_image_incompatibility(params, nxapi_handler):
+            print 'Failed to check image incompatibility'
             exit(-1)
     elif params.action == 'remove':
         if not remove_image(params, nxapi_handler):
