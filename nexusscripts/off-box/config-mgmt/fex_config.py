@@ -46,7 +46,7 @@ to_addresses = config.get('EmailDetails', 'to_addresses')
 #get the current working directory
 directory = os.getcwd()
 #html file and template location
-out_template = 'fex_10.1.150.12_.jinja'
+out_template = 'config_fex.jinja'
 out_html = directory+'/html/fex_'+ipaddress+'_.html'
 
 #remove the existing html file
