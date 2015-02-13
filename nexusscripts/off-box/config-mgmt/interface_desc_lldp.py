@@ -94,55 +94,63 @@ class Interface_Desc:
         sys_version = response['result']['body']['rr_sys_ver']
         #initialize the html file and update with version and chassis details
 
-    def cdp_status(self):
+
+    def lldp_status(self):
+
         intob = Interface_Desc()
 
-        #check CDP is enabled or not
-        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show cdp global","version":1},"id":1},]
+        #check lldp is enabled or not
+        #lldp_stat = "show lldp neighbors"
+        
+        #try:
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show lldp neighbors","version":1},"id":1},]
         response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
+        #except:
+        #print "LLDP is not enabled on the host switch"
+        #exit(1)
 
-        if (response['result']['body']['cdp_global_enabled'] == 'enabled'):
-            print "CDP is enabled on the Host Switch"
+        if ('result' in response.keys()):
+            print "LLDP is enabled on the host switch"
+            #payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show lldp neighbors","version":1},"id":1},]
+            #lldp_nei = "show lldp neighbors"
+            #status = json.loads(clid(lldp_nei))
+            #print status
+            print response
+            status_list = response['result']['body']['TABLE_nbor']['ROW_nbor']
+            lldp_dict = {}
 
-            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show cdp nei","version":1},"id":1},]
-            response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
-            status_list = response['result']['body']['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
-            cdp_dict = {}
-
-            
             if (isinstance(status_list, list)):
                 for i in status_list:
-                    for key,value in i.items():
-                        if (key == 'device_id'):
-                            cdp_dict.update({key:value})
-                        if (key == 'intf_id'):
-                            cdp_dict.update({key:value})
-                        if (key == 'port_id'):
-                            cdp_dict.update({key:value})
-                        if (key == 'capability'):
-                            cdp_dict.update({key:value})
-                    intob.updateinterface(cdp_dict)
+                   for key,value in i.items():
+                       if (key == 'chassis_id'):
+                           lldp_dict.update({'device_id':value})
+                       if (key == 'l_port_id'):
+                           lldp_dict.update({'intf_id':value})
+                       if (key == 'port_id'):
+                           lldp_dict.update({key:value})
+                       if (key == 'capability'):
+                           lldp_dict.update({key:''})
+                   intob.updateinterface(lldp_dict)
+
             elif (isinstance(status_list, dict)):
                 for key,value in status_list.items():
-                        if (key == 'device_id'):
-                            cdp_dict.update({key:value})
-                        if (key == 'intf_id'):
-                            cdp_dict.update({key:value})
-                        if (key == 'port_id'):
-                            cdp_dict.update({key:value})
-                        if (key == 'capability'):
-                            cdp_dict.update({key:value})
-                intob.updateinterface(cdp_dict)
+                       if (key == 'chassis_id'):
+                           lldp_dict.update({'device_id':value})
+                       if (key == 'l_port_id'):
+                           lldp_dict.update({'intf_id':value})
+                       if (key == 'port_id'):
+                           lldp_dict.update({key:value})
+                       if (key == 'capability'):
+                           lldp_dict.update({key:''})
+
+                intob.updateinterface(lldp_dict)
             else:
                 print "Not implemented for this response type"
 
 
-
         else:
-            print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
+            print "LLDP is not enabled on the Host Switch.Please check the LLDP manual to enable it. "
             exit(1)
-
-
 
 
 
@@ -230,8 +238,8 @@ class Interface_Desc:
 
 
 if __name__ == '__main__':
-    systemob = Interface_Desc()
-    systemob.nexus_version()
-    systemob.cdp_status()
-    systemob.updatetemp()
-    systemob.send_mail()
+    interfaceob = Interface_Desc()
+    interfaceob.nexus_version()
+    interfaceob.lldp_status()
+    interfaceob.updatetemp()
+    interfaceob.send_mail()
