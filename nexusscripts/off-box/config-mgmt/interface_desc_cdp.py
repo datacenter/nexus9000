@@ -96,32 +96,60 @@ class Interface_Desc:
 
     def cdp_status(self):
         intob = Interface_Desc()
-        global cdp_dict
-        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show cdp nei","version":1},"id":1},]
+
+        #check CDP is enabled or not
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show cdp global","version":1},"id":1},]
         response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
 
-        
-        status_list = []
-        cdp_dict = {}
-        status_list = response['result']['body']['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
-        
-        #print status_list
-        for i in status_list:
-            for key,value in i.items():
-                if (key == 'device_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'intf_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'port_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'capability'):
-                    cdp_dict.update({key:value})
-            #print cdp_dict
-            intob.updateinterface(cdp_dict)
+        if (response['result']['body']['cdp_global_enabled'] == 'enabled'):
+            print "CDP is enabled on the Host Switch"
+
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show cdp nei","version":1},"id":1},]
+            response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
+            status_list = response['result']['body']['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
+            cdp_dict = {}
+
+            
+            if (isinstance(status_list, list)):
+                for i in status_list:
+                    for key,value in i.items():
+                        if (key == 'device_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'intf_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'port_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'capability'):
+                            cdp_dict.update({key:value})
+                    intob.updateinterface(cdp_dict)
+            elif (isinstance(status_list, dict)):
+                for key,value in status_list.items():
+                        if (key == 'device_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'intf_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'port_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'capability'):
+                            cdp_dict.update({key:value})
+                intob.updateinterface(cdp_dict)
+            else:
+                print "Not implemented for this response type"
+
+
+
+        else:
+            print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
+            exit(1)
+
+
+
+
 
     #update the interface description  
     def updateinterface(self, data):
 
+        
         for key,value in data.iteritems():
             if (key == 'intf_id'):
                 cmd1 = "interface" + ' ' + value 
