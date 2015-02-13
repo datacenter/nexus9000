@@ -33,7 +33,7 @@ cmd_vlan_tag_native = "vlan dot1q tag native ;"
 cmd_sys_default_port_mode_2_l2 = "system default switchport ;"
 
 cmd_copy_running_startup = "copy running-config startup-config ;"
-cmd_show_interface = "show running-config interface %s  %s ;"
+cmd_show_interface = "show running-config interface %s %s ;"
 
 class Args(object):
 
@@ -94,7 +94,7 @@ def show_interface(params):
         cmd_str += cmd_show_interface %\
             (params.int_type, "%s/%s" %(params.slot, params.port))
     elif params.int_type == 'port-channel':
-        cmd_str += cmd_show_interface % params.int_type, params.port_channel_id
+        cmd_str += cmd_show_interface % (params.int_type, params.port_channel_id)
     print cmd_str
     return_xml = cli(cmd_str)
     print return_xml
