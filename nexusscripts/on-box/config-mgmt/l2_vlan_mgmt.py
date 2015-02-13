@@ -59,7 +59,10 @@ def create_l2_interface(params):
         cmd_str += cmd_int_ethernet % (params.slot, params.port)
     if params.int_type == 'port-channel':
         cmd_str += cmd_int_port_channel % (params.port_channel_id)
-    cmd_str += cmd_switchport
+
+    if params.int_type:
+        cmd_str += cmd_switchport
+        cmd_str += cmd_int_no_shutdown
 
     if params.switchport_mode == 'access':
         cmd_str += cmd_switchport_mode % (params.switchport_mode)
@@ -80,7 +83,6 @@ def create_l2_interface(params):
             cmd_str += cmd_switchport_trunk_allowed_vlan %\
                 (params.vlan_list, ' ')
 
-    cmd_str += cmd_int_no_shutdown
     cmd_str += cmd_copy_running_startup
 
     print cmd_str

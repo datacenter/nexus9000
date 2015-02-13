@@ -4,9 +4,9 @@
 :Title:Interface Description configuration
 :Short Description:To dynamically configure interface descriptions
 :Long Description: Check the CDP state and modify the interface description accordingly.
-Input: command to check the CDP state and based on the command output,
+:Input: command to check the CDP state and based on the command output,
        modify the description of the interface
-Output : interface description should be updated
+:Output : interface description should be updated
 
 """
 
@@ -44,7 +44,7 @@ to_addresses = config.get('EmailDetails', 'to_addresses')
 #get the current working directory
 directory = os.getcwd()
 #html file and template location
-out_template = 'interfacedesc_10.1.150.12_.jinja'
+out_template = 'update_interfacedesc.jinja'
 out_html = directory+'/html/interfacedesc_'+ipaddress+'_.html'
 
 #remove the existing html file
@@ -94,32 +94,70 @@ class Interface_Desc:
         sys_version = response['result']['body']['rr_sys_ver']
         #initialize the html file and update with version and chassis details
 
-    def cdp_status(self):
-        intob = Interface_Desc()
-        global cdp_dict
-        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show cdp nei","version":1},"id":1},]
-        response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
 
+    def lldp_status(self):
+
+        intob = Interface_Desc()
+
+        #check lldp is enabled or not
+        #lldp_stat = "show lldp neighbors"
         
-        status_list = []
-        cdp_dict = {}
-        status_list = response['result']['body']['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
-        
-        #print status_list
-        for i in status_list:
-            for key,value in i.items():
-                if (key == 'device_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'intf_id'):
-                    cdp_dict.update({key:value})
-                if (key == 'port_id'):
-                    cdp_dict.update({key:value})
-            #print cdp_dict
-            intob.updateinterface(cdp_dict)
+        #try:
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show lldp neighbors","version":1},"id":1},]
+        response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
+        #except:
+        #print "LLDP is not enabled on the host switch"
+        #exit(1)
+
+        if ('result' in response.keys()):
+            print "LLDP is enabled on the host switch"
+            #payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show lldp neighbors","version":1},"id":1},]
+            #lldp_nei = "show lldp neighbors"
+            #status = json.loads(clid(lldp_nei))
+            #print status
+            print response
+            status_list = response['result']['body']['TABLE_nbor']['ROW_nbor']
+            lldp_dict = {}
+
+            if (isinstance(status_list, list)):
+                for i in status_list:
+                   for key,value in i.items():
+                       if (key == 'chassis_id'):
+                           lldp_dict.update({'device_id':value})
+                       if (key == 'l_port_id'):
+                           lldp_dict.update({'intf_id':value})
+                       if (key == 'port_id'):
+                           lldp_dict.update({key:value})
+                       if (key == 'capability'):
+                           lldp_dict.update({key:''})
+                   intob.updateinterface(lldp_dict)
+
+            elif (isinstance(status_list, dict)):
+                for key,value in status_list.items():
+                       if (key == 'chassis_id'):
+                           lldp_dict.update({'device_id':value})
+                       if (key == 'l_port_id'):
+                           lldp_dict.update({'intf_id':value})
+                       if (key == 'port_id'):
+                           lldp_dict.update({key:value})
+                       if (key == 'capability'):
+                           lldp_dict.update({key:''})
+
+                intob.updateinterface(lldp_dict)
+            else:
+                print "Not implemented for this response type"
+
+
+        else:
+            print "LLDP is not enabled on the Host Switch.Please check the LLDP manual to enable it. "
+            exit(1)
+
+
 
     #update the interface description  
     def updateinterface(self, data):
 
+        
         for key,value in data.iteritems():
             if (key == 'intf_id'):
                 cmd1 = "interface" + ' ' + value 
@@ -136,8 +174,12 @@ class Interface_Desc:
 
                          ]
                 response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
-                print "Interface " + data['intf_id'] + ' ' + "updated description -------" + msg
-        
+                print "\n"
+                print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
+                if (data['capability']):
+                    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                    print data['capability']
+ 
     #update the jinja template with the data
     def updatetemp(self):
         systemob = Interface_Desc()
@@ -196,8 +238,8 @@ class Interface_Desc:
 
 
 if __name__ == '__main__':
-    systemob = Interface_Desc()
-    systemob.nexus_version()
-    systemob.cdp_status()
-    systemob.updatetemp()
-    systemob.send_mail()
+    interfaceob = Interface_Desc()
+    interfaceob.nexus_version()
+    interfaceob.lldp_status()
+    interfaceob.updatetemp()
+    interfaceob.send_mail()

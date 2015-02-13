@@ -59,7 +59,7 @@ class Interface_Desc:
             status_list = status['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
             cdp_dict = {}
 
-            if (status_list):
+            if (isinstance(status_list, list)):
                 for i in status_list:
                     for key,value in i.items():
                         if (key == 'device_id'):
@@ -71,6 +71,19 @@ class Interface_Desc:
                         if (key == 'capability'):
                             cdp_dict.update({key:value})
                     intob.updateinterface(cdp_dict)
+            elif (isinstance(status_list, dict)):
+                for key,value in status_list.items():
+                        if (key == 'device_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'intf_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'port_id'):
+                            cdp_dict.update({key:value})
+                        if (key == 'capability'):
+                            cdp_dict.update({key:value})
+                intob.updateinterface(cdp_dict)
+            else:
+                print "Not implemented for this response type"
 
         else:
             print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
