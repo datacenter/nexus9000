@@ -49,7 +49,7 @@ to_addresses = config.get('EmailDetails', 'to_addresses')
 #get the current working directory
 directory = os.getcwd() 
 #html file location
-out_template = 'interface_10.1.150.12_.jinja'
+out_template = 'monitor_interface.jinja'
 out_html = directory+'/html/interface_'+ipaddress+'_.html'
 
 

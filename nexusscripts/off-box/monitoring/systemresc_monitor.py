@@ -46,7 +46,7 @@ to_addresses = config.get('EmailDetails', 'to_addresses')
 #get the current working directory
 directory = os.getcwd()
 #html file and template location
-out_template = 'systemresc_10.1.150.12_.jinja'
+out_template = 'monitor_systemresc.jinja'
 out_html = directory+'/html/systemresc_'+ipaddress+'_.html'
 
 #remove the existing html file
