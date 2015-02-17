@@ -119,17 +119,17 @@ class Interface_Monit:
         part = MIMEText(content)
         msg.attach(part)
         try:
-            mailserver = smtplib.SMTP(server);
+            mailserver = smtplib.SMTP(server)
             # identify ourselves to smtp gmail client
-	    mailserver.ehlo();
+	    mailserver.ehlo()
             # secure our email with tls encryption
-	    mailserver.starttls();
+	    mailserver.starttls()
             # re-identify ourselves as an encrypted connection
-            mailserver.ehlo();
-            mailserver.login(username, password);
-            mailserver.sendmail(msg['From'],(msg['To'].split(',')),msg.as_string());
+            mailserver.ehlo()
+            mailserver.login(username, password)
+            mailserver.sendmail(msg['From'],(msg['To'].split(',')),msg.as_string())
 
-            mailserver.quit();
+            mailserver.quit()
             print "Successfully sent email"
 
         except Exception:
