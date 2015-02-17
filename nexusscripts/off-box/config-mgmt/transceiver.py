@@ -4,14 +4,15 @@ Script Information:
         Category: Monitoring
         Title: Syslog Monitoring
         Short Description: This script is to monitor transceiver speed at all the interfaces of switch.
-        Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch and it also helps in altering of speed specific to respective transceiver.
-        Once it changes its speed, it notifies the admin through sending a mail.
+        Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
 """
 import requests
 import json
 import os
 import ConfigParser
 import datetime
+import smtplib;
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -112,26 +113,23 @@ class Interface_Monit:
         msg = MIMEMultipart()
         msg['From'] = username
         msg['To'] = to_address
-        msg['Subject'] = 'Nexus 9000 Transceiver Monitoring Email' + ' ' + 'on' + ' ' + timestamp.strftime("%d/%m/%Y") + '@' + timestamp.strftime("%H:%M:%S")
+        msg['Subject'] = 'Nexus 9000 Transceiver Monitoring Email' + ' @ Interface ' + str(i) + '/' + str(j) + ' on ' + timestamp.strftime("%d/%m/%Y") + ' @ ' + timestamp.strftime("%H:%M:%S")
 
-	text = "Speed of a transceiver is altered with a speed of "+str(speed)+" at an interface ethernet "+str(i)+"/"+str(j)+"."
-        part = MIMEText(text, 'plain')
-
+	content = "Speed of an interface is set with "+str(speed)+" at an interface ethernet "+str(i)+"/"+str(j)+"."
+        part = MIMEText(content)
         msg.attach(part)
-
         try:
-            mailserver = smtplib.SMTP(server)
+            mailserver = smtplib.SMTP(server);
             # identify ourselves to smtp gmail client
-            mailserver.ehlo()
+	    mailserver.ehlo();
             # secure our email with tls encryption
-            mailserver.starttls()
+	    mailserver.starttls();
             # re-identify ourselves as an encrypted connection
-            mailserver.ehlo()
-            mailserver.login(username, password)
+            mailserver.ehlo();
+            mailserver.login(username, password);
+            mailserver.sendmail(msg['From'],(msg['To'].split(',')),msg.as_string());
 
-            mailserver.sendmail(msg['From'],(msg['To'].split(',')),msg.as_string())
-
-            mailserver.quit()
+            mailserver.quit();
             print "Successfully sent email"
 
         except Exception:
