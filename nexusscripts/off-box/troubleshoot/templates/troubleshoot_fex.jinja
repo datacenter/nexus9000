@@ -20,29 +20,20 @@
 <div id="fex_status">
 
 
-<table border=1 style=width:300px><thead><tr><th><font size=3 color=green>Status</font></th><th><font size=3 color=green>Updated Status</font></th></tr></thead>
+<table border=1 style=width:300px><thead><tr><td colspan=2 bgcolor=#5D7B9D><center><font size=4 color=black>FEX Status</font></center></td></tr></thead>
+
 <tbody>
+{% if status %}
 
-{% if earlierstat %}
-
-<tr><td>
-<label> {{ earlierstat }}</label>
-</td>
-{%endif  %}
-{%if currentstat %}
-<td>
-<label>{{ currentstat }}</label>
-</td>
-
-{%else %}
-
-<td>
-<label>FEX is already enabled</label>
-</td>
-
-{%endif %}
-
+<tr><label> {{ status }}</label>
 </tr>
+{%endif  %}
+{%if interface_stat %}
+<tr>
+<label>{{ interface_stat }}</label>
+</tr>
+{%endif  %}
+
 
 </tbody>
 
