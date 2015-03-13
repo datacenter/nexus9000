@@ -139,7 +139,7 @@ class Interface_Desc:
 
 
         else:
-            print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
+            print "CDP is not enabled on the Host Switch. "
             exit(1)
 
 
