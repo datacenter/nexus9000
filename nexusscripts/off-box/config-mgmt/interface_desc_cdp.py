@@ -92,7 +92,6 @@ class Interface_Desc:
         response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
         chassis_id = response['result']['body']['chassis_id']
         sys_version = response['result']['body']['rr_sys_ver']
-        #initialize the html file and update with version and chassis details
 
     def cdp_status(self):
         intob = Interface_Desc()
@@ -149,7 +148,8 @@ class Interface_Desc:
     #update the interface description  
     def updateinterface(self, data):
 
-        
+
+                
         for key,value in data.iteritems():
             if (key == 'intf_id'):
                 cmd1 = "interface" + ' ' + value 
@@ -170,7 +170,7 @@ class Interface_Desc:
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
                 if (data['capability']):
                     print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
-                    print data['capability']
+                    print (data['capability'])
  
     #update the jinja template with the data
     def updatetemp(self):
