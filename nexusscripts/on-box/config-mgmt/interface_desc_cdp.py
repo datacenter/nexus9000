@@ -86,7 +86,7 @@ class Interface_Desc:
                 print "Not implemented for this response type"
 
         else:
-            print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
+            print "CDP is not enabled on the Host Switch. "
             exit(1)
 
     #update the interface description
