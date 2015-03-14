@@ -94,26 +94,29 @@ class Interface_Desc:
                 print "Not implemented for this response type"
 
         else:
-            print "LLDP is not enabled on the Host Switch. "
+            print "LLDP is not enabled on the Host Switch."
             exit(1)
 
 
 
      #update the interface description
     def updateinterface(self, data):
-        print data
-        #for key,value in data.iteritems():
-        #    if (key == 'intf_id'):
-        #        cmd1 = "interface" + ' ' + value
-        #        desc = "description" + '  ' + "Connected to device" + ' ' + data['device_id'] + ' ' + "on" + ' ' + data['port_id']
-        #        msg = "Connected to device" + '  ' + data['device_id'] + '  ' + "on" + '   ' + data['port_id']
+        #print data
+        for key,value in data.iteritems():
+            if (key == 'intf_id'):
+                cmd1 = "interface" + ' ' + value
+                desc = "description" + '  ' + "Connected to device" + ' ' + data['device_id'] + ' ' + "on" + ' ' + data['port_id']
+                msg = "Connected to device" + '  ' + data['device_id'] + '  ' + "on" + '   ' + data['port_id']
 
-        #        cmd = "conf t" + ' ' + " ;" + ' ' + cmd1 + ' ' + ";" + ' ' + desc
-        #        cli(cmd)
-        #        print "\n"
-        #        print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
-        #        if (data['capability']):
-        #            print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                cmd = "conf t" + ' ' + " ;" + ' ' + cmd1 + ' ' + ";" + ' ' + desc
+                cli(cmd)
+                print "\n"
+                print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
+                if (data['capability']):
+                    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                    for i in data['capability']:
+                        print str(i)
+
         #            print data['capability']
 
 

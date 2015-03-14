@@ -86,7 +86,7 @@ class Interface_Desc:
                 print "Not implemented for this response type"
 
         else:
-            print "CDP is not enabled on the Host Switch. "
+            print "CDP is not enabled on the Host Switch.Please check the CDP manual to enable it. "
             exit(1)
 
     #update the interface description
@@ -103,7 +103,10 @@ class Interface_Desc:
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
                 if (data['capability']):
                     print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
-                    print  data['capability']
+                    for i in data['capability']:
+                        print str(i)
+
+                    #print  data['capability']
 
 
 
