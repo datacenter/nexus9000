@@ -94,7 +94,7 @@ class Interface_Desc:
                 print "Not implemented for this response type"
 
         else:
-            print "LLDP is not enabled on the Host Switch.Please check the LLDP manual to enable it. "
+            print "LLDP is not enabled on the Host Switch. "
             exit(1)
 
 
