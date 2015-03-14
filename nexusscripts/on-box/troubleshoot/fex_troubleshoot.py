@@ -13,7 +13,7 @@ associated interfaces etc
 
 import os,sys
 import json
-import  ConfigParser
+import ConfigParser
 from cli import *
 
 
@@ -59,9 +59,24 @@ class FEX_Troubleshoot:
 
         try:
             out = json.loads(clid("show interface fex-fabric"))
+            #print out
             status = out['TABLE_fex_fabric']['ROW_fex_fabric']
             FEX_Troubleshoot.stat = "On " + osversion + " Nexus Switch interfaces have detected a Fabric Extender uplink"
             print FEX_Troubleshoot.stat
+            print "Interfaces configured are:"
+
+            if (isinstance(status, list)):
+                for i in status:
+                    for key,value in i.items():
+                        if (key == 'fbr_port'):
+                            print value
+            elif (isinstance(status, dict)):
+                for key,value in status.items():
+                    if (key == 'fbr_port'):
+                        print value
+            else:
+                print "Not implemented for this response type"
+
         except:
             FEX_Troubleshoot.stat = "On " + osversion + " Nexus Switch interfaces are not configured to  FEX uplink"
             print FEX_Troubleshoot.stat
