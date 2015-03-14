@@ -38,6 +38,19 @@
 </tbody>
 
 </table>
+
+
+
+{%if interface_list %}
+<label><font size=4 color=coral>Interfaces configured are : </font></label>
+{% for j in interface_list %}
+<label><font size=3 color=black>{{ j }}</font></label><br>
+
+{% endfor %}
+{%endif  %}
+
+
+
 </div>
 
 

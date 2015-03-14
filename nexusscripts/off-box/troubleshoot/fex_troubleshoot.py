@@ -78,10 +78,10 @@ class FEX_Troubleshoot:
 
     stat = '';
     interface_stat = '';
+    interface_list = [];
     myheaders = {'content-type':'application/json-rpc'}
 
     url = "http://"+ipaddress+"/ins"
-    earlierstat = ''; currentstat = '';
 
     def render_template(self, template_filename, context):
         return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
@@ -111,6 +111,23 @@ class FEX_Troubleshoot:
             status =  response['result']['body']['TABLE_fex_fabric']['ROW_fex_fabric']
             FEX_Troubleshoot.stat = " Interfaces have detected a Fabric Extender uplink"
             print FEX_Troubleshoot.stat
+
+            if (isinstance(status, list)):
+                for i in status:
+                    for key,value in i.items():
+                        if (key == 'fbr_port'):
+                            print value
+                            FEX_Troubleshoot.interface_list.append(value)
+            elif (isinstance(status, dict)):
+                for key,value in status.items():
+                    if (key == 'fbr_port'):
+                       print value
+                       FEX_Troubleshoot.interface_list.append(value)
+            else:
+                print "Not implemented for this response type"
+
+
+
         except:
             FEX_Troubleshoot.stat = "Interfaces are not configured to  FEX uplink"
             print FEX_Troubleshoot.interface_stat
@@ -128,7 +145,8 @@ class FEX_Troubleshoot:
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
                          "status" : FEX_Troubleshoot.stat,
-                         "interface_stat" : FEX_Troubleshoot.interface_stat
+                         "interface_stat" : FEX_Troubleshoot.interface_stat,
+                         "interface_list" : FEX_Troubleshoot.interface_list
         }
         with open(out_html, 'a') as f:
              outputText = systemob.render_template(out_template, templateVars)
