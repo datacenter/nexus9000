@@ -6,6 +6,7 @@ Script Information:
         Short Description: This script is to monitor transceiver speed at all the interfaces of switch.
         Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
 """
+
 import requests
 import json
 import os
