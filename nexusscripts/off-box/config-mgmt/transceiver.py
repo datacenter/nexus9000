@@ -1,8 +1,8 @@
 """
 Script Information:
         Product Info: Nexus::9000::9516::NX-OS Release 6.2
-        Category: Monitoring
-        Title: Syslog Monitoring
+        Category: Configuration Management
+        Title: Transceiver auto speed detection and setup
         Short Description: This script is to monitor transceiver speed at all the interfaces of switch.
         Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
 """
