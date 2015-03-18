@@ -26,5 +26,6 @@ Note: If pip does not exist then install it with the command 'sudo apt-get insta
   Steps :
 
      a. Configuration file is reused from the interface description update (check the host details and email address)
-     b. verify the jinja templates exists or not. 
-     c. schedule the cron job for the python script e.g */15 * * * * cd /home/ubuntu/nexus9000/nexusscripts && python fex_config.py
+     b. Edit the configuration for the interface details e.g interfacetype = ethernet/fastethernet , interfacenumber = 1/12 , fexnumber = 102
+     c. verify the jinja templates exists or not. 
+     d. schedule the cron job for the python script e.g */15 * * * * cd /home/ubuntu/nexus9000/nexusscripts && python fex_config.py
