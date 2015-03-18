@@ -87,12 +87,14 @@ class Interface_Desc:
     #get the nexus switch version and chassis details
     def nexus_version(self):
 
-        global chassis_id, sys_version
+        global chassis_id, sys_version, hostname
         payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show version","version":1},"id":1},]
         response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
         chassis_id = response['result']['body']['chassis_id']
         sys_version = response['result']['body']['rr_sys_ver']
-        #initialize the html file and update with version and chassis details
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show hostname","version":1},"id":1},]
+        response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
+        hostname =  response['result']['body']['hostname']
 
 
     def lldp_status(self):
@@ -188,6 +190,7 @@ class Interface_Desc:
                          "description" : "Dynamically Update Interface Description",
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
+                         "hostname" : hostname,
                          "message" : Interface_Desc.interface_message
         }
         with open(out_html, 'a') as f:
