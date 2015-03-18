@@ -14,6 +14,7 @@
 <div id="nexusver">
   <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
   <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+  <p><font face=verdana size=5 color=orange> Hostname  :  {{ hostname }} </font></p>
 
 </div>
 
@@ -48,8 +49,10 @@
 
 </table>
 
+<br><br>
+
 {%if interface_list %}
-<label><font size=4 color=coral>Interfaces configured are : </font></label>
+<label><font size=4 color=coral>Interfaces configured to FEX : </font></label>
 {% for j in interface_list %}
 <label><font size=3 color=black>{{ j }}</font></label><br>
 

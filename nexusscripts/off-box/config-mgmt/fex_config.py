@@ -19,6 +19,7 @@ import os
 import requests
 import json
 import ConfigParser
+import argparse
 import datetime
 
 from jinja2 import Template
@@ -40,9 +41,6 @@ ipaddress = config.get('HostDetails', 'ipaddress')
 username = config.get('HostDetails', 'username')
 password = config.get('HostDetails', 'password')
 
-interfacetype = config.get('InterfaceDetails', 'interfacetype')
-interfacenumber = config.get('InterfaceDetails', 'interfacenumber')
-fexnumber = config.get('InterfaceDetails', 'fexnumber')
 
 #list of to addresses for the email
 to_addresses = config.get('EmailDetails', 'to_addresses')
@@ -73,6 +71,17 @@ elif (password == ''):
     exit(1)
 
 
+class Args(object):
+
+    def __init__(self, args):
+        self.interface_type = args.interface_type
+        self.interface_number = args.interface_number
+        self.fex_number = args.fex_number
+
+
+
+
+
 """
 
 Class to install/enable FEX on the Nexus Switch
@@ -90,14 +99,38 @@ class FEX_Config:
         return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
 
 
+    def initialize_args(self):
+
+        parser = argparse.ArgumentParser(
+                description='Nexus 9000 FEX configuration mgmt.',
+                epilog="""   """)
+
+        parser.add_argument('--interface-type', '-t', dest='interface_type',
+            help='Interface type',
+            choices={'ethernet', 'port-channel'})
+        parser.add_argument('--interface-number', '-s', dest='interface_number',
+            help="ethernet interface slot/port")
+        parser.add_argument('--fex-number', '-f', dest='fex_number',
+            help="fex number")
+
+        args = parser.parse_args()
+        return Args(args)
+
+
+
+
     #get the nexus switch version and chassis details
     def nexus_version(self):
 
-        global chassis_id, sys_version
+        global chassis_id, sys_version, hostname
         payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show version","version":1},"id":1},]
         response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
         chassis_id = response['result']['body']['chassis_id']
         sys_version = response['result']['body']['rr_sys_ver']
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show hostname","version":1},"id":1},]
+        response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
+        hostname = response['result']['body']['hostname']
+
 
     def fex_status(self):
         fexob = FEX_Config()
@@ -141,10 +174,10 @@ class FEX_Config:
              print FEX_Config.currentstat
 
 
-    def fex_inter_config(self):
+    def fex_inter_config(self, params):
 
-         inter_cmd = "interface" + ' ' + interfacetype + ' ' + interfacenumber
-         fex_cmd = "fex associate" + ' ' + fexnumber
+         inter_cmd = "interface" + ' ' + params.interface_type + ' ' + params.interface_number
+         fex_cmd = "fex associate" + ' ' + params.fex_number
          payload = [
 
         {"jsonrpc": "2.0","method": "cli","params": {"cmd": "conf t","version": 1},"id": 1},
@@ -192,6 +225,7 @@ class FEX_Config:
                          "description" : "FEX Configuration",
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
+                         "hostname" : hostname,
                          "earlierstat" : FEX_Config.earlierstat,
                          "currentstat" : FEX_Config.currentstat,
                          "interface_list" : FEX_Config.interface_list
@@ -245,8 +279,9 @@ class FEX_Config:
 
 if __name__ == '__main__':
     systemob = FEX_Config()
+    params = systemob.initialize_args()
     systemob.nexus_version()
     systemob.fex_status()
-    systemob.fex_inter_config()
+    systemob.fex_inter_config(params)
     systemob.updatetemp()
     systemob.send_mail()
