@@ -6,9 +6,9 @@
 :Long Description: Check the FEX state.If not installed,install the FEX.
 If not enabled ,enable the FEX.
 Input: command to check the FEX installation and based on the command output,
-       install the FEX.command to check FEX is enabled or not.
+       install the FEX.Interfaces to be configured.
        
-Output : FEX should be enabled
+Output : FEX should be enabled and interfaces should be configured.
 
 """
 
@@ -40,6 +40,10 @@ ipaddress = config.get('HostDetails', 'ipaddress')
 username = config.get('HostDetails', 'username')
 password = config.get('HostDetails', 'password')
 
+interfacetype = config.get('InterfaceDetails', 'interfacetype')
+interfacenumber = config.get('InterfaceDetails', 'interfacenumber')
+fexnumber = config.get('InterfaceDetails', 'fexnumber')
+
 #list of to addresses for the email
 to_addresses = config.get('EmailDetails', 'to_addresses')
 
@@ -62,7 +66,7 @@ if ((username and password) == ''):
     print "Please update the configuration file with Switch User Credentials"
     exit(1)
 elif (username == ''):
-    print "Please update the configuration file with Switch User Creentials "
+    print "Please update the configuration file with Switch User Crdentials "
     exit(1)
 elif (password == ''):
     print "Please update the configuration file with Switch User Credentials "
@@ -80,7 +84,8 @@ class FEX_Config:
 
     url = "http://"+ipaddress+"/ins"
     earlierstat = ''; currentstat = '';
-    
+    interface_list = [];    
+
     def render_template(self, template_filename, context):
         return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
 
@@ -136,6 +141,50 @@ class FEX_Config:
              print FEX_Config.currentstat
 
 
+    def fex_inter_config(self):
+
+         inter_cmd = "interface" + ' ' + interfacetype + ' ' + interfacenumber
+         fex_cmd = "fex associate" + ' ' + fexnumber
+         payload = [
+
+        {"jsonrpc": "2.0","method": "cli","params": {"cmd": "conf t","version": 1},"id": 1},
+
+        {"jsonrpc": "2.0","method": "cli","params": {"cmd": inter_cmd,"version": 1},"id": 2},
+        {"jsonrpc": "2.0","method": "cli","params": {"cmd": "switchport","version": 1},"id": 3},
+        {"jsonrpc": "2.0","method": "cli","params": {"cmd": "switchport mode fex-fabric","version": 1},"id": 4},
+        {"jsonrpc": "2.0","method": "cli","params": {"cmd": fex_cmd,"version": 1},"id": 5},
+
+        {"jsonrpc": "2.0","method": "cli","params": {"cmd": "exit","version": 1},"id": 6},
+
+                         ]
+
+         response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
+         #print response
+         payload = [
+
+          {"jsonrpc": "2.0","method": "cli","params": {"cmd": "show interface fex-fabric","version": 1},"id": 1},
+          ]
+         response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
+         print "Configured Interfaces to FEX :"
+         status =  response['result']['body']['TABLE_fex_fabric']['ROW_fex_fabric']
+         if (isinstance(status, list)):
+             for i in status:
+                 for key,value in i.items():
+                     if (key == 'fbr_port'):
+                         print value
+                         FEX_Config.interface_list.append(value)
+         elif (isinstance(status, dict)):
+             for key,value in status.items():
+                 if (key == 'fbr_port'):
+                     print value
+                     FEX_Config.interface_list.append(value)
+         else:
+             print "Not implemented for this response type"
+
+
+
+
+
     #update the jinja template with the data
     def updatetemp(self):
         systemob = FEX_Config()
@@ -144,7 +193,8 @@ class FEX_Config:
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
                          "earlierstat" : FEX_Config.earlierstat,
-                         "currentstat" : FEX_Config.currentstat
+                         "currentstat" : FEX_Config.currentstat,
+                         "interface_list" : FEX_Config.interface_list
         }
         with open(out_html, 'a') as f:
              outputText = systemob.render_template(out_template, templateVars)
@@ -197,5 +247,6 @@ if __name__ == '__main__':
     systemob = FEX_Config()
     systemob.nexus_version()
     systemob.fex_status()
+    systemob.fex_inter_config()
     systemob.updatetemp()
     systemob.send_mail()
