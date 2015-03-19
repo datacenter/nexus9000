@@ -79,6 +79,7 @@ class Interface_Desc:
 
     url = "http://"+ipaddress+"/ins"
     interface_message = {}
+    status = '';
     
     def render_template(self, template_filename, context):
         return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
@@ -95,6 +96,8 @@ class Interface_Desc:
         payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show hostname","version":1},"id":1},]
         response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
         hostname =  response['result']['body']['hostname']
+
+
     def cdp_status(self):
         intob = Interface_Desc()
 
@@ -121,6 +124,7 @@ class Interface_Desc:
                         if (key == 'port_id'):
                             cdp_dict.update({key:value})
                         if (key == 'capability'):
+                            #print value
                             cdp_dict.update({key:value})
                     intob.updateinterface(cdp_dict)
             elif (isinstance(status_list, dict)):
@@ -132,6 +136,7 @@ class Interface_Desc:
                         if (key == 'port_id'):
                             cdp_dict.update({key:value})
                         if (key == 'capability'):
+                            #print value
                             cdp_dict.update({key:value})
                 intob.updateinterface(cdp_dict)
             else:
@@ -141,6 +146,9 @@ class Interface_Desc:
 
         else:
             print "CDP is not enabled on the Host Switch. "
+            Interface_Desc.status = "CDP is not enabled on the Host Switch."
+            intob.updatetemp();
+            intob.send_mail()
             exit(1)
 
 
@@ -183,6 +191,7 @@ class Interface_Desc:
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
                          "hostname"  : hostname,
+                         "status" : Interface_Desc.status,
                          "message" : Interface_Desc.interface_message
         }
         with open(out_html, 'a') as f:

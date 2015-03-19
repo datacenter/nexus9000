@@ -79,7 +79,8 @@ class Interface_Desc:
 
     url = "http://"+ipaddress+"/ins"
     interface_message = {}
-    
+    status = '';
+        
     def render_template(self, template_filename, context):
         return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
 
@@ -101,24 +102,15 @@ class Interface_Desc:
 
         intob = Interface_Desc()
 
-        #check lldp is enabled or not
-        #lldp_stat = "show lldp neighbors"
         
-        #try:
         payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show lldp neighbors","version":1},"id":1},]
         response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
-        #except:
-        #print "LLDP is not enabled on the host switch"
-        #exit(1)
 
         if ('result' in response.keys()):
             print "LLDP is enabled on the host switch"
-            #payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show lldp neighbors","version":1},"id":1},]
-            #lldp_nei = "show lldp neighbors"
-            #status = json.loads(clid(lldp_nei))
-            #print status
-            print response
+            #print response
             status_list = response['result']['body']['TABLE_nbor']['ROW_nbor']
+            print status_list
             lldp_dict = {}
 
             if (isinstance(status_list, list)):
@@ -152,6 +144,10 @@ class Interface_Desc:
 
         else:
             print "LLDP is not enabled on the Host Switch. "
+            Interface_Desc.status = "LLDP is not enabled on the Host Switch."
+            intob.updatetemp();
+            intob.send_mail()
+
             exit(1)
 
 
@@ -191,6 +187,7 @@ class Interface_Desc:
                          "chassis_id" : chassis_id,
                          "os_version" : sys_version,
                          "hostname" : hostname,
+                         "status" : Interface_Desc.status,
                          "message" : Interface_Desc.interface_message
         }
         with open(out_html, 'a') as f:
