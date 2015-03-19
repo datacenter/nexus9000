@@ -113,6 +113,8 @@ class Interface_Desc:
             status_list = response['result']['body']['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
             cdp_dict = {}
 
+            print status_list
+
             
             if (isinstance(status_list, list)):
                 for i in status_list:
@@ -210,7 +212,7 @@ class Interface_Desc:
         msg = MIMEMultipart()
         msg['From'] = username
         msg['To'] = to_addresses
-        msg['Subject'] = 'Nexus 9000 Interface Description Update Email' + ' ' + 'on' + ' ' + timestamp.strftime("%d/%m/%Y") + '@' + timestamp.strftime("%H:%M:%S")
+        msg['Subject'] = 'Nexus 9000 Interface Description Update (CDP) Email' + ' ' + 'on' + ' ' + timestamp.strftime("%d/%m/%Y") + '@' + timestamp.strftime("%H:%M:%S")
 
         fp = open(out_html, 'rb')
         content = fp.read()
