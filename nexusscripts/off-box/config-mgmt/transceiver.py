@@ -2,11 +2,10 @@
 Script Information:
         Product Info: Nexus::9000::9516::NX-OS Release 6.2
         Category: Configuration Management
-        Title: Transceiver auto speed detection and setup
-        Short Description: This script is to monitor transceiver speed at all the interfaces of switch.
-        Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
+        Title: Transceiver Auto-speed-configuration
+        Short Description: This script is to auto configure the transceiver speed at all the available interfaces of switch.
+        Long Description: Helps in configuring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
 """
-
 import requests
 import json
 import os
@@ -18,6 +17,14 @@ import os.path
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from jinja2 import Template
+from jinja2 import Environment, FileSystemLoader
+
+PATH = os.getcwd()
+TEMPLATE_ENVIRONMENT = Environment(
+    autoescape=False,
+    loader=FileSystemLoader(os.path.join(PATH, 'templates')),
+    trim_blocks=False)
 
 #read the nexus configuration file
 config=ConfigParser.ConfigParser()
@@ -31,7 +38,33 @@ switchpassword = config.get('HOSTS', 'switchpassword')
 #list of to addresses for the email
 to_address = config.get('EMAIL', 'to_address')
 
-class Interface_Monit:
+#get the current working directory
+directory = os.getcwd()
+#html file and template location
+out_template = 'update_intspeed.jinja'
+out_html = directory+'/html/int_transciever_'+ipaddress+'_.html'
+
+#remove the existing html file
+if os.path.exists(out_html):
+    os.remove(out_html)
+
+#check the configuration details
+if (ipaddress == ''):
+    print "Please update the configuration file with Switch IPAddress"
+    exit(1)
+
+if ((switchuser and switchpassword) == ''):
+    print "Please update the configuration file with Switch User Credentials"
+    exit(1)
+elif (switchuser == ''):
+    print "Please update the configuration file with Switch User Credentials "
+    exit(1)
+elif (switchpassword == ''):
+    print "Please update the configuration file with Switch User Credentials "
+    exit(1)
+
+
+class Interface_Config:
 
     global url, myheaders
     
@@ -39,21 +72,21 @@ class Interface_Monit:
     
     # Messege Header
     myheaders={'content-type':'application/json-rpc'}
-
+    speed_dict = {}
     interface_list = []
     
+    def render_template(self, template_filename, context):
+        return TEMPLATE_ENVIRONMENT.get_template(template_filename).render(context)
 
-    # Scroll around the interfaces to monitor which interfaces have got transceivers and not
-    def interfacemonit(self):
-        interfaceobj = Interface_Monit()
-        global bitrate, status, hostname
 
-	# Check whether File exists or not; if yes delete.
-	if os.path.exists("speed.txt"):
-	    os.remove("speed.txt")
+    # Scroll around the interfaces to configure which interfaces have got transceivers and not
+    def interfaceconfig(self):
+        interfaceobj = Interface_Config()
+        global bitrate, status, hostname, chassis_id, sys_version
 
-	# Enable the feature Nexus API
-        payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "feature nxapi", "version": 1 }, "id": 2 }]
+
+        payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+		{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "feature nxapi", "version": 1 }, "id": 2 }]
 	requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
 
 	# Get the Hostname
@@ -62,13 +95,18 @@ class Interface_Monit:
         response = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
 	hostname = response['result']['body']['hostname']
 
+        payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"show version","version":1},"id":1},]
+        response = requests.post(url,data=json.dumps(payload),headers=myheaders,auth=(switchuser,switchpassword)).json()
+        chassis_id = response['result']['body']['chassis_id']
+        sys_version = response['result']['body']['rr_sys_ver']
+
 	# Get the available interfaces from the device
         cmd = "show interface status"
         payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": cmd, "version": 1 }, "id": 1 }]
         response = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
-        Interface_Monit.interface_list = response['result']['body']['TABLE_interface']['ROW_interface']
+        Interface_Config.interface_list = response['result']['body']['TABLE_interface']['ROW_interface']
         
-        for i in Interface_Monit.interface_list:
+        for i in Interface_Config.interface_list:
             for key,value in i.items():
                 if (key == 'interface'):
                     m = re.search('Ethernet(.*)', value)
@@ -81,6 +119,7 @@ class Interface_Monit:
                         response = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
 
                         status = response['result']['body']['TABLE_interface']['ROW_interface']['sfp']
+
                         # Check whether Transceiver is present or not at the interface
                         if (status == "present" ):
                             bitrate = response['result']['body']['TABLE_interface']['ROW_interface']['nom_bitrate']
@@ -89,74 +128,84 @@ class Interface_Monit:
                             pass
 	interfaceobj.send_mail()	
 
-    # Set the Nexus Transceiver speed
+    # Get the Nexus Transceiver info
     def transceiver(self, i, j, bitrate):
-        interfaceobj = Interface_Monit()
+        interfaceobj = Interface_Config()
 	print "\nAvailable Nominal bitrate/SFP speed at interface "+str(i)+"/"+str(j)+" = "+str(bitrate)
+
 	if (bitrate >= 100 and bitrate <= 1000):
-            payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 100", "version": 1 }, "id": 3 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
+            payload=[   { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 100", "version": 1 }, "id": 3 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
 	    out = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
-	    print "Speed Set to: " + str(bitrate)
-            print out
 	    err = interfaceobj.error_chk(out)
             if (err == 10):
 		interfaceobj.auto(i,j)
             else :
-            	# Append the changes to a file
-        	so = open("speed.txt","a+")
-                so.write("Speed at the ethernet interface "+str(i)+"/"+str(j)+" is set with "+str(bitrate)+".\n")
-                so.close()
-    		
+    		interfaceobj.speed_dict["Ethernet"+str(i)+"/"+str(j)] = "Speed is set with "+str(bitrate)
+
         elif (bitrate >= 1000 and bitrate <= 10000):
-            payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 1000", "version": 1 }, "id": 3 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
+            payload=[   { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 1000", "version": 1 }, "id": 3 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
 	    out = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
             err = interfaceobj.error_chk(out)
             if (err == 10):
                 interfaceobj.auto(i,j)
             else :
-		so = open("speed.txt","a+")
-                so.write("Speed at the ethernet interface "+str(i)+"/"+str(j)+" is set with "+str(bitrate)+".\n")
-                so.close()
+		interfaceobj.speed_dict["Ethernet"+str(i)+"/"+str(j)] = "Speed is set with "+str(bitrate)
 
         elif (bitrate >= 10000 and bitrate <= 40000):
-            payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 10000", "version": 1 }, "id": 3 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
+            payload=[   { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 10000", "version": 1 }, "id": 3 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
 	    out = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
 	    err = interfaceobj.error_chk(out)
 	    if (err == 10):
 		interfaceobj.auto(i,j)
 	    else :
-		so = open("speed.txt","a+")
-                so.write("Speed at the ethernet interface "+str(i)+"/"+str(j)+" is set with "+str(bitrate)+".\n")
-                so.close()
+#		key = "Ethernet"+str(i)+"/"+str(j)
+#		value = "Speed is set with "+str(bitrate)
+		interfaceobj.speed_dict["Ethernet"+str(i)+"/"+str(j)] = "Speed is set with "+str(bitrate)
 
         elif (bitrate >= 40000 and bitrate <= 100000):
-            payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 40000", "version": 1 }, "id": 3 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
+            payload=[	{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 40000", "version": 1 }, "id": 3 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 },
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
 	    out = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
             err = interfaceobj.error_chk(out)
             if (err == 10):
                 interfaceobj.auto(i,j)
             else :
-		so = open("speed.txt","a+")
-                so.write("Speed at the ethernet interface "+str(i)+"/"+str(j)+" is set with "+str(bitrate)+".\n")
-                so.close()
+		interfaceobj.speed_dict["Ethernet"+str(i)+"/"+str(j)] = "Speed is set with "+str(bitrate)
 
         elif (bitrate >= 100000):
-            payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 100000", "version": 1 }, "id": 3 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
+            payload=[	{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed 100000", "version": 1 }, "id": 3 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, 
+			{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
 	    out = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
             err = interfaceobj.error_chk(out)
             if (err == 10):
                 interfaceobj.auto(i,j)
             else :
-		so = open("speed.txt","a+")
-                so.write("Speed at the ethernet interface "+str(i)+"/"+str(j)+" is set with "+str(bitrate)+".\n")
-                so.close()
+		interfaceobj.speed_dict["Ethernet"+str(i)+"/"+str(j)] = "Speed is set with "+str(bitrate)
 
         else :
 	    interfaceobj.auto(i,j)
 
-    # Check whether the transceiver speed is different from general available set
+
     def error_chk(self,out):
-	interfaceobj = Interface_Monit()
+	interfaceobj = Interface_Config()
 	ret_val = 0
 	for x in out:
             for key,value in x.items():
@@ -173,12 +222,31 @@ class Interface_Monit:
 
     # Configure the interface speed to AUTO
     def auto(self, i, j):
-	interfaceobj = Interface_Monit()
-        payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed auto", "version": 1 }, "id": 3 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
+	interfaceobj = Interface_Config()
+        payload=[{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
+		{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "interface ethernet "+str(i)+"/"+str(j), "version": 1 }, "id": 2 }, 
+		{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "speed auto", "version": 1 }, "id": 3 }, 
+		{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "no shutdown", "version": 1 }, "id": 4 }, 
+		{ "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "end", "version": 1 }, "id": 5 }]
 	out = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
-	so = open("speed.txt","a+")
-        so.write("Speed at the ethernet interface "+str(i)+"/"+str(j)+" is set with AUTO.\n")
-        so.close()
+	interfaceobj.speed_dict["Ethernet"+str(i)+"/"+str(j)] = "Speed is set with AUTO."
+
+    #update the jinja template with the data
+    def updatetemp(self):
+        interfaceobj = Interface_Config()
+        print interfaceobj.speed_dict
+        templateVars = { "title" : "Nexus Switch Configuration management",
+                         "description" : "Dynamically Update Interface Description",
+                         "chassis_id" : chassis_id,
+                         "os_version" : sys_version,
+                         "hostname"  : hostname,
+			 "ipaddress" : ipaddress,
+                         "message" : interfaceobj.speed_dict
+        }
+        with open(out_html, 'a') as f:
+             outputText = interfaceobj.render_template(out_template, templateVars)
+             f.write(outputText)
+	     f.close()
 
     # Notify the Admin about changes taken care at different interfaces.
     def send_mail(self):
@@ -192,12 +260,12 @@ class Interface_Monit:
         msg = MIMEMultipart()
         msg['From'] = username
         msg['To'] = to_address
-        msg['Subject'] = 'Transceiver speed update at HOST: "' + hostname + '" with IP: ' + ipaddress + ' on ' + timestamp.strftime("%d/%m/%Y") + ' @ ' + timestamp.strftime("%H:%M:%S")
-
-	so = open("speed.txt","r")
+        msg['Subject'] = 'Transceiver speed updated at HOST: "' + hostname + '" with IP: ' + ipaddress + ' on ' + timestamp.strftime("%d/%m/%Y") + ' @ ' + timestamp.strftime("%H:%M:%S")
+	interfaceobj.updatetemp()
+	so = open(out_html,'r')
 	content = so.read()
 	so.close()
-	part = MIMEText(content)
+	part = MIMEText(content, 'html')
         msg.attach(part)
         try:
             mailserver = smtplib.SMTP(server);
@@ -220,5 +288,5 @@ class Interface_Monit:
 
 
 if __name__ == '__main__':
-    interfaceobj = Interface_Monit()
-    interfaceobj.interfacemonit()
+    interfaceobj = Interface_Config()
+    interfaceobj.interfaceconfig()
