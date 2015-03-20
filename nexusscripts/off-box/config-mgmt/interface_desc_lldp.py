@@ -60,7 +60,7 @@ if ((username and password) == ''):
     print "Please update the configuration file with Switch User Credentials"
     exit(1)
 elif (username == ''):
-    print "Please update the configuration file with Switch User Creentials "
+    print "Please update the configuration file with Switch User Credentials "
     exit(1)
 elif (password == ''):
     print "Please update the configuration file with Switch User Credentials "
@@ -110,7 +110,7 @@ class Interface_Desc:
             print "LLDP is enabled on the host switch"
             #print response
             status_list = response['result']['body']['TABLE_nbor']['ROW_nbor']
-            print status_list
+            #print status_list
             lldp_dict = {}
 
             if (isinstance(status_list, list)):
@@ -122,8 +122,8 @@ class Interface_Desc:
                            lldp_dict.update({'intf_id':value})
                        if (key == 'port_id'):
                            lldp_dict.update({key:value})
-                       if (key == 'capability'):
-                           lldp_dict.update({key:''})
+                       #if (key == 'capability'):
+                       #    lldp_dict.update({key:''})
                    intob.updateinterface(lldp_dict)
 
             elif (isinstance(status_list, dict)):
@@ -134,8 +134,8 @@ class Interface_Desc:
                            lldp_dict.update({'intf_id':value})
                        if (key == 'port_id'):
                            lldp_dict.update({key:value})
-                       if (key == 'capability'):
-                           lldp_dict.update({key:''})
+                       #if (key == 'capability'):
+                       #    lldp_dict.update({key:''})
 
                 intob.updateinterface(lldp_dict)
             else:
@@ -174,9 +174,9 @@ class Interface_Desc:
                 response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
                 print "\n"
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
-                if (data['capability']):
-                    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
-                    print data['capability']
+                #if (data['capability']):
+                #    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                #    print data['capability']
  
     #update the jinja template with the data
     def updatetemp(self):
