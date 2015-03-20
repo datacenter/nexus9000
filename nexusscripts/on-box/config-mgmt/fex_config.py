@@ -103,10 +103,16 @@ class FEX_Config:
 
     def fex_config(self, params):
 
-        cmd = "config terminal" + ' ' + ";" + ' ' + 'interface' + ' ' + params.interface_type + params.interface_number + ' ' + ";" + ' ' + "switchport" + ' ' + ";" + \
-        "switchport mode fex-fabric" + ' ' + ";" + ' ' +  "fex associate" + ' ' + params.fex_number + ' ' + ";"
+         try:
+            cmd = "config terminal" + ' ' + ";" + ' ' + 'interface' + ' ' + params.interface_type + params.interface_number + ' ' + ";" + ' ' + "switchport" + ' ' + ";"
+             "switchport mode fex-fabric" + ' ' + ";" + ' ' +  "fex associate" + ' ' + params.fex_number + ' ' + ";" + ' '
 
-        cli(cmd)
+            cli(cmd)
+        except Exception as e:
+            #print (e)
+            if (e):
+                print "Check the Interface and FEX numbers are valid."
+
         print "The configured interfaces are:"
         out = json.loads(clid("show interface fex-fabric"))
         #print out

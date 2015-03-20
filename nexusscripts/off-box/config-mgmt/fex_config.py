@@ -15,7 +15,7 @@ Output : FEX should be enabled and interfaces should be configured.
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-import os
+import os,sys
 import requests
 import json
 import ConfigParser
@@ -191,13 +191,26 @@ class FEX_Config:
 
                          ]
 
+
          response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
          #print response
+         run_once = 0;
+         for i in response:
+             if (run_once == 0):
+                 for key,value in i.items():
+                     if (key == 'error'):
+                         for k,v in value.items():
+                             if (k == 'message'):
+                                 print v + ".Interface " + params.interface_type + ' ' + params.interface_number  + '  ' + "is not configured to FEX.Check the Interface and FEX numbers are valid."
+                                 run_once = run_once + 1;    
+
+
          payload = [
 
           {"jsonrpc": "2.0","method": "cli","params": {"cmd": "show interface fex-fabric","version": 1},"id": 1},
           ]
          response = requests.post(FEX_Config.url,data=json.dumps(payload),headers=FEX_Config.myheaders,auth=(username,password)).json()
+         
          print "Configured Interfaces to FEX :"
          status =  response['result']['body']['TABLE_fex_fabric']['ROW_fex_fabric']
          if (isinstance(status, list)):
