@@ -111,7 +111,7 @@ class FEX_Config:
         except Exception as e:
             #print (e)
             if (e):
-                print "Check the Interface and FEX numbers are valid."
+                print " Interface " + params.interface_type +  ' ' + params.interface_number + ' ' + "is not configured to FEX.Check the Interface and FEX numbers are valid."
 
         print "The configured interfaces are:"
         out = json.loads(clid("show interface fex-fabric"))
