@@ -1,3 +1,4 @@
+from __future__ import print_function
 """
 Script Information:
         Product Info: Nexus::9000::9516::NX-OS Release 6.2
@@ -14,11 +15,13 @@ import ConfigParser
 import datetime
 import smtplib
 import os.path
+#from __future__ import print_function
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jinja2 import Template
 from jinja2 import Environment, FileSystemLoader
+
 
 PATH = os.getcwd()
 TEMPLATE_ENVIRONMENT = Environment(
@@ -50,17 +53,17 @@ if os.path.exists(out_html):
 
 #check the configuration details
 if (ipaddress == ''):
-    print "Please update the configuration file with Switch IPAddress"
+    print ("Please update the configuration file with Switch IPAddress")
     exit(1)
 
 if ((switchuser and switchpassword) == ''):
-    print "Please update the configuration file with Switch User Credentials"
+    print ("Please update the configuration file with Switch User Credentials")
     exit(1)
 elif (switchuser == ''):
-    print "Please update the configuration file with Switch User Credentials "
+    print ("Please update the configuration file with Switch User Credentials ")
     exit(1)
 elif (switchpassword == ''):
-    print "Please update the configuration file with Switch User Credentials "
+    print ("Please update the configuration file with Switch User Credentials ")
     exit(1)
 
 
@@ -131,7 +134,7 @@ class Interface_Config:
     # Get the Nexus Transceiver info
     def transceiver(self, i, j, bitrate):
         interfaceobj = Interface_Config()
-	print "\nAvailable Nominal bitrate/SFP speed at interface "+str(i)+"/"+str(j)+" = "+str(bitrate)
+	print ("\nAvailable Nominal bitrate/SFP speed at interface "+str(i)+"/"+str(j)+" = "+str(bitrate))
 
 	if (bitrate >= 100 and bitrate <= 1000):
             payload=[   { "jsonrpc": "2.0", "method": "cli", "params": { "cmd": "configure terminal", "version": 1 }, "id": 1 }, 
@@ -214,8 +217,8 @@ class Interface_Config:
                         if (a == 'data'):
                             for c,d in b.items():
                                 if (c == 'msg'):
-                                    print d
-                                    print "Transceiver value is set to an AUTO."
+                                    print (d.replace ("ERROR", "Note"), end = '')
+                                    print ("Transceiver value is set to an AUTO.")
 				    ret_val=10
 				    return ret_val
 
@@ -234,7 +237,6 @@ class Interface_Config:
     #update the jinja template with the data
     def updatetemp(self):
         interfaceobj = Interface_Config()
-        print interfaceobj.speed_dict
         templateVars = { "title" : "Nexus Switch Configuration management",
                          "description" : "Dynamically Update Interface Description",
                          "chassis_id" : chassis_id,
@@ -279,12 +281,12 @@ class Interface_Config:
             mailserver.sendmail(msg['From'],(msg['To'].split(',')),msg.as_string());
 
             mailserver.quit();
-            print "Successfully sent email"
-	    print ""
+            print ("Successfully sent email")
+	    print ("")
 
         except Exception:
-            print "Error: unable to send email, please check your Internet connection."
-	    print ""
+            print ("Error: unable to send email, please check your Internet connection.")
+	    print ("")
 
 
 if __name__ == '__main__':
