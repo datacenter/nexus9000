@@ -217,7 +217,7 @@ class Interface_Config:
                         if (a == 'data'):
                             for c,d in b.items():
                                 if (c == 'msg'):
-                                    print (d.replace ("ERROR", "Note"), end = '')
+                                    print (d.replace ("ERROR", "NOTE"), end = '')
                                     print ("Transceiver value is set to an AUTO.")
 				    ret_val=10
 				    return ret_val
