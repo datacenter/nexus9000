@@ -281,7 +281,7 @@ class Interface_Config:
             mailserver.sendmail(msg['From'],(msg['To'].split(',')),msg.as_string());
 
             mailserver.quit();
-            print ("Successfully sent email")
+            print ("\nSuccessfully sent email")
 	    print ("")
 
         except Exception:
