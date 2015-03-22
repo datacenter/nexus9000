@@ -112,10 +112,10 @@ class Interface_Desc:
                 cli(cmd)
                 print "\n"
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
-                if (data['capability']):
-                    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
-                    for i in data['capability']:
-                        print str(i)
+                #if (data['capability']):
+                #    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                    #for i in data['capability']:
+                    #    print str(i)
 
         #            print data['capability']
 
