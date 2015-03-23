@@ -125,9 +125,9 @@ class Interface_Desc:
                             cdp_dict.update({key:value})
                         if (key == 'port_id'):
                             cdp_dict.update({key:value})
-                        if (key == 'capability'):
+                        #if (key == 'capability'):
                             #print value
-                            cdp_dict.update({key:value})
+                       #     cdp_dict.update({key:value})
                     intob.updateinterface(cdp_dict)
             elif (isinstance(status_list, dict)):
                 for key,value in status_list.items():
@@ -137,9 +137,9 @@ class Interface_Desc:
                             cdp_dict.update({key:value})
                         if (key == 'port_id'):
                             cdp_dict.update({key:value})
-                        if (key == 'capability'):
+                        #if (key == 'capability'):
                             #print value
-                            cdp_dict.update({key:value})
+                        #    cdp_dict.update({key:value})
                 intob.updateinterface(cdp_dict)
             else:
                 print "Not implemented for this response type"
@@ -180,9 +180,9 @@ class Interface_Desc:
                 response = requests.post(Interface_Desc.url,data=json.dumps(payload),headers=Interface_Desc.myheaders,auth=(username,password)).json()
                 print "\n"
                 print "Interface" + ' ' + data['intf_id'] + ' ' + "description is updated as : " + ' ' + msg
-                if (data['capability']):
-                    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
-                    print (data['capability'])
+                #if (data['capability']):
+                #    print "Neighbor device" + ' ' + data['device_id'] + ' ' + "is capable as : "
+                #    print (data['capability'])
  
     #update the jinja template with the data
     def updatetemp(self):
