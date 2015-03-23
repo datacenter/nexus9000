@@ -1,3 +1,12 @@
+"""
+Script Information:
+        Product Info: Nexus::9000::9516::NX-OS Release 6.2
+        Category: Configuration Management
+        Title: Transceiver auto speed detection and setup
+        Short Description: This script is to monitor transceiver speed at all the interfaces of switch.
+        Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
+"""
+from __future__ import print_function
 import os,sys
 import json
 import re
@@ -54,17 +63,15 @@ class Interface_Monit:
     def transceiver(self, i, j, bitrate):
         interfaceobj = Interface_Monit()
         cmd_str = ''
-        print bitrate
-        print "Nominal bitrate/Transceiver speed at interface " + str(i) + "/" + str(j) + " = " + str(bitrate)
+        print ("\nNominal bitrate/Transceiver speed at interface " + str(i) + "/" + str(j) + " = " + str(bitrate))
         if (bitrate >= 100 and bitrate <= 1000):
             cmd_str += cmd_config_terminal
             cmd_str += cmd_str_ethernet % (str(i) +"/"+ str(j))
             cmd_str += cmd_speed_hundred
             cmd_str += cmd_str_no_shutdown
             cmd_str += cmd_end
-            print cmd_str
             return_xml = cli(cmd_str)
-            print return_xml
+            print (return_xml.replace ("ERROR", "NOTE"), end = '')
             err = re.search('ERROR(.*)', return_xml)
             if err:
                 interfaceobj.auto(i,j)
@@ -75,10 +82,9 @@ class Interface_Monit:
             cmd_str += cmd_speed_1k
             cmd_str += cmd_str_no_shutdown
             cmd_str += cmd_end
-            print cmd_str
             return_xml = cli(cmd_str)
-            print return_xml
             err = re.search('ERROR(.*)', return_xml)
+            print (return_xml.replace ("ERROR", "NOTE"), end = '')
             if err:
                 interfaceobj.auto(i,j)
 
@@ -88,10 +94,9 @@ class Interface_Monit:
             cmd_str += cmd_speed_10k
             cmd_str += cmd_str_no_shutdown
             cmd_str += cmd_end
-            print cmd_str
             return_xml = cli(cmd_str)
-            print return_xml
             err = re.search('ERROR(.*)', return_xml)
+            print (return_xml.replace ("ERROR", "NOTE"), end = '')
             if err:
                 interfaceobj.auto(i,j)
 
@@ -101,10 +106,9 @@ class Interface_Monit:
             cmd_str += cmd_speed_40k
             cmd_str += cmd_str_no_shutdown
             cmd_str += cmd_end
-            print cmd_str
             return_xml = cli(cmd_str)
-            print return_xml
             err = re.search('ERROR(.*)', return_xml)
+            print (return_xml.replace ("ERROR", "NOTE"), end = '')
             if err:
                 interfaceobj.auto(i,j)
 
@@ -114,10 +118,9 @@ class Interface_Monit:
             cmd_str += cmd_speed_100k
             cmd_str += cmd_str_no_shutdown
             cmd_str += cmd_end
-            print cmd_str
             return_xml = cli(cmd_str)
-            print return_xml
             err = re.search('ERROR(.*)', return_xml)
+            print (return_xml.replace ("ERROR", "NOTE"), end = '')
             if err:
                 interfaceobj.auto(i,j)
 
@@ -133,11 +136,10 @@ class Interface_Monit:
         cmd_str += cmd_speed_auto
         cmd_str += cmd_str_no_shutdown
         cmd_str += cmd_end
-        print "Changing Speed to AUTO"
-        print cmd_str
+        print ("Changing Speed to AUTO")
         return_xml = cli(cmd_str)
-        print return_xml
-
+        print (return_xml.replace ("ERROR", "NOTE"), end = '')
+        
 if __name__ == '__main__':
     interfaceobj = Interface_Monit()
     interfaceobj.interfacemonit()
