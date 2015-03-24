@@ -113,7 +113,7 @@ class Interface_Desc:
             status_list = response['result']['body']['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']
             cdp_dict = {}
 
-            print status_list
+            #print status_list
 
             
             if (isinstance(status_list, list)):
