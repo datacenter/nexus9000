@@ -279,9 +279,9 @@ import string
 # Will be used by set_config_file_src_location() function
 poap_log("INFO: show cdp neighbors interface %s" % cdp_interface)
 a = clid("show cdp neighbors interface %s" % cdp_interface)
-b = eval(a)
-cdpnei_switchName = b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id']
-cdpnei_intfName = b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id']
+b = json.loads(a)
+cdpnei_switchName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id'])
+cdpnei_intfName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id'])
 cdpnei_intfName = string.replace(cdpnei_intfName, "/", "_")
 
 # utility functions
@@ -543,4 +543,3 @@ install_it()
 
 poap_log_close()
 exit(0)
-
