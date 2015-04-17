@@ -399,6 +399,19 @@ class Nexus_Clean:
         except Exception as e:
             pass
 
+#####################################
+#                                   #
+#        Validation Commands        #
+#                                   #
+#####################################
+        try:
+	    payload={"ins_api": {"version": "1.0","type": "cli_show_ascii","chunk": "0","sid": "1",
+			"input": "sh run | inc chef ;sh run | inc puppet ;sh run | inc ntp ;sh virtual-service list","output_format": "json"}}
+ 	    response = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
+            print response
+        except Exception as e:
+            pass
+
 
 
 
