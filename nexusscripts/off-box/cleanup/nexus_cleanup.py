@@ -404,10 +404,28 @@ class Nexus_Clean:
 #        Validation Commands        #
 #                                   #
 #####################################
+
         try:
-	    payload={"ins_api": {"version": "1.0","type": "cli_show_ascii","chunk": "0","sid": "1",
-			"input": "sh run | inc chef ;sh run | inc puppet ;sh run | inc ntp ;sh virtual-service list","output_format": "json"}}
- 	    response = requests.post(url,data=json.dumps(payload), headers=myheaders,auth=(switchuser,switchpassword)).json()
+            payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc chef","output_format": "json"}}
+	    response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+	    print response
+        except Exception as e:
+            pass
+        try:
+            payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc puppet","output_format": "json"}}
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+            print response
+        except Exception as e:
+            pass
+        try:
+            payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc ntp","output_format": "json"}}
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+            print response
+        except Exception as e:
+            pass
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"sh virtual-service list","version":1},"id":4},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
             print response
         except Exception as e:
             pass
