@@ -15,6 +15,7 @@ import json
 import ConfigParser
 import datetime
 import time
+from validate import *
 
 #read the nexus configuration file
 config=ConfigParser.ConfigParser()
@@ -48,6 +49,7 @@ Class to cleanup the required nexus switch
 class Nexus_Clean:
 
     myheaders = {'content-type':'application/json-rpc'}
+    headers = {'content-type':'application/json'}
 
     url = "http://"+ipaddress+"/ins"
     
@@ -58,7 +60,8 @@ class Nexus_Clean:
         #execute the commands
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"conf t","version":1},"id":1},
-            {"jsonrpc":"2.0","method":"cli","params":{"cmd":"no feature bash-shell","version":1},"id":2},]
+            {"jsonrpc":"2.0","method":"cli","params":{"cmd":"no feature bash-shell","version":1},"id":2},
+            {"jsonrpc":"2.0","method":"cli","params":{"cmd":"terminal dont-ask","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
         except Exception as e:
             pass
@@ -99,74 +102,61 @@ class Nexus_Clean:
             pass
 
 #####################################################
-        #print "1"
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no onep","version":1},"id":1},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-           # print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"chef","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no server https://chef-server.onecloudinc.com:443","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no vrf management","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no validation-client-name chef-validator","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no interval 60","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no node-name N9K-Standalone-Pod-3","version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no domain-name onecloudinc.com","version":1},"id":8},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
 
 #####################################################################################
-        #print "2"
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no name-server 10.1.150.254","version":1},"id":1},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-         #   print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"virtual-service chef","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-          #  print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no activate","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-           # print response
         except Exception as e:
             pass
         try:
@@ -177,227 +167,222 @@ class Nexus_Clean:
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no chef","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no virtual-service chef","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
             time.sleep(60)
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no scheduler job name helloworld","version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no scheduler name helloworld","version":1},"id":8},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
     
 ###########################################################################################################
-        #print "3"
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"puppet","version":1},"id":1},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-         #   print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no master puppet-master.sakommu-lab.com","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-          #  print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no vrf management","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-           # print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no run-interval 60","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no name-server 10.1.150.254","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no activate","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"exit","version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
 ############################################################
-        #print "4"
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"conf t","version":1},"id":1},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-         #   print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"virtual-service puppet","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-          #  print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no activate","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-           # print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"conf t","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no puppet","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no virtual-service puppet","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
             time.sleep(60)
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no event manager applet foo","version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"virtual-service uninstall name chef","version":1},"id":8},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
             time.sleep(60)
         except Exception as e:
             pass
 ###############################################
-        #print "5"
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no vlan 500 - 555","version":1},"id":1},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-         #   print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no ip prefix-list puppet-list seq 5 permit 192.168.0.0/16","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-          #  print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no inter port 10","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-           # print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no ip access-list puppet-command-config","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no ntp server 10.1.150.51 use-vrf management","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no ntp server 10.1.150.52 use-vrf management","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"virtual-service uninstall name puppet","version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
             time.sleep(60)
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"virtual-service uninstall name chef","version":1},"id":8},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
             time.sleep(60)
         except Exception as e:
             pass
 ################################
-        #print "6"
-       # try:
-       #     payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"guestshell destroy","version":1},"id":1},]
-       #     response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-       #     print response
-       # except Exception as e:
-       #     pass
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"guestshell destroy","version":1},"id":1},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no virtual-service destroy","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-         #   print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"defa int e 1/10","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-          #  print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"defa int e 2/1","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-           # print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no int loo 99","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"copy r s","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"exit","version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"conf t","version":1},"id":8},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
+
+        
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"do delete bootflash:interface_rate.py","version":1},"id":9},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"do del bootflash:pingrange.py","version":1},"id":10},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"do del bootflash:scripts/helloworld.py","version":1},"id":11},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"do del bootflash:int_change.py","version":1},"id":12},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"do del bootflash:Int_Change.py","version":1},"id":13},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
+
+        try:
+            payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no terminal dont-ask","version":1},"id":14},]
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
+        except Exception as e:
+            pass
+
 
 #####################################
 #                                   #
@@ -406,31 +391,28 @@ class Nexus_Clean:
 #####################################
 
         try:
+            cmd = "sh run | inc chef"
             payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc chef","output_format": "json"}}
-	    response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-	    print response
+	    response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.headers,auth=(username,password)).json()
         except Exception as e:
             pass
         try:
             payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc puppet","output_format": "json"}}
-            response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            print response
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.headers,auth=(username,password)).json()
         except Exception as e:
             pass
         try:
             payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc ntp","output_format": "json"}}
-            response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            print response
+            response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.headers,auth=(username,password)).json()
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"sh virtual-service list","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            print response
         except Exception as e:
             pass
 
-
+        print "Script execution is Complete!!!"
 
 
 
