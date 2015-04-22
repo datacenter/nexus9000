@@ -109,49 +109,35 @@ class Nexus_Clean:
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"chef","version":1},"id":2},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
-            #cmd = "no node-name" + '' + ipaddress
             payload = [
-            #{"jsonrpc":"2.0","method":"cli","params":{"cmd":"conf t","version":1},"id":1},
             {"jsonrpc":"2.0","method":"cli","params":{"cmd":"no server https://chef-server.onecloudinc.com:443","version":1},"id":3},
-            #{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no vrf management","version":1},"id":3},
-            #{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no validation-client-name chef-validator","version":1},"id":4},
-            #{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no interval 60","version":1},"id":5},
-            #{"jsonrpc":"2.0","method":"cli","params":{"cmd":cmd,"version":1},"id":6}, 
-            # {"jsonrpc":"2.0","method":"cli","params":{"cmd":"no domain-name onecloudinc.com","version":1},"id":7},
-            #{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no name-server 10.1.150.254","version":1},"id":8}
             ]
  
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no vrf management","version":1},"id":4},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no validation-client-name chef-validator","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no interval 60","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
             cmd = "no node-name" + '' + ipaddress
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":cmd,"version":1},"id":7},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
@@ -173,7 +159,6 @@ class Nexus_Clean:
               {"jsonrpc":"2.0","method":"cli","params":{"cmd":"no activate","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
             time.sleep(60)
-            #print response
         except Exception as e:
             pass
         try:
@@ -185,13 +170,11 @@ class Nexus_Clean:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no virtual-service chef","version":1},"id":5},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
             time.sleep(60)
-            #print response
         except Exception as e:
             pass
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no chef","version":1},"id":6},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
 
@@ -220,7 +203,6 @@ class Nexus_Clean:
         try:
             payload = [{"jsonrpc":"2.0","method":"cli","params":{"cmd":"no vrf management","version":1},"id":3},]
             response = requests.post(Nexus_Clean.url,data=json.dumps(payload),headers=Nexus_Clean.myheaders,auth=(username,password)).json()
-            #print response
         except Exception as e:
             pass
         try:
@@ -406,7 +388,6 @@ class Nexus_Clean:
 #####################################
 
         try:
-            cmd = "sh run | inc chef"
             payload={"ins_api":{"version": "1.0","type":"cli_show_ascii","chunk": "0","sid": "1","input": "sh run | inc chef","output_format": "json"}}
 	    response = requests.post(Nexus_Clean.url,data=json.dumps(payload), headers=Nexus_Clean.headers,auth=(username,password)).json()
         except Exception as e:
