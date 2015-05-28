@@ -1,14 +1,14 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
 :Category:Troubleshooting
+:Box Type:On-Box
 :Title:FEX issues
 :Short Description:To identify FEX issues
-:Long Description: Check the FEX state
+:Long Description:Check the FEX state
 installed/enabled etc
-:Input: command to check the FEX installation,
+:Input:command to check the FEX installation,
 associated interfaces etc
-:Output : FEX status
-
+:Output:FEX status
 """
 
 import os,sys

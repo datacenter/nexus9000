@@ -1,11 +1,12 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
-:Category:Configuration Management
-:Title: VLAN Configuration Management
+:Category:Config-Mgmt
+:Box Type:On-Box
+:Title:VLAN Configuration Management
 :Short Description:This script is to perform L2 VLAN operations
 :Long Description:This script is to perform configuration operations
     of L2 VLAN interfaces
-:Input: N9K Address, username, password, L2 VLAN parameters
+:Input:N9K Address, username, password, L2 VLAN parameters
 :Output:status/result of the L2 VLAN configuration parameters
 """
 

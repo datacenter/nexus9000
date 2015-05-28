@@ -1,14 +1,14 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
 :Category:Monitoring
+:Box Type:On-Box
 :Title:System Resources Monitoring
 :Short Description:This script is to monitor system-level resources.
 :Long Description:This script is to monitor system-level resources
 like cpu utilization, memory usage etc
-Input: command to check the system resources status
+:Input:command to check the system resources status
               e.g show system resources
-Output : parse the json output and update the html file
-
+:Output:parse the json output and update the html file
 """
 
 import os,sys

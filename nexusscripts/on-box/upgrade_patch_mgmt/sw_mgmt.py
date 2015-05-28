@@ -1,11 +1,12 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
-:Category:OS Software Upgrade Management
-:Title: Software Management
+:Category:OS-Mgmt
+:Box Type:On-Box
+:Title:Software Management
 :Short Description:This script is to perform Software management operations 
 :Long Description:This script is to perform operations like 
     copy, upgrade, downgrade, remove switch images.
-:Input: N9K Address, username, password, tftp_address, image_filename, action
+:Input:N9K Address, username, password, tftp_address, image_filename, action
 :Output:status/result of the software management action
 """
 

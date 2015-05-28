@@ -8,7 +8,6 @@
 If not enabled ,enable the FEX.
 :Input:command to check the FEX installation and based on the command output,
        install the FEX.Interfaces to be configured.
-       
 :Output:FEX should be enabled and interfaces should be configured.
 """
 

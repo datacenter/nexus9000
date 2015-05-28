@@ -1,15 +1,14 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
 :Category:Monitoring
+:Box Type:On-Box
 :Title:Interface Monitoring
 :Short Description:This script is to monitor Interface counters.
 :Long Description:This script is to monitor Interface counters like
 Errors, Drops, Utilization etc.
-:Input: command to check the interface status
+:Input:command to check the interface status
      e.g show interface ethernet 1/1
-:Output : Details of Drops,Errors and Utilization for all the interfaces
-
-
+:Output:Details of Drops,Errors and Utilization for all the interfaces
 """
 
 import os,sys

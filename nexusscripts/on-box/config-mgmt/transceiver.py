@@ -1,10 +1,12 @@
-"""
-Script Information:
-        Product Info: Nexus::9000::9516::NX-OS Release 6.2
-        Category: Configuration Management
-        Title: Transceiver auto speed detection and setup
-        Short Description: This script is to monitor transceiver speed at all the interfaces of switch.
-        Long Description: Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
+"""Script Cataloging Information
+:Product Info:Nexus::9000::9516::NX-OS Release 6.2
+:Category:Config-Mgmt
+:Box Type:On-Box
+:Title:Transceiver auto speed detection and setup
+:Short Description:This script is to monitor transceiver speed at all the interfaces of switch.
+:Long Description:Helps in monitoring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
+:Input:No Input
+:Output:No Output
 """
 from __future__ import print_function
 import os,sys
