@@ -1,12 +1,12 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
-:Category:Cleanup Script
+:Category:Cleanup
+:Box Type:Off-Box
 :Title:Nexus Configuration Cleanup
 :Short Description:To clean up the switch configurations
 :Long Description: Cleanup the switch configurations
-:Input: command to disable the configurations
-:Output: Nexus switch is cleaned up
-
+:Input:command to disable the configurations
+:Output:Nexus switch is cleaned up
 """
 
 import os

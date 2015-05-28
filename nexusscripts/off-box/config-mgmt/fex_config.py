@@ -1,15 +1,15 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
-:Category:Configuration Management
+:Category:Config-Mgmt
+:Box Type:Off-Box
 :Title:FEX configuration
 :Short Description:To dynamically configure FEX
 :Long Description: Check the FEX state.If not installed,install the FEX.
 If not enabled ,enable the FEX.
-Input: command to check the FEX installation and based on the command output,
+:Input:command to check the FEX installation and based on the command output,
        install the FEX.Interfaces to be configured.
        
-Output : FEX should be enabled and interfaces should be configured.
-
+:Output:FEX should be enabled and interfaces should be configured.
 """
 
 import smtplib

@@ -1,12 +1,15 @@
+"""Script Cataloging Information
+:Product Info:Nexus::9000::9516::NX-OS Release 6.2
+:Category:Config-Mgmt
+:Box Type:Off-Box
+:Title:Transceiver Auto-speed-configuration
+:Short Description:This script is to auto configure the transceiver speed at all the available interfaces of switch.
+:Long Description:Helps in configuring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
+:Input:No Input
+:Output:No Output
+"""
+
 from __future__ import print_function
-"""
-Script Information:
-        Product Info: Nexus::9000::9516::NX-OS Release 6.2
-        Category: Configuration Management
-        Title: Transceiver Auto-speed-configuration
-        Short Description: This script is to auto configure the transceiver speed at all the available interfaces of switch.
-        Long Description: Helps in configuring any changes in speed at any Interfaces of the switch by setting specific supported speed of the transceiver.
-"""
 import requests
 import json
 import os

@@ -1,11 +1,12 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
-:Category:OS Software Patch Management
+:Category:OS-Mgmt
+:Box Type:Off-Box
 :Title:Patch Management
 :Short Description:This script is to perform patch related operations
 :Long Description:This script is to perform operations like 
     copy, activate, deactivate, remove patch files.
-:Input: N9K Address, username, password, tftp_address, smu_file, action
+:Input:N9K Address, username, password, tftp_address, smu_file, action
 :Output:status/result of the patch management action
 """
 

@@ -1,11 +1,12 @@
 """Script Cataloging Information
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
-:Category:Cleanup Script
+:Category:Cleanup
+:Box Type:Off-Box
 :Title:Nexus Configuration Cleanup
 :Short Description:To delete the switch bootflash configurations
-:Long Description: Delete the switch bootflash configurations
-:Input: command to delete the configurations
-:Output: Nexus switch is cleaned up from bootflash scripts
+:Long Description:Delete the switch bootflash configurations
+:Input:command to delete the configurations
+:Output:Nexus switch is cleaned up from bootflash scripts
 
 """
 
