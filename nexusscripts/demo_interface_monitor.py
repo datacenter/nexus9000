@@ -2,7 +2,7 @@
 :Product Info:Nexus::9000::9516::NX-OS Release 6.2
 :Category:Monitoring
 :Box Type:On-Box
-:Title:Demo Interface Monitoring
+:Title:Demo Interface Monitoring Script
 :Short Description:This script is to monitor Interface counters.
 :Long Description:This demo script is to monitor Interface counters like
 Errors, Drops, Utilization etc.
