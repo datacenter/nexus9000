@@ -4,7 +4,7 @@
 :Box Type:Off-Box
 :Title:FEX configuration
 :Short Description:To dynamically configure FEX
-:Long Description: Check the FEX state.If not installed,install the FEX.
+:Long Description: Check the FEX state.If not installed,install the FEX and try again.
 If not enabled ,enable the FEX.
 :Input:command to check the FEX installation and based on the command output,
        install the FEX.Interfaces to be configured.
