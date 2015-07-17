@@ -195,7 +195,7 @@ if cl_protocol:
 
 # setup log file and associated utils
 
-if now == None:
+if now is None:
   now=cli("show clock | sed 's/[ :]/_/g'");
 try:
     log_filename = "%s.%s" % (log_filename, now)
@@ -221,11 +221,11 @@ def abort_cleanup_exit () :
 
 # some argument sanity checks:
 
-if config_file_type == "serial_number" and serial_number == None: 
+if config_file_type == "serial_number" and serial_number is None:
     poap_log("ERR: serial-number required (to derive config name) but none given")
     exit(-1)
 
-if config_file_type == "location" and cdp_interface == None: 
+if config_file_type == "location" and cdp_interface is None:
     poap_log("ERR: interface required (to derive config name) but none given")
     exit(-1)
 
@@ -275,14 +275,15 @@ if not os.path.exists(image_dir_dst_u):
 import signal
 import string
 
-# Set CDP variables for location option
-# Will be used by set_config_file_src_location() function
-poap_log("INFO: show cdp neighbors interface %s" % cdp_interface)
-a = clid("show cdp neighbors interface %s" % cdp_interface)
-b = json.loads(a)
-cdpnei_switchName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id'])
-cdpnei_intfName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id'])
-cdpnei_intfName = string.replace(cdpnei_intfName, "/", "_")
+if config_file_type == "location" and cdp_interface is not None:
+    # Set CDP variables for location option
+    # Will be used by set_config_file_src_location() function
+    poap_log("INFO: show cdp neighbors interface %s" % cdp_interface)
+    a = clid("show cdp neighbors interface %s" % cdp_interface)
+    b = json.loads(a)
+    cdpnei_switchName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id'])
+    cdpnei_intfName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id'])
+    cdpnei_intfName = string.replace(cdpnei_intfName, "/", "_")
 
 # utility functions
 
@@ -334,7 +335,7 @@ def get_md5sum_src (file_name):
     rm_rf(md5_file_name_dst)
 
     ret=doCopy(protocol, hostname, md5_file_name_src, md5_file_name_dst, vrf, md5sum_timeout, username, password, False)
-    if ret == True:
+    if ret is True:
         sum=run_cli("show file %s | grep -v '^#' | head lines 1 | sed 's/ .*$//'" % md5_file_name_dst).strip('\n')
         poap_log("INFO: md5sum %s (.md5 file)" % sum)
         rm_rf(md5_file_name_dst)
