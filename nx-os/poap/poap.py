@@ -275,6 +275,8 @@ if not os.path.exists(image_dir_dst_u):
 import signal
 import string
 
+# This check seems redundant but it's here as a defensive programming measure
+# If the checks above change or go away, this code won't have to change
 if config_file_type == "location" and cdp_interface is not None:
     # Set CDP variables for location option
     # Will be used by set_config_file_src_location() function
@@ -284,6 +286,9 @@ if config_file_type == "location" and cdp_interface is not None:
     cdpnei_switchName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id'])
     cdpnei_intfName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id'])
     cdpnei_intfName = string.replace(cdpnei_intfName, "/", "_")
+else:
+    poap_log("ERR: interface required (to derive config name) but none given")
+    exit(-1)
 
 # utility functions
 
