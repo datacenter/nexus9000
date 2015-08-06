@@ -20,6 +20,23 @@ import urllib2
 from xml.dom import minidom
 import base64
 
+import os
+full_path = os.path.realpath(__file__)
+dir_name = os.path.dirname(full_path)
+
+# First things first: credentials. They should be parsed through sys.argv[] ideally ..
+ip="10.201.30.194"
+
+import sys
+sys.path.append(dir_name)
+
+import csv 
+cred_detail = []
+os.chdir(dir_name)
+for row in csv.reader(open("creds.csv","rb")):       
+    cred_detail.append(row)
+user=cred_detail[0][0]
+password=cred_detail[0][1]
 
 handlers = []
 hh = urllib2.HTTPHandler()
@@ -154,11 +171,9 @@ def getCDP(xml):
 #################
 #  MAIN MODULE  #
 #################
-
 # First things first: credentials. They should be parsed through sys.argv[] ideally ..
-ip=".."
-user=".."
-password=".."
+
+
 
 basicauth=CreateAuthHeader(user, password)
 cookie=GetiAPICookie(ip, basicauth, user, password)
@@ -175,8 +190,8 @@ print("Its serial number is {0}".format(proc_board_id))
 print("CPU is {0}\n".format(cpu_name))
 
 # Example 2: create 10 new VLANs
-vlan=555
-while vlan<=564:
+vlan=565
+while vlan<=570:
     dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, \
                                    "cli_conf", "vlan " + str(vlan) + " ; name Created_by_NXAPI"))
     if GetNodeDataDom(dom,"msg")=="Success":

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DOCMAP>
+    <Topic>
+        <Title>My Document</Title>
+    </Topic>
+    <Topic>
+        <Title>Overview</Title>
+        <Topic>
+                <Title>Platforms Supported</Title>
+        </Topic>
+    </Topic>
+</DOCMAP>

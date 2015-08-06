@@ -1,0 +1,265 @@
+<?xml version="1.0"?>
+<ins_api>
+  <type>cli_show</type>
+  <version>1.0</version>
+  <sid>eoc</sid>
+  <outputs>
+    <output>
+      <body>
+       <TABLE_modinfo>
+        <ROW_modinfo>
+         <modinf>2</modinf>
+         <ports>52</ports>
+         <modtype>48x1/10G SFP+ 4x40G Ethernet Module</modtype>
+         <model>N9K-X9564PX</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>3</modinf>
+         <ports>36</ports>
+         <modtype>36p 40G Ethernet Module</modtype>
+         <model>N9K-X9636PQ</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>21</modinf>
+         <ports>0</ports>
+         <modtype>Fabric Module</modtype>
+         <model>N9K-C9508-FM</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>22</modinf>
+         <ports>0</ports>
+         <modtype>Fabric Module</modtype>
+         <model>N9K-C9508-FM</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>23</modinf>
+         <ports>0</ports>
+         <modtype>Fabric Module</modtype>
+         <model>N9K-C9508-FM</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>24</modinf>
+         <ports>0</ports>
+         <modtype>Fabric Module</modtype>
+         <model>N9K-C9508-FM</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>25</modinf>
+         <ports>0</ports>
+         <modtype>Fabric Module</modtype>
+         <model>N9K-C9508-FM</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>26</modinf>
+         <ports>0</ports>
+         <modtype>Fabric Module</modtype>
+         <model>N9K-C9508-FM</model>
+         <status>ok</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>27</modinf>
+         <ports>0</ports>
+         <modtype>Supervisor Module</modtype>
+         <model>N9K-SUP-A</model>
+         <status>active *</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>29</modinf>
+         <ports>0</ports>
+         <modtype>System Controller</modtype>
+         <model>N9K-SC-A</model>
+         <status>active</status>
+        </ROW_modinfo>
+        <ROW_modinfo>
+         <modinf>30</modinf>
+         <ports>0</ports>
+         <modtype>System Controller</modtype>
+         <model>N9K-SC-A</model>
+         <status>standby</status>
+        </ROW_modinfo>
+       </TABLE_modinfo>
+       <TABLE_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>2</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.0</hw>
+         <slottype>LC2</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>3</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.0</hw>
+         <slottype>LC3</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>21</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.1</hw>
+         <slottype>FM1</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>22</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.1</hw>
+         <slottype>FM2</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>23</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.1</hw>
+         <slottype>FM3</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>24</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.1</hw>
+         <slottype>FM4</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>25</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.1</hw>
+         <slottype>FM5</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>26</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.1</hw>
+         <slottype>FM6</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>27</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.0</hw>
+         <slottype>SUP1</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>29</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.0</hw>
+         <slottype>SC1</slottype>
+        </ROW_modwwninfo>
+        <ROW_modwwninfo>
+         <modwwn>30</modwwn>
+         <sw>6.1(2)I2(2a)</sw>
+         <hw>1.0</hw>
+         <slottype>SC2</slottype>
+        </ROW_modwwninfo>
+       </TABLE_modwwninfo>
+       <TABLE_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>2</modmac>
+         <mac> 3c-08-f6-ff-e9-9c to 3c-08-f6-ff-e9-df  </mac>
+         <serialnum>SAL1752JR38</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>3</modmac>
+         <mac> 7c-69-f6-6e-e3-ac to 7c-69-f6-6e-e4-3f  </mac>
+         <serialnum>SAL1739DEZ4</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>21</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1748H02Z</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>22</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1745G1S8</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>23</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1745G1SU</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>24</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1745FYK4</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>25</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1745G1W4</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>26</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1745FYNY</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>27</modmac>
+         <mac> c0-67-af-a0-e1-e8 to c0-67-af-a0-e1-f9  </mac>
+         <serialnum>SAL1739DAU0</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>29</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1741E6S6</serialnum>
+        </ROW_modmacinfo>
+        <ROW_modmacinfo>
+         <modmac>30</modmac>
+         <mac> NA </mac>
+         <serialnum>SAL1743F1P6</serialnum>
+        </ROW_modmacinfo>
+       </TABLE_modmacinfo>
+       <TABLE_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>2</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>3</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>21</mod>
+         <diagstatus>Fail</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>22</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>23</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>24</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>25</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>26</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>27</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>29</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+        <ROW_moddiaginfo>
+         <mod>30</mod>
+         <diagstatus>Pass</diagstatus>
+        </ROW_moddiaginfo>
+       </TABLE_moddiaginfo>
+      </body>
+      <input>show mod</input>
+      <msg>Success</msg>
+      <code>200</code>
+    </output>
+  </outputs>
+</ins_api>
