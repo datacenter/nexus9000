@@ -19,6 +19,8 @@
 
 import os
 import time
+import re
+import sys
 from cli import *
 
 # **** Here are all variables that parametrize this script **** 
@@ -72,13 +74,10 @@ config_file_type        = "static"
 # parameters passed through environment:
 # TODO: use good old argv[] instead, using env is bad idea.
 # pid is used for temp file name: just use getpid() instead!
-# serial number should be gotten from "show version" or something!
 pid=""
 if os.environ.has_key('POAP_PID'):
     pid=os.environ['POAP_PID']
-serial_number=None
-if os.environ.has_key('POAP_SERIAL'):
-    serial_number=os.environ['POAP_SERIAL']
+serial_number = cli('show inventory chassis | grep SN:').rstrip().split(" ")[-1]
 cdp_interface=None
 if os.environ.has_key('POAP_INTF'):
     cdp_interface=os.environ['POAP_INTF']
@@ -100,9 +99,6 @@ now="%d_%d_%d" % (t.tm_hour, t.tm_min, t.tm_sec)
 # for no seeminly good reason: we allow to overwrite those by passing
 # argv, this is usufull when testing the script from vsh (even simple
 # script have many cases to test, going through a reboto takes too long)
-
-import sys
-import re
 
 cl_cdp_interface=None  # Command Line version of cdp-interface
 cl_serial_number=None  # can overwrite the corresp. env var
