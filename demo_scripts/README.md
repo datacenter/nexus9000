@@ -6,7 +6,7 @@ These scripts were developed and tested on a Nexus 9000 C9372PX chassis running 
 
 Summary
 ========
-1. find_freeip.py : Pings a range of IP addresses then prints which are UP followed by a summary of addresses that are unused.
+1. __find_freeip.py__ : Pings a range of IP addresses then prints which are UP followed by a summary of addresses that are unused.
 2. sh_switch_details.py : Displays specific details from neighbor based on its IP address. Demonstrates use of a single programmatic Python instruction versus a series of CLI commands to obtain the same information.
 3. cdp.py : Configures interface descriptions based on CDP information.
 4. lldp.py : Configured interface descriptions based on LLDP information.
