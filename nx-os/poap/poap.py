@@ -275,21 +275,6 @@ if not os.path.exists(image_dir_dst_u):
 import signal
 import string
 
-# This check seems redundant but it's here as a defensive programming measure
-# If the checks above change or go away, this code won't have to change
-if config_file_type == "location" and cdp_interface is not None:
-    # Set CDP variables for location option
-    # Will be used by set_config_file_src_location() function
-    poap_log("INFO: show cdp neighbors interface %s" % cdp_interface)
-    a = clid("show cdp neighbors interface %s" % cdp_interface)
-    b = json.loads(a)
-    cdpnei_switchName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id'])
-    cdpnei_intfName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id'])
-    cdpnei_intfName = string.replace(cdpnei_intfName, "/", "_")
-else:
-    poap_log("ERR: interface required (to derive config name) but none given")
-    exit(-1)
-
 # utility functions
 
 def run_cli (cmd):
@@ -526,14 +511,26 @@ def set_config_file_src_serial_number ():
     config_file_src = "%s.%s" % (config_file_src, serial_number)
     poap_log("INFO: Selected config filename (serial_number) : %s" % config_file_src)
 
-if config_file_type == "location":
+# This check seems redundant but it's here as a defensive programming measure
+# If the checks above change or go away, this code won't have to change
+if config_file_type == "location" and cdp_interface is not None:
+    # Set CDP variables for location option
+    # Will be used by set_config_file_src_location() function
+    poap_log("INFO: show cdp neighbors interface %s" % cdp_interface)
+    a = clid("show cdp neighbors interface %s" % cdp_interface)
+    b = json.loads(a)
+    cdpnei_switchName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['device_id'])
+    cdpnei_intfName = str(b['TABLE_cdp_neighbor_brief_info']['ROW_cdp_neighbor_brief_info']['port_id'])
+    cdpnei_intfName = string.replace(cdpnei_intfName, "/", "_")
+elif config_file_type == "location":
     # set source config file based on switch's location
     set_config_file_src_location()
-
-if config_file_type == "serial_number": 
+elif config_file_type == "serial_number": 
     #set source config file based on switch's serial number
     set_config_file_src_serial_number()
-
+else:
+    poap_log("ERR: Either config_file_type is not valid or interface was not given and location can not be derived.")
+    exit(-1)
 
 # finally do it
 
