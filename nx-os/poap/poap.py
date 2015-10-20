@@ -18,7 +18,13 @@
 # done by this script itself.
 
 import os
+import re
+import shutil
+import signal
+import string
+import sys
 import time
+
 from cli import *
 
 # **** Here are all variables that parametrize this script **** 
@@ -100,9 +106,6 @@ now="%d_%d_%d" % (t.tm_hour, t.tm_min, t.tm_sec)
 # for no seeminly good reason: we allow to overwrite those by passing
 # argv, this is usufull when testing the script from vsh (even simple
 # script have many cases to test, going through a reboto takes too long)
-
-import sys
-import re
 
 cl_cdp_interface=None  # Command Line version of cdp-interface
 cl_serial_number=None  # can overwrite the corresp. env var
@@ -264,16 +267,12 @@ system_image_src        = "%s/%s"       % (image_dir_src, system_image_src)
 # directory
 image_dir_dst_u="/%s" % image_dir_dst.replace(":", "/") # unix path: cli's rmdir not working!
 
-import shutil
 try: shutil.rmtree("%s.new" % image_dir_dst_u)
 except: pass
 os.mkdir("%s.new" % image_dir_dst_u)
 
 if not os.path.exists(image_dir_dst_u):
     os.mkdir(image_dir_dst_u)
-
-import signal
-import string
 
 # utility functions
 
