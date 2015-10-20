@@ -78,13 +78,10 @@ config_file_type        = "static"
 # parameters passed through environment:
 # TODO: use good old argv[] instead, using env is bad idea.
 # pid is used for temp file name: just use getpid() instead!
-# serial number should be gotten from "show version" or something!
 pid=""
 if os.environ.has_key('POAP_PID'):
     pid=os.environ['POAP_PID']
-serial_number=None
-if os.environ.has_key('POAP_SERIAL'):
-    serial_number=os.environ['POAP_SERIAL']
+serial_number = cli('show inventory chassis | grep SN:').rstrip().split(" ")[-1]
 cdp_interface=None
 if os.environ.has_key('POAP_INTF'):
     cdp_interface=os.environ['POAP_INTF']
