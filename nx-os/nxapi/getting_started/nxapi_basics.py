@@ -16,31 +16,10 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License. 
 
-import urllib2
 from xml.dom import minidom
-import base64
+import requests
 
-
-handlers = []
-hh = urllib2.HTTPHandler()
-hh.set_http_debuglevel(0)
-handlers.append(hh)
-
-def CreateAuthHeader(username,password):
-    base64string = base64.encodestring('%s:%s' % (username, password))[:-1]
-    return ("Basic %s" % base64string)
-
-def GetiAPICookie(ip_addr, authheader, username, password):
-    global password_mgr
-    url = 'http://'+ip_addr+'/ins/'
-
-    # create "opener" (OpenerDirector instance)
-    opener = urllib2.build_opener(*handlers)
-    opener.addheaders = [('Authorization', authheader),]
-    # Install the opener.
-    # Now all calls to urllib2.urlopen use our opener.
-    urllib2.install_opener(opener)
-
+def GetiAPICookie(url, username, password):
     xml_string="<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> \
       <ins_api>                         \
       <version>0.1</version>            \
@@ -50,25 +29,15 @@ def GetiAPICookie(ip_addr, authheader, username, password):
       <input>show clock</input>         \
       <output_format>xml</output_format>\
       </ins_api>"
-
-    # Call iAPI with show clock just to get a response that contains a cookie
-    req = urllib2.Request(url=url, data=xml_string,)
-
     try:
-      response = urllib2.urlopen(req)
-    except urllib2.URLError, e:
-      print e.code
-      print e.read()
+        r = requests.post(url, data=xml_string, auth=(username, password))
+    except requests.exceptions.ConnectionError as e:
+        print "Connection Error"
     else:
-      rawcookie=response.info().getheaders('Set-Cookie')
-      return rawcookie[0]
+        return r.headers['Set-Cookie']
 
-
-def ExecuteiAPICommand(ip_addr, cookie, authheader, cmd_type, cmd):
-    url = 'http://'+ip_addr+'/ins/'
-    opener = urllib2.build_opener(*handlers)
-    opener.addheaders = [('Cookie', cookie),]
-    urllib2.install_opener(opener)
+def ExecuteiAPICommand(url, cookie, username, password, cmd_type, cmd):
+    headers = {'Cookie': cookie}
 
     xml_string="<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?> \
      <ins_api>                          \
@@ -80,17 +49,12 @@ def ExecuteiAPICommand(ip_addr, cookie, authheader, cmd_type, cmd):
      <output_format>xml</output_format> \
      </ins_api>"
 
-    req = urllib2.Request(url=url,
-                           data=xml_string,
-                           headers={'Authorization': authheader})
-
     try:
-     response = urllib2.urlopen(req)
-    except urllib2.URLError, e:
-     print e.code
-     print e.read()
+        r = requests.post(url, headers=headers, data=xml_string, auth=(username, password))
+    except requests.exceptions.ConnectionError as e:
+        print "Connection Error"
     else:
-     return response
+        return r.text
 
 def GetNodeDataDom(dom,nodename):
     # given a XML document, find an element by name and return it as a string
@@ -157,14 +121,14 @@ def getCDP(xml):
 
 # First things first: credentials. They should be parsed through sys.argv[] ideally ..
 ip=".."
+url = 'http://'+ip+'/ins/'
 user=".."
 password=".."
 
-basicauth=CreateAuthHeader(user, password)
-cookie=GetiAPICookie(ip, basicauth, user, password)
+cookie=GetiAPICookie(url, user, password)
 
 # Example 1: obtain hostname, chassis ID, NXOS version, serial number
-dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, "cli_show", "show version"))
+dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, "cli_show", "show version"))
 host_name=GetNodeDataDom(dom,"host_name")
 chassis_id=GetNodeDataDom(dom,"chassis_id")
 kickstart_ver_str=GetNodeDataDom(dom,"kickstart_ver_str")
@@ -175,16 +139,14 @@ print("Its serial number is {0}".format(proc_board_id))
 print("CPU is {0}\n".format(cpu_name))
 
 # Example 2: create 10 new VLANs
-vlan=555
-while vlan<=564:
-    dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, \
+for vlan in range(555, 565):
+    dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, \
                                    "cli_conf", "vlan " + str(vlan) + " ; name Created_by_NXAPI"))
     if GetNodeDataDom(dom,"msg")=="Success":
         print("Config mode: Vlan %s created" % vlan)
-    vlan+=1
-    
+
 # Example 3: create a new loopback interface
-dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, "cli_conf", \
+dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, "cli_conf", \
                                    "interface loopback 99 ; \
                                     ip addr 9.9.9.9/32 ; \
                                     descr Created by Python iAPI code"))
@@ -192,13 +154,13 @@ if GetNodeDataDom(dom,"msg")=="Success":
     print("Config mode: Loopback 99 created")
 
 # Example 4: delete one of the VLANs we created
-dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, \
+dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, \
                                    "cli_conf", "no vlan 444"))
 if GetNodeDataDom(dom,"msg")=="Success":
     print("Config mode: Vlan 444 deleted")
 
 # Example 5: iterate over "show modules"
-dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, "cli_show", "show mod"))
+dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, "cli_show", "show mod"))
 moddict=getModules(dom)
 print("\nList of modules:\n================")
 for module in sorted(moddict.keys()):
@@ -209,7 +171,7 @@ for module in sorted(moddict.keys()):
                          moddict[module]['status'])
 
 # Example 6: get CDP neighbors
-dom = minidom.parse(ExecuteiAPICommand(ip, cookie, basicauth, "cli_show", "show cdp neighbors detail"))
+dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, "cli_show", "show cdp neighbors detail"))
 cdpdict=getCDP(dom)
 print("\nCDP Neighbors:\n==============")
 for interface in sorted(cdpdict.keys()):
