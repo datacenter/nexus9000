@@ -140,14 +140,12 @@ print("Its serial number is {0}".format(proc_board_id))
 print("CPU is {0}\n".format(cpu_name))
 
 # Example 2: create 10 new VLANs
-vlan=555
-while vlan<=564:
+for vlan in range(555, 565):
     dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, \
                                    "cli_conf", "vlan " + str(vlan) + " ; name Created_by_NXAPI"))
     if GetNodeDataDom(dom,"msg")=="Success":
         print("Config mode: Vlan %s created" % vlan)
-    vlan+=1
-    
+
 # Example 3: create a new loopback interface
 dom = minidom.parseString(ExecuteiAPICommand(url, cookie, user, password, "cli_conf", \
                                    "interface loopback 99 ; \
