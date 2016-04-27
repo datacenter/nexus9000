@@ -38,6 +38,7 @@ ftp_image_dir_src_root  = image_dir_src
 tftp_image_dir_src_root = image_dir_src
 n9k_system_image_src    = "n9000-dk9.%s.bin" % n9k_image_version
 config_file_src         = "/tftpboot/conf" # Sample - /Users/bob/poap/conf
+static_config_filename  = "staticpoap.cfg"
 image_dir_dst           = "bootflash:poap" # directory where n9k image will be stored
 system_image_dst        = n9k_system_image_src
 config_file_dst         = "volatile:poap.cfg"
@@ -507,6 +508,12 @@ def set_config_file_src_serial_number ():
     config_file_src = "%s.%s" % (config_file_src, serial_number)
     poap_log("INFO: Selected config filename (serial_number) : %s" % config_file_src)
 
+# set config name file to staticpoap.cfg
+def set_config_file_src_static ():
+    global config_file_src
+    config_file_src = "%s.%s" % (config_file_src, static_config_filename)
+    poap_log("INFO: Selected config filename (static) : %s" % config_file_src)
+
 # This check seems redundant but it's here as a defensive programming measure
 # If the checks above change or go away, this code won't have to change
 if config_file_type == "location" and cdp_interface is not None:
@@ -524,6 +531,8 @@ elif config_file_type == "location":
 elif config_file_type == "serial_number": 
     #set source config file based on switch's serial number
     set_config_file_src_serial_number()
+elif config_file_type == "static":
+    set_config_file_src_static()
 else:
     poap_log("ERR: Either config_file_type is not valid or interface was not given and location can not be derived.")
     exit(-1)
