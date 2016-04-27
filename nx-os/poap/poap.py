@@ -32,14 +32,16 @@ from cli import *
 # in your automation environment
 
 # system and kickstart images, configuration: location on server (src) and target (dst)
-n9k_image_version       = "6.1.2" # this must match your code version
-image_dir_src           = "/tftpboot"  # Sample - /Users/bob/poap
+n9k_image_version       = "7.0.3.I2.2a" # this must match your code version
+image_dir_src           = "/home/poap-sftp"  # Sample - /Users/bob/poap
 ftp_image_dir_src_root  = image_dir_src
 tftp_image_dir_src_root = image_dir_src
-n9k_system_image_src    = "n9000-dk9.%s.bin" % n9k_image_version
-config_file_src         = "/tftpboot/conf" # Sample - /Users/bob/poap/conf
+n9k_system_image_src    = "nxos.%s.bin" % n9k_image_version
+config_file_src         = "/home/poap-sftp/config" # Sample - /Users/bob/poap/co
+nf
 static_config_filename  = "staticpoap.cfg"
-image_dir_dst           = "bootflash:poap" # directory where n9k image will be stored
+image_dir_dst           = "bootflash:poap" # directory where n9k image will be s
+tored
 system_image_dst        = n9k_system_image_src
 config_file_dst         = "volatile:poap.cfg"
 md5sum_ext_src          = "md5"
@@ -51,10 +53,10 @@ required_space          = 350000
 protocol                = "scp" # protocol to use to download images/config
 
 # Host name and user credentials
-username                = "root" # server account
-ftp_username            = "anonymous" # server account
-password                = "root" # password
-hostname                = "1.1.1.1" # ip address of ftp/scp/http/sftp server
+username                = "poap-sftp" # server account
+ftp_username            = "poap-sftp" # server account
+password                = "C1sco123" # password
+hostname                = "10.0.0.15" # ip address of ftp/scp/http/sftp server
 
 # vrf info
 vrf = "management"
