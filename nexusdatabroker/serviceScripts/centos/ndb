@@ -1,0 +1,70 @@
+#! /bin/sh
+### BEGIN INIT INFO
+#Required start
+#Required stop
+#Required Restart
+#Required status
+### END INIT INFO
+
+# Export the value of the varibale JAVA_HOME
+#export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/jre
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
+export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+
+DESC="Execution of NDB as a Service manually"
+NAME=ndb
+SCRIPTNAME=/etc/init.d/$NAME
+
+#. /lib/lsb/init-functions
+
+NDB_PATH=/home/chandanvm/NDB3.1-83/xnc
+
+do_start()
+{
+  $NDB_PATH/runxnc.sh -start
+}
+
+do_stop()
+{
+  $NDB_PATH/runxnc.sh -stop
+}
+
+do_status()
+{
+  $NDB_PATH/runxnc.sh -status
+}
+
+do_restart()
+{
+  do_stop
+
+  do_start
+}
+
+
+
+#execute the statemts depends on the input arg
+
+case $1 in 
+   start)
+      do_start 
+     ;;
+
+   stop)
+     do_stop
+     ;;
+
+   restart)
+     do_restart
+     ;;
+
+   status)
+      do_status
+     ;;
+   *)
+      echo "Usage: $SCRIPTNAME {start|stop|restart|status}" >&2
+      exit 1
+      ;;
+esac
+
+:
