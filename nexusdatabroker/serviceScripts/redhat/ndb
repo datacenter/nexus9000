@@ -6,18 +6,18 @@
 #Required status
 ### END INIT INFO
 
-# Export the value of the varibale JAVA_HOME
-#export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64/jre
+# EDIT THE BELOW LINES -START
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
+NDB_PATH=/home/user/xnc
+# END
+
 export PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
 
-DESC="Execution of NDB as a Service manually"
+DESC="Execution of NDB as a Service"
 NAME=ndb
 SCRIPTNAME=/etc/init.d/$NAME
 
 #. /lib/lsb/init-functions
-
-NDB_PATH=/home/chandanvm/NDB3.1-83/xnc
 
 do_start()
 {
@@ -41,13 +41,11 @@ do_restart()
   do_start
 }
 
+#execute the statements depends on the input
 
-
-#execute the statemts depends on the input arg
-
-case $1 in 
+case $1 in
    start)
-      do_start 
+      do_start
      ;;
 
    stop)
