@@ -1,0 +1,59 @@
+HW_NXOS_SUPPORTED_FEATURES:
+    HARDWARE:
+        3048:
+            supported_features_both: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support","VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support",  "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters","Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        3064:
+            supported_features_both: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["Aggregate traffic","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        3164:
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        3172:
+            supported_features_both: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters","Symmetric Load Balancing", "QinQ Support", "MST"]
+
+
+        3232:
+            supported_features_both: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters","Symmetric Load Balancing", "QinQ Support", "MST"]
+        
+        3548:
+            supported_features_both: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["IPV4 Filter","IPV6 Filter","HTTP Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters","Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        92160:
+            supported_features_nxapi: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "UP Port Capacity", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        92304:
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        93128:
+            supported_features_both: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "UP Port Capacity", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        9372:
+            supported_features_both: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "UP Port Capacity", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters","Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        9396:
+            supported_features_both: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "UP Port Capacity", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        9504:
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+
+        93180:
+            supported_features_both: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_nxapi: ["IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "Up Port Capacity","VLAN", "Replicate traffic to multiple tools", "Port Channel Support", "MPLS Tag removal", "Symmetric Load Balancing", "QinQ Support", "MST"]
+            supported_features_of: ["Aggregate traffic","IPV4 Filter","IPV6 Filter","HTTP Filter", "Ether type Filter", "MAC Address Filter","ACL Filter Direction", "UP Port Capacity", "Replicate traffic to multiple tools", "Port Channel Support", "VLAN Add Replace Strip based on filters", "Symmetric Load Balancing", "QinQ Support", "MST"]
+        

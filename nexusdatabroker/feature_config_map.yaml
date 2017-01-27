@@ -1,0 +1,28 @@
+HARDWARE_CONFIG:
+    FEATURE:
+        IPV4 Filter:
+            CONFIG:
+                NXAPI: ["ifacl"]
+                OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
+        IPV6 Filter:
+            CONFIG:
+                NXAPI: ["ipv6-ifacl"]
+                OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
+        HTTP Filter:
+            CONFIG:
+                NXAPI: ["ifacl" , "double-wide"]
+                OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
+        Ether type Filter:
+            CONFIG:
+                NXAPI: ["mac-ifacl"]
+                OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
+        MAC Address Filter:
+            CONFIG:
+                NXAPI: ["mac-ifacl" , "double-wide"]
+                OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
+        Aggregate traffic:
+            CONFIG:
+                NXAPI: ["tap-aggregation"]
+                OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
+
+
