@@ -1,0 +1,15 @@
+DEVICES:
+    DEVICE_1:
+
+        CONNECTION:
+            ip: "10.16.206.116"
+            username: "admin"
+            password: "cisco123"
+
+        MODE:
+            primary: "NXAPI"
+            #auxilary: "NXAPI"
+
+        SUPPORTED_FEATURES:
+            features: "ALL"
+

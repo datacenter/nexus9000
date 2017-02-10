@@ -25,4 +25,3 @@ HARDWARE_CONFIG:
                 NXAPI: ["tap-aggregation"]
                 OF: ["controller_ipv4","openflow_double-wide","profile_openflow"]
 
-
