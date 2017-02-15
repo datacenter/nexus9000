@@ -2180,13 +2180,13 @@ class NdbValidator:
                                     elif 'mst1' in NDB_Validator_dict[device]['enhacements']:
                                         fp.write("\n")
                                         fp.write(
-                                            "\t\t\t\t" + feature + "  : Spanning tree not disable on all vlans")
+                                            "\t\t\t\t" + feature + "  : Spanning tree not disable on all vlans : no spanning-tree vlan <vlan>")
                                     elif 'mst3' in NDB_Validator_dict[device]['enhacements']:
                                         fp.write("\n")
                                         fp.write(
                                             "\t\t\t\t" +
                                             feature +
-                                            "  : spanning-tree mode mst & Spanning tree disable on all vlans\n")
+                                            "  : spanning-tree mode mst & Spanning not tree disable on all vlans : no spanning-tree vlan <vlan>\n")
                                     else:
                                         pass
                                 if 'bpdu' in feature:
@@ -2214,6 +2214,7 @@ class NdbValidator:
                                 NDB_Validator_dict[device]['Global'][feature] = set(
                                     list(NDB_Validator_dict[device]['Global'][feature]))
                                 if "Replicate" in feature:
+                                    fp.write("\n\n")
                                     try:
                                         if 'l2drop' in self.NDB_Validator_dict[
                                                 device]["problem"]['NXAPI']:
@@ -2344,20 +2345,36 @@ class NdbValidator:
                                             if '3' in str(
                                                     NDB_Validator_dict[device]['platform']['version'])[0]:
                                                 if len(value_list) >= 2:
-                                                    fp.write(
-                                                        "  " + "hardware profile tcam region ifacl <256/512/1024> double-wide")
+						    if 'IPV4 Filter' in feature:
+							fp.write(
+                                                            "  " + "hardware profile tcam region ifacl <256/512/1024>")
+						    else:
+                                                        fp.write(
+                                                            "  " + "hardware profile tcam region ifacl <256/512/1024> double-wide")
                                                     fp.write("\n")
                                                 else:
-                                                    fp.write(
-                                                        "  " + "hardware profile tcam region ifacl <256/512/1024> double-wide")
+						   if 'IPV4 Filter' in feature:
+                                                        fp.write(
+                                                            "  " + "hardware profile tcam region ifacl <256/512/1024>")
+						   else:
+                                                        fp.write(
+                                                            "  " + "hardware profile tcam region ifacl <256/512/1024> double-wide")
                                             else:
                                                 if len(value_list) >= 2:
-                                                    fp.write(
-                                                        "  " + "hardware access-list tcam region ifacl <256/512/1024> double-wide")
+						    if 'IPV4 Filter' in feature:
+                                                        fp.write(
+                                                            "  " + "hardware access-list tcam region ifacl <256/512/1024>")
+						    else:
+                                                        fp.write(
+                                                            "  " + "hardware access-list tcam region ifacl <256/512/1024> double-wide")
                                                     fp.write("\n")
                                                 else:
-                                                    fp.write(
-                                                        "  " + "hardware access-list tcam region ifacl <256/512/1024> double-wide")
+						    if 'IPV4 Filter' in feature:
+                                                        fp.write(
+                                                            "  " + "hardware access-list tcam region ifacl <256/512/1024>")
+						    else:
+                                                        fp.write(
+                                                            "  " + "hardware access-list tcam region ifacl <256/512/1024> double-wide")
 
                                         else:
                                             if 'HTTP Filter' in feature:
@@ -2366,7 +2383,7 @@ class NdbValidator:
                                                 if '3164' not in self.tem and '32' not in self.tem[
                                                         :2] and '3' in self.tem:
                                                     fp.write(
-                                                        "  " + "hardware profile tcam region ifacl <256/512/1024> double-wide")
+                                                    "  " + "hardware profile tcam region ifacl <256/512/1024> double-wide")
                                                     break
                                                 else:
                                                     fp.write(
@@ -2380,7 +2397,7 @@ class NdbValidator:
                                                        and '32' not in self.tem[:2] and '3' in self.tem:
                                                         fp.write("\n")
                                                         fp.write(
-                                                            "\t\t\t\t\t\t" + self.ref_config['HW_CONFIG']['NXAPI']['double-wide2'])
+                                                            "\t\t\t\t\t\t" + self.ref_config['HW_CONFIG']['NXAPI']['double-wide3'])
                                                     elif 'IPV6 Filter' in feature and '3164' in self.tem\
                                                             or '32' in self.tem[:2] or '9' in self.tem and '92160' in self.tem:
                                                         fp.write("\n")
@@ -2394,7 +2411,7 @@ class NdbValidator:
                                                     if 'IPV4 Filter' in feature and '3164' not in self.tem\
                                                        and '32' not in self.tem[:2] and '3' in self.tem:
                                                         fp.write(
-                                                            "  " + self.ref_config['HW_CONFIG']['NXAPI']['double-wide2'])
+                                                            "  " + self.ref_config['HW_CONFIG']['NXAPI']['double-wide3'])
                                                     elif 'IPV6 Filter' in feature and '3164' in self.tem\
                                                             or '32' in self.tem[:2] or '9' in self.tem\
                                                             and '92160' in self.tem:
@@ -2407,7 +2424,7 @@ class NdbValidator:
                             if len(
                                     self.NDB_Validator_dict[device]['no_sh_cmd']) >= 1:
                                 fp.write(
-                                    "\t\t\t\t" + "NOT WORKING NXAPI CLI : Device can not add to NDB\n")
+                                    "\n\t\t\t\t" + "NOT WORKING NXAPI CLI : Device can not add to NDB\n")
                                 fp.write("\t\t\t\t\t\t\t" +
                                          "Reload the device\n")
                                 if 'I3' in NDB_Validator_dict[device]['nxos']['os'] or 'I4' in \

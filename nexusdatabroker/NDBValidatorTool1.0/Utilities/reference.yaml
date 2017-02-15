@@ -1,8 +1,9 @@
 HW_CONFIG:
     NXAPI:
         double-wide: "hardware access-list tcam region ifacl <256/512/1024> double-wide"
-        double-wide2: "hardware profile tcam region ifacl <256/512/1024> double-wide"
-        ifacl: "hardware access-list tcam region ifacl <256/512/1024> double-wide"
+        double-wide2: "hardware profile tcam region ifacl <256/512/1024 double-wide"
+        double-wide3: "hardware profile tcam region ifacl <256/512/1024"
+        ifacl: "hardware access-list tcam region ifacl <256/512/1024>"
         ipv6-ifacl: "hardware access-list tcam region ipv6-ifacl <256/512/1024> double-wide"
         ipv6-ifacl2: "hardware profile tcam region ipv6-ifacl <256/512/1024> double-wide"
         mac-ifacl: "hardware access-list tcam region mac-ifacl <256/512/1024>"
