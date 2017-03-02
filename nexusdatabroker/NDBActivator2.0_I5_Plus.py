@@ -185,7 +185,9 @@ def guestShell(path):
   zip_ref.close()
 
   xncpath = '/volatile/xnc'
- 
+  cli("tar extract volatile:xnc/jre-8u121-linux-x64.tar.gz to volatile:xnc")
+  os.system('rm -rf /volatile/xnc/jre-8u121-linux-x64.tar.gz')
+
   diskFreeSpaceInside = cli("guestshell run df -m /home/guestshell | awk '{print $4}' | grep '[0-9]'")
   diskFreeSpaceInside = int(diskFreeSpaceInside.strip())
   requiredSpaceInside = 600
