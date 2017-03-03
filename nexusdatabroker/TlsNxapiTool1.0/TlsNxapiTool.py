@@ -86,8 +86,8 @@ class Device(Server):
             logger.error("%s"%(e))
 if __name__ == "__main__":
     dir = os.path.dirname(__file__)
-    subprocess.call(" python tls_python_script.py 1", shell=True)
-    subprocess.call(" python openssl.py 1", shell=True)
+    subprocess.call(" python TlsScript.py 1", shell=True)
+    subprocess.call(" python OpenSsl.py 1", shell=True)
     if not os.path.isdir('Utilities/Log'):
         os.mkdir("Utilities/Log")
 

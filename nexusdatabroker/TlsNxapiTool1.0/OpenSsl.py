@@ -129,14 +129,12 @@ class Device:
                     self.default_md_list = line1.split(" ")
                     self.default_md_list = filter(None, self.default_md_list)
                     self.default_md_c = self.default_md_list[2]
-                    
                 if 'default_bits' in line and 'Size of keys' in line:
                     line2 = line.strip()
                     self.default_bits_list = line2.split(" ")
                     self.default_bits_list = filter(None,\
                                                  self.default_bits_list)
                     self.default_bits_c = self.default_bits_list[2]
-                    
                 if 'commonName_default' in line:
                     self.commonname_list = line.split(" ")[-1]
                     self.commonname_c = self.commonname_list.strip()
@@ -170,7 +168,6 @@ class Device:
                     self.ip_l2 = self.ip2_list.strip()
                     self.ip_l.append(self.ip_l2)
                 if 'IP.3' in line:
-                    
                     self.ip3_list = line.split(" ")[-1]
                     self.ip_l3 = self.ip3_list.strip()
                     self.ip_l.append(self.ip_l3)
@@ -264,8 +261,6 @@ class Device:
                             Utilities/TlsCerts/Example.conf -batch")
         self.gen_cert_key_result = call(self.gen_cert_key, \
                                        shell=True)
-            str(self.gen_cert_key_result)
-
         self.ip = confi['ServerIP']['ServerIP1']['ip']
         self.user = confi['ServerIP']['ServerIP1']['user']
         self.password = confi['ServerIP']['ServerIP1']['password']
@@ -295,7 +290,6 @@ class Device:
                 self.server_path_list[self.append_forwkey] \
                     = str(self.server_path)
             self.append_forwkey += 1
-        +str(self.server_path_list)
         self.app_forwkey_e = 0
         while self.app_forwkey_e < len(self.server_path_list):
             suffix = "/"
@@ -306,7 +300,6 @@ class Device:
                 self.server_path_list[self.app_forwkey_e] = \
                    str(self.server_path)
             self.app_forwkey_e += 1
-        str(self.server_path_list)
         self.copy_file = confi['Copy_file_check']
         self.ip = self.server_ip_list[0]
         self.user = self.server_user_list[0]
@@ -511,7 +504,6 @@ class Device:
                 ':8443 --verbose --keystore-password '+self.keystore_password+\
                 ' --truststore-password '+self.keystore_password
             self.prov_pass_b = str(self.prov_pass)
-                        +str(self.prov_pass_b)
             stdin, stdout, stderr = ssh.exec_command(self.prov_pass_b)
             time.sleep(10)
             self.login_mulser += 1
