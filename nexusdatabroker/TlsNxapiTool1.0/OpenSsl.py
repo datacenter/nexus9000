@@ -34,7 +34,7 @@ class Device:
         self.temp_user = ""
         self.temp_ip = ""
         self.cp_certpem_res = ""
-        self.copy_file = ""
+        self.copy_file = 1
         self.capem_sw_res = ""
         self.server_password_list = []
         self.device_user_list = []
@@ -117,6 +117,7 @@ class Device:
         self.ip_l8 = ""
         self.ip_l9 = ""
         self.ip_l10 = ""
+        self.append_config = 0
 
     def method_one(self):
         with open("Utilities/TlsCerts/Example.conf", 'r') as fil_ptr:
@@ -211,7 +212,7 @@ class Device:
             self.common_name = confi['commonName']
             self.email_address = confi['emailAddress']
             self.locality_name = confi['localityName']
-            self.keystore_password = str(confi['Key_Password'])
+            self.keystore_password = str(confi['keystore'])
         def replace_method(file1, searchexp, replaceexp):
             for line in fileinput.input(file1, inplace=1):
                 if searchexp in line:
@@ -300,7 +301,16 @@ class Device:
                 self.server_path_list[self.app_forwkey_e] = \
                    str(self.server_path)
             self.app_forwkey_e += 1
-        self.copy_file = confi['Copy_file_check']
+        self.append_config = 0
+        while self.append_config < len(self.server_path_list):
+            suffix = "configuration"+"/"
+            self.server_path = str(self.server_path_list\
+                              [self.append_config])
+            if self.server_path.endswith(suffix) == False:
+                self.server_path = self.server_path+"configuration"+"/"
+                self.server_path_list[self.append_config] \
+                    = str(self.server_path)
+            self.append_config += 1
         self.ip = self.server_ip_list[0]
         self.user = self.server_user_list[0]
         self.password = self.server_password_list[0]
@@ -354,35 +364,30 @@ class Device:
             	self.ip+self.path+"server.key "+
             	"bootflash:/// vrf management")
             child.sendline(self.copy_keyfile)
-            with open("temp.log", "r") as fp2:
-                for line2 in fp2:
-                    if "continue" in line2:
-                        child.sendline("yes")
-                        child.expect('password: ')
-                        child.sendline(self.password)
-                        break
-                    else:
-                        child.expect('password: ')
-                        child.sendline(self.password)
-                        child.expect('#')
-                        break
+            try:
+                child.expect ("continue")
+                child.sendline ("yes")
+                child.expect ('password: ')
+                child.sendline (self.password)
+                child.expect('#')
+            except:
+                child.expect ('password: ')
+                child.sendline (self.password)
+                child.expect('#')
             time.sleep(10)
             self.cp_certfile = str("copy scp://"+self.user+'@'+\
             	self.ip+self.path+"server.crt bootflash:/// vrf management")
             child.sendline(self.cp_certfile)
-            with open("temp.log", "r") as fp3:
-                for line3 in fp3:
-                    if "continue" in line3:
-                        child.sendline("yes")
-                        child.expect('password: ')
-                        child.sendline(self.password)
-                        break
-                    else:
-                        child.expect('password: ')
-                        child.sendline(self.password)
-                        break
-            time.sleep(10)
-            child.expect("#")
+            try:
+                child.expect ("continue")
+                child.sendline ("yes")
+                child.expect ('password: ')
+                child.sendline (self.password)
+                child.expect('#')
+            except:
+                child.expect ('password: ')
+                child.sendline (self.password)
+                child.expect('#')
             child.sendline("configure terminal")
             child.expect("#")
             child.sendline("nxapi certificate httpskey "+
@@ -417,6 +422,10 @@ class Device:
                         break
             child.sendline("nxapi certificate enable")
             child.expect('#')
+            child.sendline("configure terminal")
+            child.expect("#")
+            child.sendline("feature nxapi")
+            child.expect("#")
             child.expect([pexpect.EOF, pexpect.TIMEOUT])
             self.log_mul_dev += 1
         self.cp_keypem = "cp Utilities/TlsCerts/server.key "+\
