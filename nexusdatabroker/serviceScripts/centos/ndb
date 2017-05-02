@@ -1,4 +1,6 @@
 #! /bin/sh
+# ndb    This used to do various ndb operations.
+# chkconfig: - 99 10
 ### BEGIN INIT INFO
 #Required start
 #Required stop
@@ -17,7 +19,6 @@ DESC="Execution of NDB as a Service"
 NAME=ndb
 SCRIPTNAME=/etc/init.d/$NAME
 
-#. /lib/lsb/init-functions
 
 do_start()
 {
