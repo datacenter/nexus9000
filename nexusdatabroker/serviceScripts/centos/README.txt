@@ -4,7 +4,7 @@ Steps to deploy the service startup script
    a) Download git to clone repository
       i)  sudo yum install git
       ii) git --version ( check for the version after successfull installation)
-   b) move to "nexusdatabroker/serviceScripts/redhat" directory, copy ndb script to "/etc/init.d" directory.
+   b) move to "nexusdatabroker/serviceScripts/centos" directory, copy ndb script to "/etc/init.d" directory.
    c) Change the permissions to 755 with command "chmod 755 ndb"
 
 2. Edit the following lines in the ndb script.
