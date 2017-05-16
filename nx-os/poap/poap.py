@@ -1,19 +1,20 @@
 #!/bin/env python
-#md5sum=5fddae8efacfc3b6acff9beb2a9e8bf3
+#md5sum=
 # Still needs to be implemented.
+# EPLD
 # Return Values:
 # 0 : Reboot and reapply configuration
 # 1 : No reboot, just apply configuration. Customers issue copy file run ; copy
 # run start. Do not use scheduled-config since there is no reboot needed. i.e.
 # no new image was downloaded
-# -1 : Error case. This will cause POAP to restart the DHCP discovery phase. 
+# -1 : Error case. This will cause POAP to restart the DHCP discovery phase.
 
-# The above is the (embedded) md5sum of this file taken without this line, 
-# can be # created this way: 
+# The above is the (embedded) md5sum of this file taken without this line,
+# can be # created this way:
 # f=poap.py ; cat $f | sed '/^#md5sum/d' > $f.md5 ; sed -i "s/^#md5sum=.*/#md5sum=$(md5sum $f.md5 | sed 's/ .*//')/" $f
 # This way this script's integrity can be checked in case you do not trust
 # tftp's ip checksum. This integrity check is done by /isan/bin/poap.bin).
-# The integrity of the files downloaded later (images, config) is checked 
+# The integrity of the files downloaded later (images, config) is checked
 # by downloading the corresponding file with the .md5 extension and is
 # done by this script itself.
 
@@ -27,17 +28,17 @@ import time
 
 from cli import *
 
-# **** Here are all variables that parametrize this script **** 
-# These parameters should be updated with the real values used 
+# **** Here are all variables that parametrize this script ****
+# These parameters should be updated with the real values used
 # in your automation environment
 
 # system and kickstart images, configuration: location on server (src) and target (dst)
-n9k_image_version       = "6.1.2" # this must match your code version
-image_dir_src           = "/tftpboot"  # Sample - /Users/bob/poap
+n9k_image_version       = "7.0.3.I1.1b" # this must match your code version
+image_dir_src           = "/"  # Sample - /Users/bob/poap
 ftp_image_dir_src_root  = image_dir_src
 tftp_image_dir_src_root = image_dir_src
 n9k_system_image_src    = "n9000-dk9.%s.bin" % n9k_image_version
-config_file_src         = "/tftpboot/conf" # Sample - /Users/bob/poap/conf
+config_file_src         = "/cfg/bootstrap.cfg" # Sample - /Users/bob/poap/conf
 image_dir_dst           = "bootflash:poap" # directory where n9k image will be stored
 system_image_dst        = n9k_system_image_src
 config_file_dst         = "volatile:poap.cfg"
@@ -47,13 +48,13 @@ required_space          = 350000
 
 # copy protocol to download images and config
 # options are: scp/http/tftp/ftp/sftp
-protocol                = "scp" # protocol to use to download images/config
+protocol                = "ftp" # protocol to use to download images/config
 
 # Host name and user credentials
-username                = "root" # server account
-ftp_username            = "anonymous" # server account
-password                = "root" # password
-hostname                = "1.1.1.1" # ip address of ftp/scp/http/sftp server
+username                = "cisco" # server account
+ftp_username            = "cisco" # server account
+password                = "Cisco1" # password
+hostname                = "192.168.1.1" # ip address of ftp/scp/http/sftp server
 
 # vrf info
 vrf = "management"
@@ -61,9 +62,9 @@ if os.environ.has_key('POAP_VRF'):
     vrf=os.environ['POAP_VRF']
 
 # Timeout info (from biggest to smallest image, should be f(image-size, protocol))
-system_timeout          = 2100 
-config_timeout          = 120 
-md5sum_timeout          = 120  
+system_timeout          = 2100
+config_timeout          = 120
+md5sum_timeout          = 120
 
 # POAP can use 3 modes to obtain the config file.
 # - 'static' - filename is static
@@ -93,7 +94,7 @@ now="%d_%d_%d" % (t.tm_hour, t.tm_min, t.tm_sec)
 #now=None
 #now=1 # hardcode timestamp (easier while debugging)
 
-# **** end of parameters **** 
+# **** end of parameters ****
 # *************************************************************
 
 # ***** argv parsing and online help (for test through cli) ******
@@ -116,19 +117,19 @@ def parse_args(argv, help=None):
         # not handling duplicate matches...
         if cmp('cdp-interface'[0:len(x)], x) == 0:
           try: cl_cdp_interface = argv.pop(0)
-          except: 
+          except:
              if help: cl_cdp_interface=-1
           if len(x) != len('cdp-interface') and help: cl_cdp_interface=None
           continue
         if cmp('serial-number'[0:len(x)], x) == 0:
           try: cl_serial_number = argv.pop(0)
-          except: 
+          except:
             if help: cl_serial_number=-1
           if len(x) != len('serial-number') and help: cl_serial_number=None
           continue
         if cmp('protocol'[0:len(x)], x) == 0:
-          try: cl_protocol = argv.pop(0); 
-          except: 
+          try: cl_protocol = argv.pop(0);
+          except:
             if help: cl_protocol=-1
           if len(x) != len('protocol') and help: cl_protocol=None
           if cl_protocol: protocol=cl_protocol
@@ -138,7 +139,7 @@ def parse_args(argv, help=None):
           continue
         print "Syntax Error|invalid token:", x
         exit(-1)
-  
+
 
 ########### display online help (if asked for) #################
 nb_args = len(sys.argv)
@@ -183,13 +184,13 @@ if nb_args > 1:
 
 argv = sys.argv[1:]
 parse_args(argv)
-if cl_serial_number: 
+if cl_serial_number:
     serial_number=cl_serial_number
     config_file_type = "serial_number"
-if cl_cdp_interface: 
+if cl_cdp_interface:
     cdp_interface=cl_cdp_interface
     config_file_type = "location"
-if cl_protocol: 
+if cl_protocol:
     protocol=cl_protocol
 
 
@@ -213,11 +214,13 @@ def poap_log (info):
 def poap_log_close ():
     poap_log_file.close()
 
-def abort_cleanup_exit () : 
+def abort_cleanup_exit () :
     poap_log("INFO: cleaning up")
+    poap_log("INFO: copying log to server")
+    doCopy(protocol, hostname, log_filename, log_filename, vrf, 10, username, password, False, True)
     poap_log_close()
+    run_cli(cmd)
     exit(-1)
-
 
 # some argument sanity checks:
 
@@ -230,14 +233,14 @@ if config_file_type == "location" and cdp_interface is None:
     exit(-1)
 
 # figure out what kind of box we have (to download the correct image)
-try: 
+try:
   r=clid("show version")
   m = re.match('Nexus9000', r["chassis_id/1"])
   if m:
     box="n9k"
   else:
     m = re.match('Nexus7000', r["chassis_id"])
-    if m: 
+    if m:
       box="n7k"
       m = re.match('.*module-2', r["module_id"])
       if m: box="n7k2"
@@ -252,7 +255,7 @@ except: root_path   = ""
 try: username       = eval("%s_%s" % (protocol , "username"), globals())
 except: pass
 
-# images are copied to temporary location first (dont want to 
+# images are copied to temporary location first (dont want to
 # overwrite good images with bad ones).
 system_image_dst_tmp    = "%s%s/%s"     % (image_dir_dst, ".new", system_image_dst)
 system_image_dst        = "%s/%s"       % (image_dir_dst, system_image_dst)
@@ -277,32 +280,40 @@ def run_cli (cmd):
     poap_log("CLI : %s" % cmd)
     return cli(cmd)
 
-def rm_rf (filename): 
+def rm_rf (filename):
     try: cli("delete %s" % filename)
     except: pass
 
 # signal handling
 
-def sig_handler_no_exit (signum, frame) : 
+def sig_handler_no_exit (signum, frame) :
     poap_log("INFO: SIGTERM Handler while configuring boot variables")
 
-def sigterm_handler (signum, frame): 
-    poap_log("INFO: SIGTERM Handler") 
+def sigterm_handler (signum, frame):
+    poap_log("INFO: SIGTERM Handler")
     abort_cleanup_exit()
     exit(1)
 
 signal.signal(signal.SIGTERM, sigterm_handler)
 
 # transfers file, return True on success; on error exits unless 'fatal' is False in which case we return False
-def doCopy (protocol = "", host = "", source = "", dest = "", vrf = "management", login_timeout=10, user = "", password = "", fatal=True):
+def doCopy (protocol = "", host = "", source = "", dest = "", vrf = "management", login_timeout=10, user = "", password = "", fatal=True, upstream = False):
     rm_rf(dest)
 
     # mess with source paths (tftp does not like full paths)
     global username, root_path
     source = source[len(root_path):]
+    if source[0] != "/":
+        source = "/" + source
 
     cmd = "terminal dont-ask ; terminal password %s ; " % password
-    cmd += "copy %s://%s@%s%s %s vrf %s" % (protocol, username, host, source, dest, vrf)
+    # Swap source/destination based on stream direction
+    if not upstream:
+        cmd += "copy %s://%s@%s%s %s vrf %s" % (protocol, username, host, source, dest, vrf)
+    else:
+        source = os.path.basename(source)
+        dest = "/" + os.path.basename(source)
+        cmd += "copy %s %s://%s@%s%s vrf %s" % (source, protocol, username, host, dest, vrf)
 
     try: run_cli(cmd)
     except:
@@ -313,7 +324,6 @@ def doCopy (protocol = "", host = "", source = "", dest = "", vrf = "management"
             exit(1)
         return False
     return True
-
 
 def get_md5sum_src (file_name):
     md5_file_name_src = "%s.%s" % (file_name, md5sum_ext_src)
@@ -355,7 +365,7 @@ def check_embedded_md5sum (filename):
 def get_md5sum_dst (filename):
     sum=run_cli("show file %s md5sum" % filename).strip('\n')
     poap_log("INFO: md5sum %s (recalculated)" % sum)
-    return sum  
+    return sum
 
 def check_md5sum (filename_src, filename_dst, lname):
     md5sum_src = get_md5sum_src(filename_src)
@@ -371,9 +381,9 @@ def same_images (filename_src, filename_dst):
         if md5sum_src:
             md5sum_dst = get_md5sum_dst(filename_dst)
             if md5sum_dst == md5sum_src:
-                poap_log("INFO: Same source and destination images" ) 
+                poap_log("INFO: Same source and destination images" )
                 return True
-    poap_log("INFO: Different source and destination images" ) 
+    poap_log("INFO: Different source and destination images" )
     return False
 
 # Will run our CLI command to test MD5 checksum and if files are valid images
@@ -381,14 +391,14 @@ def same_images (filename_src, filename_dst):
 # additional check
 
 def get_version (msg):
-    lines=msg.split("\n") 
+    lines=msg.split("\n")
     for line in lines:
         index=line.find("MD5")
         if (index!=-1):
             status=line[index+17:]
 
         index=line.find("kickstart:")
-        if (index!=-1): 
+        if (index!=-1):
             index=line.find("version")
             ver=line[index:]
             return status,ver
@@ -398,17 +408,17 @@ def get_version (msg):
             index=line.find("version")
             ver=line[index:]
             return status,ver
-    
+
 def verify_images2 ():
     sys_cmd="show version image %s" % system_image_dst
     sys_msg=cli(sys_cmd)
 
-    sys_s,sys_v=get_version(sys_msg)    
-    
+    sys_s,sys_v=get_version(sys_msg)
+
     print "Value: %s and %s" % (kick_s, sys_s)
     if (kick_s == "Passed" and sys_s == "Passed"):
         # MD5 verification passed
-        if(kick_v != sys_v): 
+        if(kick_v != sys_v):
             poap_log("ERR : Image version mismatch. (kickstart : %s) (system : %s)" % (kick_v, sys_v))
             abort_cleanup_exit()
     else:
@@ -437,7 +447,7 @@ def verify_images ():
 # get config file from server
 def get_config ():
     doCopy(protocol, hostname, config_file_src, config_file_dst, vrf, config_timeout, username, password)
-    poap_log("INFO: Completed Copy of Config File") 
+    poap_log("INFO: Completed Copy of Config File")
     # get file's md5 from server (if any) and verify it, failure is fatal (exit)
     check_md5sum (config_file_src, config_file_dst, "config file")
 
@@ -445,8 +455,8 @@ def get_config ():
 # get system image file from server
 def get_system_image ():
     if not same_images(system_image_src, system_image_dst):
-        doCopy(protocol, hostname, system_image_src, system_image_dst_tmp, vrf, system_timeout, username, password)  
-        poap_log("INFO: Completed Copy of System Image" ) 
+        doCopy(protocol, hostname, system_image_src, system_image_dst_tmp, vrf, system_timeout, username, password)
+        poap_log("INFO: Completed Copy of System Image" )
         # get file's md5 from server (if any) and verify it, failure is fatal (exit)
         check_md5sum(system_image_src, system_image_dst_tmp, "system image")
         run_cli("move %s %s" % (system_image_dst_tmp, system_image_dst))
@@ -460,8 +470,8 @@ def wait_box_online ():
         poap_log("INFO: Waiting for box online...")
 
 
-# install (make persistent) images and config 
-def install_it (): 
+# install (make persistent) images and config
+def install_it ():
     global cl_download_only
     if cl_download_only: exit(0)
     timeout = -1
@@ -484,9 +494,9 @@ def install_it ():
     # running as different users (log file have timestamp, so fine)
     poap_log("INFO: Configuration successful")
 
-        
+
 # Verify if free space is available to download config, kickstart and system images
-def verify_freespace (): 
+def verify_freespace ():
     freespace = int(cli("dir bootflash: | last 3 | grep free | sed 's/[^0-9]*//g'").strip('\n'))
     freespace = freespace / 1024
     poap_log("INFO: free space is %s kB"  % freespace )
@@ -502,10 +512,16 @@ def set_config_file_src_location():
     poap_log("INFO: Selected conf file name (location) : %s" % config_file_src)
 
 # figure out config filename to download based on serial-number
-def set_config_file_src_serial_number (): 
+def set_config_file_src_serial_number ():
     global config_file_src
     config_file_src = "%s.%s" % (config_file_src, serial_number)
     poap_log("INFO: Selected config filename (serial_number) : %s" % config_file_src)
+
+# static config file testing
+def set_config_file_static ():
+    global config_file_src
+    config_file_src = config_file_src
+    poap_log("INFO: Selected config filename : %s" % config_file_src)
 
 # This check seems redundant but it's here as a defensive programming measure
 # If the checks above change or go away, this code won't have to change
@@ -521,9 +537,12 @@ if config_file_type == "location" and cdp_interface is not None:
 elif config_file_type == "location":
     # set source config file based on switch's location
     set_config_file_src_location()
-elif config_file_type == "serial_number": 
+elif config_file_type == "serial_number":
     #set source config file based on switch's serial number
     set_config_file_src_serial_number()
+elif config_file_type == "static":
+    #set config file statically for testing
+    set_config_file_static()
 else:
     poap_log("ERR: Either config_file_type is not valid or interface was not given and location can not be derived.")
     exit(-1)
