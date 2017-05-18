@@ -193,8 +193,9 @@ def guestShell(path):
         nxosVersionOut = cli("show version | inc NXOS | inc version")
         for line in nxosVersionOut.split("\n"):
             if 'inc' not in line:
-                if 'I5' in line:
+                if 'I5' in line or 'I6' in line:
                     nxosFlag = 1
+
                 if 'I5(1)' in line:
                     FirstNxosVersion = 1
 
@@ -449,18 +450,21 @@ def guestShell(path):
 
     # Setting the nxapi to listen to network namespace
     try:
-        cli("configure terminal ; feature nxapi")
+        out = cli("configure terminal ; feature nxapi")
     except:
         logger.error("Something went wrong while enabling NXAPI")
         exit(0)
 
     try:
-        cli("configure terminal ; nxapi use-vrf management ; copy running-config startup-config")
+        cliout = cli("configure terminal ; nxapi use-vrf management ; copy running-config startup-config")
         logger.info("Kept the nxapi to listen to network namespace")
     except:
-        logger.error(
-            "Something went wrong while keeping nxapi to listen to network namespace")
-        sys.exit(0)
+	if "Warning:" in cliout:
+	    logger.info("Kept the nxapi to listen to network namespace")
+	else:
+            logger.error(
+                "Something went wrong while keeping nxapi to listen to network namespace")
+            sys.exit(0)
 
     try:
         cli("guestshell run " + guestpath +
