@@ -398,6 +398,16 @@ def poap_log(info):
     """
     global log_hdl, syslog_prefix
 
+    # Don't syslog passwords
+    parts = re.split("\s+", info.strip())
+    for (index, part) in enumerate(parts):
+        # blank out the password after the password keyword (terminal password *****, etc.)
+        if part == "password" and len(parts) >= index+2:
+            parts[index+1] = "<removed>"
+
+    # Recombine for syslogging
+    info = " ".join(parts)
+
     # We could potentially get a traceback (and trigger this) before
     # we have called init_globals. Make sure we can still log successfully
     try:
@@ -765,8 +775,7 @@ def get_md5(filename):
             file_hdl.close()
             return line
         else:
-            poap_log(re.split("\s+", line))
-            poap_log(filename)
+            poap_log("Found non-MD5 checksum in %s: %s" % (md5_filename, line))
         line = file_hdl.readline()
     file_hdl.close()
     return ""
