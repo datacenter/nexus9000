@@ -18,6 +18,6 @@ Install instructions:
 
 Option 1: Copy them directly off the switch directly from /isan/python/scripts/cisco.  
 
-Option 2: Download them from Cisco Developer Network.  http://developer.cisco.com/web/n9k/downloads 
+Option 2: Download them from Cisco Developer Network.  https://developer.cisco.com/site/nx-os/ 
 
 3. See client_example.py for an example.  
