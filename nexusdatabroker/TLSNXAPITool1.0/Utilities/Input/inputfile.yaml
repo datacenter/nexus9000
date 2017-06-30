@@ -1,0 +1,53 @@
+IP:
+   IP1:
+      port: 443
+      address: 1.1.1.1
+      username: admin
+      password: cisco123
+   IP2:
+      port: 443
+      address: 1.1.1.2
+      username: admin
+      password: cisco123
+
+ServerIP:
+    ServerIP1: 
+        ip: 2.2.2.1
+        user: root
+        password: cisco123
+        path_ndb_build: /root/Ndb3.3-Releasebuild/xnc
+    ServerIP2:
+        ip: 2.2.2.2
+        user: root
+        password: cisco123
+        path_ndb_build: /root/Ndb3.3-Releasebuild/xnc
+
+
+default_days: 365
+default_md: 'sha256'
+default_bits: 2048         
+keystore: 'cisco123'  
+
+#countryName
+countryName: US
+
+#stateOrProvinceName
+stateOrProvinceName: CA
+
+#organizationName
+organizationName: Cisco
+
+#organizationalUnitName
+organizationalUnitName: NDB
+
+#commonName
+commonName: Network
+
+#emailAddress
+emailAddress: web_master@cisco.com
+
+#localityName
+localityName: SanJose
+
+
+
