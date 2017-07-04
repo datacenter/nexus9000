@@ -88,7 +88,7 @@ def guestShell(path):
         quiteFlag = 1
 
     else:
-        logger.error("Please provide valid arguments")
+        logger.error("Please provide valid arguments. Use -h option for more details")
         sys.exit(0)
 
     # Verify zip file path
@@ -482,16 +482,24 @@ def main():
 
 if __name__ == "__main__":
 
+    usage = "usage: %prog [options]"
+    parser = optparse.OptionParser(usage=usage)
+    parser.add_option("-v", "--vservice_name",
+                      help="Mandatory Arg: guestshell+, zipfile ")
+    parser.add_option("--force", 
+                      action="store_true",
+                      help="Force option to restart NDB ")
+    (options, args) = parser.parse_args()
     if len(sys.argv) == 5:
         if '--quiet' in sys.argv or '--force' in sys.argv:
             pass
         else:
-            logger.error("Please provide valid arguments")
+            logger.error("Please provide valid arguments. Use -h option for more details")
 
     if len(sys.argv) == 6:
         if '--quiet' in sys.argv and '--force' in sys.argv:
             pass
         else:
-            logger.error("Please provide valid arguments")
+            logger.error("Please provide valid arguments. Use -h option for more details")
 
     main()

@@ -1,8 +1,11 @@
 from cisco import clid
+from cisco import *
+import cisco
 import json
 import os,sys
 import subprocess
 import optparse
+import time
 import logging
 import pdb
 
@@ -18,8 +21,12 @@ con_log_handler.setFormatter(formatter)
 logger.addHandler(file_log_handler)
 logger.addHandler(con_log_handler)
 
+reactivate_flag = 0
 
-def get_iface_info(vservice_name):
+mkdir_flag = 0
+
+def get_iface_info(vservice_name,forceFlag):
+    global reactivate_flag, mkdir_flag
     try:
         iface_details=json.loads(clid("show int mgmt 0"))
         data = iface_details['TABLE_interface']['ROW_interface']
@@ -34,8 +41,14 @@ def get_iface_info(vservice_name):
           "\nmgmt0.mac=" + mac_addr + "\nmgmt0.addresses=0\nmgmt0.0.ip=" + \
           data['eth_ip_addr'] + "\nmgmt0.0.prefix=" + str(data['eth_ip_mask'])
 
-    with open('/bootflash/interfaces', 'w') as fd:
-        fd.write(data)
+    try:
+        with open('/bootflash/interfaces', 'w') as fd:
+            fd.write(data)
+    except IOError as e:
+        logger.error("No space left on the device")
+        logger.error("Pls clean up the /bootflash and retry")
+        sys.exit()
+
 
     cont_path ='/isan/vdc_1/virtual-instance/' + vservice_name + '/rootfs'
 
@@ -43,25 +56,71 @@ def get_iface_info(vservice_name):
     if os.path.isdir(cont_path):
         os.chdir(cont_path)
         dir_name = 'embndb'
+        if os.path.exists(dir_name):
+            if forceFlag == 1:
+                pass
+            else:
+                logger.info("NDB application is already installed.")
+                sys.exit(0)
         try:
             if not os.path.exists(dir_name):
                 os.system('mkdir '+dir_name)
+                mkdir_flag = 1
+                #subprocess.call(['sudo', 'mkdir', dir_name])
+        except:
+            logger.error("Permission denied to create embndb directory")
+            sys.exit()
+
+    else:
+        output = cli("show virtual-service detail name " + vservice_name)
+        if output[1] == "\n":
+           logger.error("Pls provide the right NDB service name")
+           sys.exit(0)
+        try:
+            logger.info("Triggered to activate virtual service %s"%(vservice_name))
+            cli("conf t ; virtual-service "+  vservice_name +" ; activate")
+            iter = 0
+            while(iter < 24):
+                time.sleep(5)
+                #pdb.set_trace()
+                virtual_service_json = cli("show virtual-service detail name "+ vservice_name + " | json ")
+                vservice_output = json.loads(virtual_service_json[1])
+                vservice_state = vservice_output['TABLE_detail']['ROW_detail']['state']
+                if "Activated" in vservice_state:
+                    logger.info("Virtual service %s was successfully activated"%(vservice_name))
+                    break;
+                else:
+                    iter += 1
+        except:
+            logger.error("Error while activating virtual-service " + vservice_name)
+            sys.exit()
+        #os.system('mkdir '+cont_path)
+        os.chdir(cont_path)
+        dir_name = 'embndb'
+        try:
+            if not os.path.exists(dir_name):
+                os.system('mkdir '+dir_name)
+                mkdir_flag = 1
                 #subprocess.call(['sudo', 'mkdir', dir_name])
         except:
             logger.error("Permission denied to create embndb directory")
 
-    else:
-        logger.error("Please provide proper virtual-service name")
+    try:
+        if mkdir_flag == 1 or forceFlag == 1:
+            reactivate_flag = 1
+            os.chdir(cont_path+ '/' + dir_name)
+            os.system('sudo cp '+cont_path+'/xnclite/launcher.sh interfaces')
+            os.system('sudo cp /bootflash/interfaces interfaces')
+            os.system('sudo rm /bootflash/interfaces')
+            #subprocess.call(['sudo', 'cp', cont_path+'/xnclite/launcher.sh', 'interfaces']) #To get required permission 
+            #subprocess.call(['sudo', 'cp', '/bootflash/interfaces', 'interfaces'])          #Override the file which has the permission
+            #subprocess.call(['sudo', 'rm', '/bootflash/interfaces'])          # cleanup tmp interface file
+            emb_path ='/isan/vdc_1/virtual-instance/' + vservice_name + '/rootfs/embndb/interfaces'
+            logger.info("Successfully created %s file with management interface details" % emb_path)
+    except IOError:
+        logger.error("No space left on the device")
+        logger.error("Pls clean up the /bootflash and retry")
         sys.exit()
-
-    os.chdir(cont_path+ '/' + dir_name)
-    os.system('sudo cp '+cont_path+'/xnclite/launcher.sh interfaces')
-    os.system('sudo cp /bootflash/interfaces interfaces')
-    os.system('sudo rm /bootflash/interfaces')
-    #subprocess.call(['sudo', 'cp', cont_path+'/xnclite/launcher.sh', 'interfaces']) #To get required permission 
-    #subprocess.call(['sudo', 'cp', '/bootflash/interfaces', 'interfaces'])          #Override the file which has the permission
-    #subprocess.call(['sudo', 'rm', '/bootflash/interfaces'])          # cleanup tmp interface file
-    logger.info("Successfully created /embndb/interface file with management interface details")
 
 def creater_launcher_file(vservice_name):
     cont_path ='/isan/vdc_1/virtual-instance/' + vservice_name + '/rootfs'
@@ -140,20 +199,77 @@ def creater_launcher_file(vservice_name):
      logger.info("Successfully updated /xnclite/launcher.sh file") 
     elif "2" in version.split(".")[0]:
         logger.info("Not supported version,please upgrade to the newer version")   
+        
+def re_activate(vservice_name):        
+    try:
+        logger.info("Triggered to de-activate virtual service %s"%(vservice_name))
+        virtual_service_json = cli("show virtual-service detail name "+ vservice_name + " | json ")
+        vservice_output = json.loads(virtual_service_json[1])
+        vservice_state = vservice_output['TABLE_detail']['ROW_detail']['state']
+        if "Activated" in vservice_state:
+            try:
+                cli("conf t ; virtual-service "+  vservice_name +" ; no activate")
+                iter = 0
+                while(iter < 24):
+                    time.sleep(5)
+                    virtual_service_json = cli("show virtual-service detail name "+ vservice_name + " | json ")
+                    vservice_output = json.loads(virtual_service_json[1])
+                    vservice_state = vservice_output['TABLE_detail']['ROW_detail']['state']
+                    if "Deactivated" in vservice_state:
+                        logger.info("Virtual service %s was successfully de-activated"%(vservice_name))
+                        break;
+                    else:
+                        iter += 1
+            except:
+                pass
+                    
+        if "Deactivated" in vservice_state:
+            try:
+                logger.info("Triggered to activate virtual service %s"%(vservice_name))
+                cli("conf t ; virtual-service "+  vservice_name +" ; activate")
+                iter = 0
+                while(iter < 24):
+                    time.sleep(5)
+                    virtual_service_json = cli("show virtual-service detail name "+ vservice_name + " | json ")
+                    vservice_output = json.loads(virtual_service_json[1])
+                    vservice_state = vservice_output['TABLE_detail']['ROW_detail']['state']
+                    if "Activated" in vservice_state:
+                        logger.info("Virtual service %s was successfully activated"%(vservice_name))
+                        break;
+                    else:
+                        iter += 1
+            except:
+                pass
+                    
+    except:
+        logger.error("Check if the virtual service %s exists" % vservice_name)
+        sys.exit()
 
 def main():
     usage = "usage: %prog [options]"
     parser = optparse.OptionParser(usage=usage)
     parser.add_option("-v", "--vservice_name",
                       help="Mandatory Arg: Specify the existing virtual service name ")
-    (options, args) = parser.parse_args()
+    parser.add_option("--force", 
+                      action="store_true",
+                      dest="force_flag",
+                      help="Force option to restart NDB ")
+    (options,args) = parser.parse_args()
     if options.vservice_name==None: 
-        logger.error("Please provide proper arguements. Use -h option for more details")
+        logger.error("Please provide proper arguments. Use -h option for more details")
         sys.exit()
+       
+    if options.force_flag!=None:
+       forceFlag=1
+    else:
+       forceFlag=0
 
-    get_iface_info(options.vservice_name)
+    get_iface_info(options.vservice_name,forceFlag)
 
     creater_launcher_file(options.vservice_name)
+
+    if reactivate_flag == 1:
+        re_activate(options.vservice_name)
 
 if __name__ == "__main__":
     main()
