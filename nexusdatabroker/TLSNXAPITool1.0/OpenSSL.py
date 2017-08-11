@@ -7,6 +7,7 @@ import sys
 import fileinput
 import paramiko
 import logging
+import pdb
 
 class Device:
     def __init__(self):
@@ -138,9 +139,11 @@ class Device:
         self.emailaddress_list = ""
         self.default_bits = ""
         self.commonname_list = ""
+        self.xnc_pwd = ""
+        self.xnc_usr = ""
     def method_one(self):
         try:
-            with open("./Utilities/TlsCerts/Example.conf", 'r') as fil_ptr:
+            with open("./Utilities/TlsCerts/ca.conf", 'r') as fil_ptr:
                 for line in fil_ptr:
                     if 'default_days' in line:
                         self.default_days_c = line.split(" ")[-1]
@@ -255,20 +258,24 @@ class Device:
                         +str(replaceexp)+" in config file")
                 except OSError:
                     LOGGER.error("Failed to replace values in config file")
-        replace_method("./Utilities/TlsCerts/Example.conf", \
+        replace_method("./Utilities/TlsCerts/ca.conf", \
             self.organization_name_c, str(self.organization_name))
-        replace_method("./Utilities/TlsCerts/Example.conf", self.state_name_c, \
+        replace_method("./Utilities/TlsCerts/ca.conf", self.state_name_c, \
         str(self.state_name))
-        replace_method("./Utilities/TlsCerts/Example.conf", self.country_name_c, \
+        replace_method("./Utilities/TlsCerts/ca.conf", self.country_name_c, \
         str(self.countryname))
-        replace_method("./Utilities/TlsCerts/Example.conf", self.emailaddress_c, \
+        replace_method("./Utilities/TlsCerts/ca.conf", self.emailaddress_c, \
         str(self.email_address))
-        replace_method("./Utilities/TlsCerts/Example.conf", self.localityname_c, \
+        replace_method("./Utilities/TlsCerts/ca.conf", self.localityname_c, \
         str(self.locality_name))
-        replace_method("./Utilities/TlsCerts/Example.conf", \
+        replace_method("./Utilities/TlsCerts/ca.conf", \
         self.organizationalunit_name_c, str(self.organization_name))
-        replace_method("./Utilities/TlsCerts/Example.conf", self.commonname_c, \
+        replace_method("./Utilities/TlsCerts/ca.conf", self.commonname_c, \
         str(self.common_name))
+        replace_method("./Utilities/TlsCerts/ca.conf", self.default_md_c, \
+        str(self.default_md))
+        replace_method("./Utilities/TlsCerts/ca.conf", self.default_bits_c, \
+        str(self.default_bits))
         self.all_ips_from_yaml = sorted(confi['IP'].keys())
         for val in self.all_ips_from_yaml:
             self.device_ip_list.append(confi['IP'][val]['address'])
@@ -277,7 +284,7 @@ class Device:
             self.device_port_list.append(confi['IP'][val]['port'])  
         self.replace_ip = 0
         while self.replace_ip < len(self.device_ip_list):
-            replace_method("./Utilities/TlsCerts/Example.conf", \
+            replace_method("./Utilities/TlsCerts/ca.conf", \
                 self.ip_l[self.replace_ip],\
                 str(self.device_ip_list[self.replace_ip]))
             self.replace_ip += 1
@@ -287,9 +294,9 @@ class Device:
         try:
             with open(INPUTFILE, 'r') as file_ptr:
                 confi = yaml.load(file_ptr)
+                self.keystore_password = str(confi['keystore'])
         except OSError:
             LOGGER.error("Failed to open input yaml file")
-            sys.exit(0)
         self.gen_key_ca = str("openssl req -x509 -nodes -days "+\
                               self.default_days_str+"0 -newkey rsa:"+
                               self.default_bits_str+" -out "+\
@@ -315,7 +322,7 @@ class Device:
                             self.default_days_str+" -nodes -out "+\
                             "./Utilities/TlsCerts/server.crt -keyout "+\
                             "./Utilities/TlsCerts/server.key -config "+\
-                            "./Utilities/TlsCerts/Example.conf -batch")
+                            "./Utilities/TlsCerts/ca.conf -batch")
         try:
             self.gen_cert_key_result = call(self.gen_cert_key, \
                                        shell=True, \
@@ -406,6 +413,41 @@ class Device:
         self.password = self.server_password_list[0]
         self.path = self.server_path_list[0]
         self.port = self.server_port_list[0]
+        if self.port != 0:
+            try:
+                ssh = paramiko.SSHClient()
+                server = self.ip
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(server, port=self.port, username=self.user, password=self.password)
+                sftp = ssh.open_sftp()
+                localpath = './Utilities/TlsCerts/server.crt'
+                remotepath = '/root/xnc/configuration/server.crt'
+                sftp.put(localpath, remotepath)
+                local = './Utilities/TlsCerts/server.key'
+                remote = '/root/xnc/configuration/server.key'
+                sftp.put(local, remote)
+                sftp.close()
+            except:
+                LOGGER.error("Error while ssh into the server")
+                sys.exit(0)
+        else:
+            try:
+                ssh = paramiko.SSHClient()
+                server = self.ip
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(server, username=self.user, password=self.password)
+                sftp = ssh.open_sftp()
+                localpath = './Utilities/TlsCerts/server.crt'
+                remotepath = self.path+'server.crt'
+                sftp.put(localpath, remotepath)
+                local = './Utilities/TlsCerts/server.key'
+                remote = self.path+'server.key'
+                sftp.put(local, remote)
+                sftp.close()
+            except:
+                LOGGER.error("Error while ssh into the server")
+                exit(0)
+        """
         if self.copy_file == 1:
             if self.port != 0:
                 try:
@@ -431,6 +473,7 @@ class Device:
                                     self.path
             self.cp_cert_speloc_res = call(str(self.cp_cert_speloc), \
                                     shell=True)
+        """
         while(self.log_mul_dev < len(self.device_ip_list)):
             self.temp_ip = self.device_ip_list[self.log_mul_dev]
             self.temp_user = self.device_user_list[self.log_mul_dev]
@@ -476,6 +519,7 @@ class Device:
                 LOGGER.error("Device "+str(self.temp_ip)+\
                     " - Unable to configure feature "+\
                     "nxapi command in device")
+            #pdb.set_trace()
             child.sendline("feature sftp-server")
             try:
                 child.expect("#")
@@ -517,6 +561,7 @@ class Device:
                             break
             except OSError:
                 LOGGER.error("Failed to open temporary Log file")
+            """
             if self.port != 0:
                 ssh = paramiko.SSHClient()
                 server = self.temp_ip
@@ -534,17 +579,17 @@ class Device:
             else:
                 ssh = paramiko.SSHClient()
                 server = self.temp_ip
-                try:
-                    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                    ssh.connect(server, username=self.temp_user, \
-                        password=self.temp_pass)
-                    sftp = ssh.open_sftp()
-                    localpath = './Utilities/TlsCerts/server.key'
-                    remotepath = 'server.key'
-                    sftp.put(localpath, remotepath)
-                except paramiko.SSHException:
-                    LOGGER.error("Error while ssh into the device2")
-                    sys.exit(0)
+                #try:
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(server, username=self.temp_user, \
+                    password=self.temp_pass)
+                sftp = ssh.open_sftp()
+                localpath = './Utilities/TlsCerts/server.key'
+                remotepath = 'server.key'
+                sftp.put(localpath, remotepath)
+                #except paramiko.SSHException:
+                #    LOGGER.error("Error while ssh into the device2")
+                 #   sys.exit(0)
             if self.port != 0:
                 try:
                     time.sleep(10)
@@ -565,6 +610,84 @@ class Device:
                     ssh.close()
                 except paramiko.SSHException:
                     pass
+            """
+            self.copy_keyfile = str("copy scp://"+self.user+'@'+\
+                self.ip+self.path+"server.key "+
+                "bootflash:/// vrf management")
+            child.sendline(self.copy_keyfile)
+            try:
+                child.expect ("continue")
+                child.sendline ("yes")
+                try:
+                    child.expect('assword: ')
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided User name is not correct")
+                    sys.exit(0)
+                child.sendline (self.password)
+                try:
+                    child.expect("#")
+                    LOGGER.info("Device "+str(self.temp_ip)+\
+                        " copy server.key file success")
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided Password is not correct")
+                    sys.exit(0)
+            except:
+                try:
+                    child.expect('assword: ')
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided User name is not correct")
+                    sys.exit(0)
+                child.sendline (self.password)
+                try:
+                    child.expect("#")
+                    LOGGER.info("Device "+str(self.temp_ip)+\
+                        " copy server.key file success")
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided Password is not correct")
+                    sys.exit(0)
+            time.sleep(10)
+            self.cp_certfile = str("copy scp://"+self.user+'@'+\
+                self.ip+self.path+"server.crt bootflash:/// vrf management")
+            child.sendline(self.cp_certfile)
+            try:
+                child.expect ("continue")
+                child.sendline ("yes")
+                try:
+                    child.expect('assword: ')
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided User name is not correct")
+                    sys.exit(0)
+                child.sendline (self.password)
+                try:
+                    child.expect("#")
+                    LOGGER.info("Device "+str(self.temp_ip)+\
+                        "  copy server.crt file success")
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided Password is not correct")
+                    sys.exit(0)
+            except:
+                try:
+                    child.expect('assword: ')
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided User name is not correct")
+                    sys.exit(0)
+                child.sendline (self.password)
+                try:
+                    child.expect("#")
+                    LOGGER.info("Device "+str(self.temp_ip)+\
+                        " copy server.crt file success")
+                except pexpect.ExceptionPexpect:
+                    LOGGER.error("Device "+str(self.temp_ip)+\
+                        " Login incorrect Provided Password is not correct")
+                    sys.exit(0)
+            time.sleep(10)
             child.sendline("configure terminal")
             try:
                 child.expect("#")
@@ -695,6 +818,7 @@ class Device:
         except OSError:
             LOGGER.error("Failed to Generate xnc.p12 file -step29")
             sys.exit(0)
+        #pdb.set_trace()
         self.xncp_tlskey = "keytool -importkeystore -srckeystore "+\
         "./Utilities/TlsCerts/xnc.p12 -srcstoretype pkcs12 -destkeystore "+\
         "./Utilities/TlsCerts/tlsKeyStore -deststoretype jks -srcstorepass "+\
@@ -710,11 +834,11 @@ class Device:
             else:
                 LOGGER.error("Failed to Convert the xnc.p12 to a Java "+\
                     "KeyStore (tlsKeyStore) file -step31")
-                sys.exit(0)
+                #sys.exit(0)
         except OSError:
             LOGGER.error("Failed to Convert the xnc.p12 to a Java "+\
                     "KeyStore (tlsKeyStore) file -step31")
-            sys.exit(0)
+            #sys.exit(0)
         self.capem_sw = "cp ./Utilities/TlsCerts/mypersonalca/certs/ca.pem "+\
         "./Utilities/TlsCerts/sw-cacert.pem"
         try:
@@ -743,11 +867,11 @@ class Device:
             else:
                 LOGGER.error("Failed to Convert the sw-cacert.pem to a "+\
                     "Java TrustStore - tlsTrustStore file -step34")
-                sys.exit(0)
+                #sys.exit(0)
         except OSError:
             LOGGER.error("Failed to Convert the sw-cacert.pem to a "+\
                     "Java TrustStore - tlsTrustStore file -step34")
-            sys.exit(0)
+            #sys.exit(0)
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.login_mulser = 0
@@ -755,6 +879,13 @@ class Device:
         self.tem_seruser = ""
         self.temp_serpass = ""
         self.tem_serpath = ""
+        try:
+            with open(INPUTFILE, 'r') as file_ptr:
+                confi = yaml.load(file_ptr)
+                self.xnc_pwd = str(confi['xnc_password'])
+                self.xnc_usr = str(confi['xnc_username'])                
+        except OSError:
+            LOGGER.error("Failed to open input yaml file")
         while (self.login_mulser < len(self.server_ip_list)):
             self.tem_serip = self.server_ip_list[self.login_mulser]
             self.tem_seruser = self.server_user_list[self.login_mulser]
@@ -762,6 +893,7 @@ class Device:
             self.tem_serpath = self.server_path_list[self.login_mulser]
             self.tem_port = self.server_port_list[self.login_mulser]
             xnc_path = self.tem_serpath[:-14]
+            #pdb.set_trace()
             if self.tem_port != 0:
                 try:
                     ssh = paramiko.SSHClient()
@@ -797,8 +929,9 @@ class Device:
                     LOGGER.error("Error while ssh into the server")
                     exit(0)
             time.sleep(5)
-            self.run_ndb = 'cd '+xnc_path+' ;./runxnc.sh -tls '+\
-            '-tlskeystore ./configuration/tlsKeyStore -tlstruststore '+\
+            #pdb.set_trace()
+            self.run_ndb = 'cd '+xnc_path+' ;./runxnc.sh -osgiPasswordSync '+\
+            '-tls -tlskeystore ./configuration/tlsKeyStore -tlstruststore '+\
             './configuration/tlsTrustStore'
             self.run_n = str(self.run_ndb)
             if self.tem_port != 0:
@@ -813,15 +946,17 @@ class Device:
             else:
                 try:
                     stdin, stdout, stderr = ssh.exec_command(self.run_n)
+                    stdin.write(self.xnc_pwd+"\n")
+                    #print stdout.readlines()
                     LOGGER.info("Server "+self.tem_serip+" Run NDB in TLS"+\
                         " mode success")
                 except OSError:
                     LOGGER.error("Server "+self.tem_serip+" Failed Run NDB"+\
                         " in TLS mode")
                     sys.exit(0)
-            time.sleep(30)
+            time.sleep(75)
             flag = True
-            timeout = time.time() + 60*3
+            timeout = time.time() + 60*5
             while(flag):
                 if time.time() <= timeout:
                     if self.tem_port != 0:
@@ -833,12 +968,13 @@ class Device:
                             sftp = ssh.open_sftp()
                             localpath = '/root/xnc/logs/xnc.log'
                             remotepath = './Utilities/TlsCerts/xnc.log'
+                            #pdb.set_trace()
                             sftp.put(localpath, remotepath)
                             local = '/root/xnc/logs/xnc.log'
                             remote = './Utilities/TlsCerts/xnc.log'
                             sftp.put(local, remote)
                             sftp.close()
-                        except OSError:
+                        except:
                             LOGGER.error("Error while ssh into the server")
                             sys.exit(0)
                     else:
@@ -856,7 +992,7 @@ class Device:
                             remote = './Utilities/TlsCerts/xnc.log'
                             sftp.get(local, remote)
                             sftp.close()
-                        except OSError:
+                        except:
                             LOGGER.error("Error while ssh into the server11")
                             exit(0)
                     try:
@@ -875,9 +1011,10 @@ class Device:
                     LOGGER.error("Failed to start NDB in TLS mode")
                     sys.exit(0)
             time.sleep(15)
+            #pdb.set_trace()
             self.prov_pass = 'cd '+xnc_path+'bin/ ;./xnc '+\
-                'config-keystore-passwords --user admin '+\
-                '--password admin --url https://'+self.tem_serip+\
+                'config-keystore-passwords --user '+self.xnc_usr+\
+                ' --password '+self.xnc_pwd+' --url https://'+self.tem_serip+\
                 ':8443 --verbose --keystore-password '+self.keystore_password+\
                 ' --truststore-password '+self.keystore_password
             self.prov_pass_b = str(self.prov_pass)
@@ -902,6 +1039,7 @@ class Device:
             time.sleep(10)
             self.login_mulser += 1
             ssh.close()
+
 if __name__ == "__main__":
     DIR = os.path.dirname(__file__)
     #sys.stdout = os.devnull

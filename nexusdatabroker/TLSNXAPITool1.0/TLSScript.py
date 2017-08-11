@@ -171,7 +171,7 @@ certs                   = $dir/certs
 certificate             = $certs/cacert.pem
 private_key             = $dir/private/cakey.pem
 default_days            = 365
-default_md              = sha1
+default_md              = sha256
 preserve                = no
 email_in_dn             = no
 nameopt                 = default_ca
@@ -188,7 +188,7 @@ emailAddress            = optional
 [ req ]
 default_bits            = 2048                  # Size of keys
 default_keyfile         = example.key           # name of generated keys
-default_md              = sha1                  # message digest algorithm
+default_md              = sha256                  # message digest algorithm
 string_mask             = nombstr               # permitted characters
 distinguished_name      = req_distinguished_name
 req_extensions          = v3_req
@@ -246,18 +246,18 @@ nsComment                       = "OpenSSL Generated Client Certificate"
 subjectKeyIdentifier=hash
 authorityKeyIdentifier=keyid,issuer:always"""
         try:
-            if not os.path.isfile("./Utilities/TlsCerts/Example.conf"):
-                tls_conf_file = open('./Utilities/TlsCerts/Example.conf', 'w+')
-                LOGGER.info("Example configuration file created successfully "+\
+            if not os.path.isfile("./Utilities/TlsCerts/ca.conf"):
+                tls_conf_file = open('./Utilities/TlsCerts/ca.conf', 'w+')
+                LOGGER.info("CA configuration file created successfully "+\
                     "under TlsCerts")
         except OSError:
-            LOGGER.error("Failed to Create Example configuration file "+\
+            LOGGER.error("Failed to Create CA configuration file "+\
                 "under TlsCerts")
         try:
             tls_conf_file.write(conf_file_input)
-            LOGGER.info("Write to Example configuration file success")
+            LOGGER.info("Write to CA configuration file success")
         except OSError:
-            LOGGER.error("Failed to write to Example configuration file")
+            LOGGER.error("Failed to write to CA configuration file")
 
 if __name__ == "__main__":
     DIR = os.path.dirname(__file__)

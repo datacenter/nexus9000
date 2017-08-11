@@ -11,7 +11,7 @@ IP:
       password: cisco123
 
 ServerIP:
-    ServerIP1: 
+    ServerIP1:
         ip: 2.2.2.1
         user: root
         password: cisco123
@@ -22,11 +22,13 @@ ServerIP:
         password: cisco123
         path_ndb_build: /root/Ndb3.3-Releasebuild/xnc
 
-
 default_days: 365
-default_md: 'sha256'
-default_bits: 2048         
+default_md: 'sha1'
+default_bits: 2048 
 keystore: 'cisco123'  
+
+xnc_username: 'admin'
+xnc_password: 'admin'
 
 #countryName
 countryName: US

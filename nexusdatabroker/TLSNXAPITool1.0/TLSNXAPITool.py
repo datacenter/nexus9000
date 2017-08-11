@@ -2,7 +2,6 @@ import os
 import sys
 import yaml
 import requests
-import json
 import subprocess
 import logging
 import paramiko
@@ -12,7 +11,7 @@ from requests.packages.urllib3.exceptions import SNIMissingWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 requests.packages.urllib3.disable_warnings(SNIMissingWarning)
 
-class Server(object):
+class Server:
     def __init__(self):
         self.conn_type = "https"
         with open(INPUTFILE) as file_ptr:
@@ -21,74 +20,39 @@ class Server(object):
         self.username = confi['ServerIP']['ServerIP1']['user']
         self.password = confi['ServerIP']['ServerIP1']['password']
         self.port = '8443'
-        self.ndb_login_url = ""
-        self.headers = {
-                     'Content-Type' : 'application/json',
-                     'Authorization': 'Basic YWRtaW46YWRtaW4='
-                     }
+        self.web_url = ""
+        self.login_url = ""
+        self.add_device_url = ""
+        self.device_response = 0
+        self.xnc_pwd = str(confi['xnc_password'])
+        self.xnc_usr = str(confi['xnc_username'])
     def ndb_servrer_login(self):
         try:
-            self.ndb_login_url = self.conn_type+"://"+self.server_ip+":"\
+            self.web_url = self.conn_type+"://"+self.server_ip+":"\
             +self.port+"/monitor/"
-            #auth = {'username' : self.username, 'password' : self.password}
-            auth = {'username' : 'admin', 'password' : 'admin'}
-            proxies = {
-  		"http": None,
-  		"https": None,
-	    }
-            response = requests.post(url=self.ndb_login_url, \
-                data=auth, proxies=proxies, verify=False)
-            if response.status_code == 200:
-                LOGGER.info("Server - "+self.server_ip+" NDB server "+\
-                    "login success")
-            else:
-                LOGGER.error("Server - "+self.server_ip+"NDB server "+\
-                    "login failed")
-            return response.cookies
+            self.login_url = self.conn_type+"://"+self.server_ip+":"\
+            +self.port+"/monitor/j_security_check"
+            login_payload = {"j_username" : self.xnc_usr, "j_password" : self.xnc_pwd}
+            with open(INPUTFILE) as file_ptr:
+                dev_info = yaml.safe_load(file_ptr)
+            for dic in sorted(dev_info['IP'].keys()):
+                add_device_payload = dev_info['IP'][dic]
+                add_device_payload['connectiontype'] = 'NXAPI'
+                add_device_payload['auxnode'] = 'false'
+                for key in add_device_payload:
+                    add_device_payload[key] = str(add_device_payload[key])
+            self.add_device_url = str(self.conn_type+"://"+\
+            str(self.server_ip)+":"+str(self.port)+\
+            "/controller/web/devices/extended//element/add")
+            #pylint: disable=maybe-no-member
+            with requests.session() as ses:
+                ses.get(self.web_url, verify=False)
+                ses.post(self.login_url, data=login_payload, verify=False)
+                ses.post(self.add_device_url, data=add_device_payload, verify=False)
+                LOGGER.info("Device - "+add_device_payload['address']+\
+                    " Device added successfully")
         except paramiko.SSHException:
-            LOGGER.error("Server - "+self.server_ip+"NDB server "+\
-                    "login failed")
-            sys.exit(0)
-class Device(Server):
-    def __init__(self):
-        self.conn_type = "https"
-        with open(INPUTFILE) as fil_ptr:
-            confi = yaml.safe_load(fil_ptr)
-        self.server_ip = confi['ServerIP']['ServerIP1']['ip']
-        self.port = '8443'
-        self.cookie = None
-        self.ndb_login_url = ""
-        server = Server()
-        self.device_url = ""
-        self.device_response = 0
-        self.cookie = server.ndb_servrer_login()
-        self.headers = {
-                     'Content-Type' : 'application/json',
-                     'Authorization': 'Basic YWRtaW46YWRtaW4='
-                      }
-    def device(self, device_info, operation):
-        try:
-            self.device_info = device_info
-            if operation == 'create':
-                self.device_url = self.conn_type+"://"+\
-                str(self.server_ip)+":"+str(self.port)+\
-                "/controller/nb/v2/resourcemanager/node/"+\
-                str(self.device_info['address'])
-                proxies = {
- 		    "http": None,
-  		    "https": None,		}
-                self.device_response = requests.put(url=self.device_url,\
-                 data=json.dumps(self.device_info), cookies=self.cookie,\
-                 headers=self.headers, proxies=proxies, verify=False)
-                #pylint: disable=maybe-no-member
-                if self.device_response.status_code == int(200):
-                    LOGGER.info("Device - "+self.device_info['address']+\
-                        " Device added successfully")
-                else:
-                    LOGGER.error("Device - "+self.device_info['address']+\
-                            " Failed to add device in NDB")
-        except paramiko.SSHException:
-            LOGGER.error("Device - "+self.device_info['address']+\
+            LOGGER.error("Device - "+add_device_payload['address']+\
                         " Failed to add device in NDB")
 if __name__ == "__main__":
     FILE1 = '/etc/ssh/ssh_config'
@@ -150,8 +114,7 @@ if __name__ == "__main__":
         subprocess.call(" python TLSScript.py 1", shell=True)
         subprocess.call(" python OpenSSL.py 1", shell=True)
     INPUTFILE = os.path.join(DIR, './Utilities/Input/inputfile.yaml')
-    DEV_ONE = Device()
-    with open(INPUTFILE) as f:
-        DEVICE_INFO = yaml.safe_load(f)
-    for dic in sorted(DEVICE_INFO['IP'].keys()):
-        DEV_ONE.device(DEVICE_INFO['IP'][dic], "create")
+    DEV = Server()
+    DEV.ndb_servrer_login()
+    os.system("rm -rf ./Utilities/TlsCerts/temp")
+    os.system("rm -rf ./Utilities/TlsCerts/xnc.log")
