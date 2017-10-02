@@ -833,10 +833,15 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp=""):
                     raise
         else:
             # Add the destination path
-            copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
-            copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
-                protocol, user, host, source, copy_tmp, vrf)
-            poap_log("Command is : %s" % copy_cmd)
+            if protocol == "tftp":
+                copy_cmd = "terminal dont-ask ; "
+                copy_cmd += "copy %s://%s%s %s vrf %s" % (
+                    protocol, host, source, copy_tmp, vrf)
+            else:
+                copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
+                copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
+                    protocol, user, host, source, copy_tmp, vrf)
+                poap_log("Command is : %s" % copy_cmd)
             try:
                 cli(copy_cmd)
             except Exception as e:
