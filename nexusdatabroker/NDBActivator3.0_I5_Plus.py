@@ -151,23 +151,32 @@ def guestShell(path):
         logger.error("xnc doesn't contain plugins. Provide valid zip file")
         sys.exit(0)
 
-    # Find user, role and priveleges
+    # Find user, Role and priveleges
     puser = subprocess.check_output("whoami", shell=True)
     try:
-        whoamicliout = cli(
-            "show run | i " +
+       whoamicliout = cli(
+            "show user-account " +
+            puser.split("\n")[0] +
+            " | inc user")
+       rolecliout = cli(
+            "show user-account " +
             puser.split("\n")[0] +
             " | inc role")
-        whoami = whoamicliout.split(" ")[1]
-        userRole = whoamicliout.split(" ")[-1].split("\n")[0]
-        userprivcliout = cli("show privilege")
-        privFlag = 0
-        for line in userprivcliout.split("\n"):
+       u = re.search(r'user:(.*)',whoamicliout)
+       whoami = u.group(1)
+       #whoami = whoamicliout.split(" ")[1]
+       ro = re.search(r'roles:(.*)',rolecliout)
+       userRole = ro.group(1)
+       #userRole = whoamicliout.split(" ")[-1].split("\n")[0]
+       userprivcliout = cli("show privilege")
+       privFlag = 0
+       for line in userprivcliout.split("\n"):
             line = line.strip()
             if "privilege level" in line:
                 userpriv = line.split(":")[1]
                 privFlag = 1
-        userRole = userRole.strip()
+       userRole = userRole.strip()
+       #print(userRole)
     except:
         logger.error("Something went wrong while finding user/role/privelege")
         sys.exit(0)
@@ -392,7 +401,7 @@ def guestShell(path):
 
     # Place the xnc folder into the guestshell home directory
     if FirstNxosVersion != 1:
-        try:
+        try: 
             makePath = '/volatile/xnc/embedded/i5/make-systemctl-env.sh'
             for line in fileinput.input(makePath, inplace=1):
                 print line.replace("guestshell", whoami)
