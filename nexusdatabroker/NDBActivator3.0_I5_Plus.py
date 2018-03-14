@@ -200,9 +200,12 @@ def guestShell(path):
     try:
         nxosFlag = 0
         nxosVersionOut = cli("show version | inc NXOS | inc version")
+        nxosVersionOut = nxosVersionOut.strip()
         for line in nxosVersionOut.split("\n"):
             if 'inc' not in line:
-                if 'I5' in line or 'I6' in line or 'I7' in line:
+                version_pattern = re.compile('I\d+')
+                nxos_version = version_pattern.findall(line)[0]
+                if int(nxos_version[1:]) >= 5:
                     nxosFlag = 1
 
                 if 'I5(1)' in line:
@@ -249,18 +252,24 @@ def guestShell(path):
     devicePlatformList = []
     cliout = cli('sh ver | inc ignore-case Chassis')
     platform_flag = 0
+    n9k_conf_flag = 0
+    n3k_conf_flag = 0
     for line in cliout.split("\n"):
         line = line.strip()
         if ("Chassis" in line or 'chassis' in line) and 'cisco' in line:
-            if len(line.split(" ")) >= 4:
-                platform = line.split(" ")[2]
+            if len(line.split()) >= 4:
+                platform = line.split()[2]
                 platform_flag = 1
             else:
-                platform = line.split(" ")[1]
+                platform = line.split()[1]
                 platform_flag = 1
     if platform_flag == 1:
         platform = int(re.search(r'\d+', platform).group())
-        if str(platform)[0] == '9':
+        if str(platform)[0] == '9' or (str(platform)[0:2] == '31' and len(str(platform)) == 5):
+            n9k_conf_flag = 1
+        elif str(platform)[0] == '3':
+            n3k_conf_flag = 1
+        if str(platform)[0] in ['9', '3']:
             logger.info("Verified device platform version")
             pass
         else:
@@ -361,43 +370,43 @@ def guestShell(path):
         logger.error(
             "Something went wrong while checking disk dpace inside volatile")
         sys.exit(0)
+    if n9k_conf_flag == 1 and n3k_conf_flag == 0:
+        try:
+            cli("guestshell resize cpu 5")
+        except:
+            logger.error("Please provide valid CPU reservation")
+            sys.exit(0)
+        try:
+            cli("guestshell resize memory 1024")
+        except:
+            logger.error("Please provide valid Memory reservation")
+            sys.exit(0)
+        try:
+            cli("guestshell resize rootfs 1024")
+        except:
+            logger.error("Please provide valid Disk reservation")
+            sys.exit(0)
 
-    try:
-        cli("guestshell resize cpu 5")
-    except:
-        logger.error("Please provide valid CPU reservation")
-        sys.exit(0)
-    try:
-        cli("guestshell resize memory 1536")
-    except:
-        logger.error("Please provide valid Memory reservation")
-        sys.exit(0)
-    try:
-        cli("guestshell resize rootfs 1536")
-    except:
-        logger.error("Please provide valid Disk reservation")
-        sys.exit(0)
+        try:
+            cli("guestshell reboot")
+            tempflag = 0
+            for st in range(200):
+                if tempflag == 1:
+                    break
+                try:
+                    output = cli("show guestshell detail | inc Activated")
+                    for line in output.split("\n"):
+                        if 'Activated' in line and 'inc' not in line:
+                            tempflag += 1
+                            break
+                except:
+                    time.sleep(1)
+        except:
+            logger.error("Something went wrong while rebooting guestshell")
+            sys.exit(0)
 
-    try:
-        cli("guestshell reboot")
-        tempflag = 0
-        for st in range(200):
-            if tempflag == 1:
-                break
-            try:
-                output = cli("show guestshell detail | inc Activated")
-                for line in output.split("\n"):
-                    if 'Activated' in line and 'inc' not in line:
-                        tempflag += 1
-                        break
-            except:
-                time.sleep(1)
-    except:
-        logger.error("Something went wrong while rebooting guestshell")
-        sys.exit(0)
-
-    if tempflag == 1:
-        logger.info("Resized the guestshell resources")
+        if tempflag == 1:
+            logger.info("Resized the guestshell resources")
 
     # Place the xnc folder into the guestshell home directory
     if FirstNxosVersion != 1:
