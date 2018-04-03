@@ -282,7 +282,7 @@ def guestShell(path):
                 logger.info("Verified device platform version")
                 pass
             else:
-                logger.error("Device platform version is not N9K")
+                logger.error("Device platform version is not N9K/N3K")
                 sys.exit(0)
     else:
         logger.error("Error while greping platform version")
