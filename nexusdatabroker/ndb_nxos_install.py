@@ -1,3 +1,4 @@
+import re
 import cli
 import sys
 import logging
@@ -356,10 +357,60 @@ def get_version():
     version = list1[4].split('\n')[0]
     logger.info('NXOS Version -' + ' ' + version)
 
+def interface_parser(out):
+    interfaces = {'Ethernet' : [], 'port-channel': [] }
+    lines = out.replace('\\r', '')
+    lines = lines.replace('\r','')
+    lines = lines.replace('\\n','\n')
+    lines = lines.split("\n\n")
+    for line in lines:
+        line = line.strip(" ")
+        if re.search(r'(interface)\s+(.*)',line,re.IGNORECASE):            
+            value = re.search(r'(interface)\s+(.*)',line,re.IGNORECASE)
+            interface_name = value.group(2)
+            if 'Ethernet' in interface_name:
+                interfaces['Ethernet'].append(interface_name)
+            elif 'port-channel' in interface_name:
+                interfaces['port-channel'].append(interface_name)
+    return interfaces    
 
 def main():
+    try:
+        while True:
+            operation = raw_input("Do you want to shut/unshut all interfaces [shut(S)/unshut(U)/no_action(N)] - ")
+            if operation in ['S','U']:
+                interfaces = cli.cli('sh run int | no-more')
+                interface_response = interface_parser(interfaces)
+                interface_names = ''
+                if len(interface_response['port-channel']) != 0:
+                    interface_names = ','.join(interface_response['port-channel'])
+                    if operation == 'S':
+                        cli.cli('configure terminal ; interface '+ interface_names + ' ; shutdown ; end')
+                        logger.info("Successfully shutted down the port-channel interfaces")
+                    elif operation == 'U':
+                        cli.cli('configure terminal ; interface '+ interface_names + ' ; no shutdown ; end')
+                        logger.info("Successfully unshutted the port-channel interfaces")
+                if len(interface_response['Ethernet']) != 0:
+                    interface_names = ','.join(interface_response['Ethernet'])
+                    if operation == 'S':
+                        cli.cli('configure terminal ; interface '+ interface_names + ' ; shutdown ; end')
+                        logger.info("Successfully shutted down the ethernet interfaces")
+                    elif operation == 'U':
+                        cli.cli('configure terminal ; interface '+ interface_names + ' ; no shutdown ; end')
+                        logger.info("Successfully unshutted the ethernet interfaces")
+                    
+                break
+            elif operation == 'N':
+                break
+            else:
+                print "Invalid input"
+            
+    except BaseException:
+        logger.error(
+            'Something went wrong while fetching switch platform and nxos')
+        sys.exit(0)    
     install()
-
 
 if __name__ == '__main__':
     main()
+
