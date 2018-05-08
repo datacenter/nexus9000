@@ -252,6 +252,7 @@ def guestShell(path):
     devicePlatformList = []
     cliout = cli('sh ver | inc ignore-case Chassis')
     platform_flag = 0
+    platform_string = "Platform="
     n9k_conf_flag = 0
     n3k_conf_flag = 0
     for line in cliout.split("\n"):
@@ -265,6 +266,7 @@ def guestShell(path):
                 platform_flag = 1
     if platform_flag == 1:
         platform = int(re.search(r'\d+', platform).group())
+        platform_string += str(platform)+'\n'
         if str(platform)[0] == '9' or (str(platform)[0:2] == '31' and len(str(platform)) == 5):
             n9k_conf_flag = 1
         elif str(platform)[0] == '3':
@@ -287,7 +289,13 @@ def guestShell(path):
     else:
         logger.error("Error while greping platform version")
         sys.exit(0)
-
+    # Opening a file in xnc directory and writing the platform, flag values
+    file_obj = open(xncpath+"/embedded/Platform","w+")
+    n3k_string = 'n3k_conf_flag='+str(n3k_conf_flag)+'\n'
+    n9k_string = 'n9k_conf_flag='+str(n9k_conf_flag)+'\n'
+    L = [platform_string,n9k_string,n3k_string]
+    file_obj.writelines(L)
+    file_obj.close()
     # Resizing the guestshell resources
     try:
         statusFlag = 0
@@ -415,10 +423,6 @@ def guestShell(path):
             for line in fileinput.input(makePath, inplace=1):
                 print line.replace("guestshell", whoami)
 
-            ndbPath = '/volatile/xnc/embedded/i5/ndb'
-            for line in fileinput.input(ndbPath, inplace=1):
-                print line.replace("guestshell", whoami)
-
             servicePath = '/volatile/xnc/embedded/i5/ndb.service'
             for line in fileinput.input(servicePath, inplace=1):
                 print line.replace("guestshell", whoami)
@@ -475,9 +479,9 @@ def guestShell(path):
         cliout = cli("configure terminal ; nxapi use-vrf management ; copy running-config startup-config")
         logger.info("Kept the nxapi to listen to network namespace")
     except:
-	if "Warning:" in cliout:
-	    logger.info("Kept the nxapi to listen to network namespace")
-	else:
+        if "Warning:" in cliout:
+            logger.info("Kept the nxapi to listen to network namespace")
+        else:
             logger.error(
                 "Something went wrong while keeping nxapi to listen to network namespace")
             sys.exit(0)
