@@ -1,0 +1,1820 @@
+# revert flag -- to be set to 1 if configs have to be reverted in case of any failure
+revertFlag: 0
+# NDB server details
+NDBserverIP:
+    # ip address/username/password of NDB server 
+    host_name/IP:
+    username:
+    password:
+    # NDB server GUI login username and password
+    ndb_gui_username :
+    ndb_gui_password :
+    # Current NDB server xnc folder
+    old_path_ndb_build: 
+    # NDB server xnc folder to which migration will take place
+    new_path_ndb_build: 
+
+# device details
+DEVICES:
+    NDB_SWITCH_1:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_2:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_3:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_4:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_5:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_6:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_7:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_8:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_9:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_10:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_11:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_12:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_13:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_14:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_15:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_16:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_17:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_18:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_19:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_20:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_21:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_22:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_23:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_24:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_25:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_26:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_27:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_28:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_29:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_30:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_31:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_32:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_33:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_34:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_35:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_36:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_37:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_38:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_39:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_40:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_41:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_42:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_43:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_44:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_45:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_46:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_47:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_48:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_49:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_50:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_51:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_52:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_53:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_54:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_55:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_56:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_57:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_58:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_59:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_60:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_61:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_62:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_63:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_64:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_65:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_66:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_67:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_68:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_69:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_70:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_71:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_72:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_73:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_74:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_75:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_76:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_77:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_78:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_79:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_80:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_81:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_82:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_83:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_84:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_85:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_86:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_87:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_88:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_89:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_90:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_91:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_92:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_93:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_94:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_95:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_96:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_97:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_98:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_99:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+    NDB_SWITCH_100:
+        # ip address/username/password of switch
+        host_name/IP:
+        username:
+        password:
+        # switch mode to be converted to
+        mode:
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl:
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart:
+            system:
+        NXOS_Image2:
+            nxos:
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name:
+
+
