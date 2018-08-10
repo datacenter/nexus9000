@@ -1,0 +1,72 @@
+# revert flag -- to be set to 1 if configs have to be reverted in case of any failure
+revertFlag: 0
+# NDB server details
+NDBserverIP:
+    # ip address/username/password of NDB server 
+    host_name/IP: 10.16.206.197
+    username: cisco
+    password: Ndb@32!lab
+    # NDB server GUI login username and password
+    ndb_gui_username : admin
+    ndb_gui_password : admin
+    # Current NDB server xnc folder
+    old_path_ndb_build: /home/cisco/2.0/xnc
+    # NDB server xnc folder to which migration will take place
+    new_path_ndb_build: /home/cisco/3.6/xnc
+
+# device details
+DEVICES:
+    NDB_SWITCH_1:
+        # ip address/username/password of switch 1
+        host_name/IP: "10.16.206.116"
+        username: "admin"
+        password: "C1sNdb$lab"
+        # switch mode to be converted to
+        mode: "NXAPI"
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl: "256"
+            tcam_ipv6-ifacl : "256"
+            tcam_mac-ifacl : "256"
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            nxos: nxos.7.0.3.I7.3.bin
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name: "ofa"
+
+    NDB_SWITCH_2:
+        # ip address/username/password of switch 2 
+        host_name/IP: "10.16.206.115"
+        username: "admin"
+        password: "C1sNdb$lab"
+        # switch mode to be converted to
+        mode: "NXAPI"
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl: "256"
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            kickstart: n3000-uk9-kickstart.6.0.2.U6.4a.bin
+            system: n3000-uk9.6.0.2.U6.4a.bin
+        NXOS_Image2:
+            nxos: nxos.7.0.3.I4.6.bin
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name: "ofa"
+
+    NDB_SWITCH_3:
+        # ip address/username/password of switch 1
+        host_name/IP: "10.16.206.126"
+        username: "admin"
+        password: "C1sNdb$lab"
+        # switch mode to be converted to
+        mode: "NXAPI"
+        # tcam regions to be carved after device conversion to nxapi
+        tcam_regions:
+            tcam_ifacl-doublewide: "256"
+            tcam_mac-ifacl : "256"
+        # (Optional) nxos image location to be loaded.
+        NXOS_Image1:
+            nxos: nxos.7.0.3.I7.3.bin
+        # openflow ofa service name. To be given if switch image is lower I6.
+        ofa_ova_name: "ofa"
+

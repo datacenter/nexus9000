@@ -1,0 +1,28 @@
+HADWARE_CMDS_TO_PLATFORMS:
+    variants: ['EX','FX']
+    access-list:
+        tcam_ing-ifacl:
+            startswith: ['92', '93']
+            platforms:
+        tcam_ifacl:
+            startswith: ['9', '32']
+            platforms: ['3164']
+        tcam_ipv6-ifacl:
+            startswith: ['9', '32']
+            platforms: ['3164']
+        tcam_mac-ifacl:
+            startswith: ['9', '32']
+            platforms: ['3164']
+    profile:
+        tcam_ifacl:
+            startswith: ['3']
+            platforms: 
+NDB_CLEANUP_CONFIGS:
+    startup: ["monitorTopoCache.conf", "device_nodes.conf"]
+    default: ["ruleStatus.conf","monitorRules.conf","aclSequenceDB.conf","nxForwardingFlows.conf","nxRuleFlowTable.conf","interfacesWitMcPktClsfy.conf","monitorRedirections.conf","monitorServiceNodes.conf","monitorRemovedServiceNodes.conf","monitorConnectors.conf","monitorDevices.conf","monitorConnectorsConfigured.conf","monitorGroups.conf","ruleStatus.conf","nodesRoles.conf","monitorMatches.conf","spanDestination.conf","spanDestToEdge.conf","nodeConnectorPortConfMo.conf","portGroups.conf","udfList.conf"
+]
+
+SUPPORT_ICMPV6:
+    variants: ['EX','FX']
+    startswith: ['93', '95']
+    platforms: ['92160YC-X', 'C92304QC']
