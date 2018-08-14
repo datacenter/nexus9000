@@ -8,7 +8,7 @@ Steps to deploy the service startup script
    c) Change the permissions to 755 with this command "chmod 775 ndb"
 
 2. Edit the following lines in the ndb script.
-   a) JAVA_HOME  - Find the location of java and update the line
+   a) JAVA_HOME  - Find the location of java and update the line if NDB version is greater than 3.5
 	  for example:JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre
 
    b) NDB_PATH - Update the location of the NDB
