@@ -182,7 +182,7 @@ def guestShell(path):
         sys.exit(0)
 
     # Verify user role
-    if userRole != 'network-admin':
+    if 'network-admin' not in userRole:
         logger.error("User role is not network-admin")
         sys.exit(0)
 
