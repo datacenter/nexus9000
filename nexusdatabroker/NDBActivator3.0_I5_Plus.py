@@ -199,15 +199,25 @@ def guestShell(path):
     # Find NXOS version
     try:
         nxosFlag = 0
+        pattern_match_flag = 0
         nxosVersionOut = cli("show version | inc NXOS | inc version")
         nxosVersionOut = nxosVersionOut.strip()
         for line in nxosVersionOut.split("\n"):
             if 'inc' not in line:
-                version_pattern = re.compile('I\d+')
-                nxos_version = version_pattern.findall(line)[0]
-                if int(nxos_version[1:]) >= 5:
-                    nxosFlag = 1
-
+                try:
+                    version_pattern = re.compile('I\d+')
+                    nxos_version = version_pattern.findall(line)[0]
+                    pattern_match_flag = 1
+                    if int(nxos_version[1:]) >= 5:
+                        nxosFlag = 1
+                except:
+                    pattern_match_flag = 0
+                if not pattern_match_flag:
+                    version_pattern = re.compile('\d+')
+                    nxos_version = version_pattern.findall(line)[0]
+                    pattern_match_flag = 1
+                    if int(nxos_version) >= 9:
+                        nxosFlag = 1
                 if 'I5(1)' in line:
                     FirstNxosVersion = 1
 
