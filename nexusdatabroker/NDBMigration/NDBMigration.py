@@ -1594,6 +1594,9 @@ def get_platform(conn):
         for line in out.split("\n"):
             line = line.strip()
             if ("Chassis" in line or 'chassis' in line) and 'cisco' in line:
+                if '(' and ')' in line :
+                   seperator = '('
+                   line = line.split(seperator)[0]
                 if len(line.split()) >= 4:
                     platform = line.split()[2]
                     platform_flag = 1
