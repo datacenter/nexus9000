@@ -7,6 +7,7 @@ import logging
 import os
 import copy
 import threading
+from os import environ
 from threading import Thread
 from datetime import datetime
 from collections import OrderedDict
@@ -115,6 +116,7 @@ class NDBMigration(object):
             self.conn_type = self.variable['connection_type']
             self.port = '8443'
             self.login_payload = {}
+            self.first_login_payload = {}
             self.server_ip = self.input_dict['NDBserverIP']['host_name/IP']
             self.server_username = self.input_dict['NDBserverIP']['username']
             self.server_pwd = self.input_dict['NDBserverIP']['password']
@@ -122,6 +124,8 @@ class NDBMigration(object):
             self.server_newpath = self.input_dict['NDBserverIP']['new_path_ndb_build']
             self.login_payload['j_username'] = self.input_dict['NDBserverIP']['ndb_gui_username']
             self.login_payload['j_password'] = self.input_dict['NDBserverIP']['ndb_gui_password']
+            self.first_login_payload['j_username'] = 'admin'
+            self.first_login_payload['j_password'] = 'admin'
         else:
             logger.error("NDB server details are not provided")
             sys.exit(0)
@@ -155,6 +159,8 @@ class NDBMigration(object):
                            +self.port+self.variable['upload_url'])
         self.export_get_url = (self.conn_type + "://" + self.server_ip + ":"
                                + self.port + self.variable['export_url'])
+        self.device_url = (self.conn_type + "://"+self.server_ip + ":"
+                           + self.port + self.variable['device_url'])
 
     def ndb_migrate(self, job_id=''):
         """Invokes other methods to perform migration"""
@@ -254,35 +260,44 @@ class NDBMigration(object):
                         with open(self.reportfile, "a") as self.filepointer:
                             self.filepointer.write(
                                 "\t\t UPGRADE STATUS : Pass \n\n")
-            if 'ndb_export' not in state_items or self.migrate_state['ndb_export'] == 'FAIL':
+            if self.configs == 0:
+                logger.info("NDB has only OF devices added. No ports/connections are configured")
+                logger.info("Hence no need to export the device configs")
+                self.migrate_state['ndb_export'] = 'SKIP'
+                self.update_state()
                 with open(self.reportfile, "a") as self.filepointer:
                     self.filepointer.write(
-                        "\t\tSTEP 2: EXPORT NDB CONFIGURATIONS IN " + self.new_ndbversion + "\n")
-                    self.filepointer.write(
-                        "\t\t****************************************************************\n")
-                export_response = self.ndb_export()
-                if not export_response:
-                    logger.error("NDB export failed. Reverting back to %s NDB configuration",
+                        "\t\t EXPORT STATUS : Skip \n\n")
+            if self.configs != 0:
+                if 'ndb_export' not in state_items or self.migrate_state['ndb_export'] == 'FAIL' and self.configs == 1:
+                    with open(self.reportfile, "a") as self.filepointer:
+                        self.filepointer.write(
+                            "\t\tSTEP 2: EXPORT NDB CONFIGURATIONS IN " + self.new_ndbversion + "\n")
+                        self.filepointer.write(
+                            "\t\t****************************************************************\n")
+                    export_response = self.ndb_export()
+                    if not export_response:
+                        logger.error("NDB export failed. Reverting back to %s NDB configuration",
                                  self.old_ndbversion)
-                    self.migrate_state['ndb_export'] = 'FAIL'
-                    self.update_state()
-                    if self.ndb_revert():
-                        self.migrate_state['ndb_revert'] = 'PASS'
+                        self.migrate_state['ndb_export'] = 'FAIL'
+                        self.update_state()
+                        if self.ndb_revert():
+                            self.migrate_state['ndb_revert'] = 'PASS'
+                        else:
+                            self.migrate_state['ndb_revert'] = 'FAIL'
+                        self.update_state()
+                        with open(self.reportfile, "a") as self.filepointer:
+                            self.filepointer.write(
+                                "\t\t EXPORT STATUS : Fail \n\n")
+                        sys.exit()
                     else:
-                        self.migrate_state['ndb_revert'] = 'FAIL'
-                    self.update_state()
-                    with open(self.reportfile, "a") as self.filepointer:
-                        self.filepointer.write(
-                            "\t\t EXPORT STATUS : Fail \n\n")
-                    sys.exit()
-                else:
-                    logger.info("Export of NDB configurations in NDB %s was successful",
+                        logger.info("Export of NDB configurations in NDB %s was successful",
                                 self.new_ndbversion)
-                    self.migrate_state['ndb_export'] = 'PASS'
-                    self.update_state()
-                    with open(self.reportfile, "a") as self.filepointer:
-                        self.filepointer.write(
-                            "\t\t EXPORT STATUS : Pass \n\n")
+                        self.migrate_state['ndb_export'] = 'PASS'
+                        self.update_state()
+                        with open(self.reportfile, "a") as self.filepointer:
+                            self.filepointer.write(
+                                "\t\t EXPORT STATUS : Pass \n\n")
             if 'ndb_cleanup' not in state_items or self.migrate_state['ndb_cleanup'] == 'FAIL':
                 with open(self.reportfile, "a") as self.filepointer:
                     self.filepointer.write(
@@ -1024,6 +1039,13 @@ class NDBMigration(object):
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(
                 self.server_ip, port=22, username=self.server_username, password=self.server_pwd)
+            # Get the JAVA_HOME environment variable
+            cmd = "echo $JAVA_HOME"
+            _, stdout, _ = ssh.exec_command(cmd)
+            java_home_output = stdout.read()
+            if java_home_output is None:
+               logger.error("JAVA_HOME variable needs to be set. Pls set it and rerun the script")
+               sys.exit()			   
             logger.info("Stopping the current NDB")
             cmd1 = 'cd '+ self.server_oldpath
             cmd2 = './runxnc.sh -stop'
@@ -1066,7 +1088,7 @@ class NDBMigration(object):
                     with requests.session() as s_obj:
                         s_obj.get(self.web_url, verify=False)
                         login_response = s_obj.post(
-                            self.login_url, data=self.login_payload, verify=False)
+                            self.login_url, data=self.first_login_payload, verify=False)
                         if login_response.status_code == 200:
                             break
                         else:
@@ -1076,7 +1098,7 @@ class NDBMigration(object):
                     time.sleep(20)
             with requests.session() as s_obj:
                 s_obj.get(self.web_url, verify=False)
-                s_obj.post(self.login_url, data=self.login_payload, verify=False)
+                s_obj.post(self.login_url, data=self.first_login_payload, verify=False)
                 zip_file = self.job_path + '/Backup/' + currentndbzipfile
                 response = s_obj.post(
                     self.upload_url,
@@ -1143,6 +1165,12 @@ class NDBMigration(object):
             startstatus = 0
             upgradeflag = 1
             ndb_path = servernewpath
+            cmd = "echo $JAVA_HOME"
+            _, stdout, _ = ssh.exec_command(cmd)
+            java_home_output = stdout.read()
+            if java_home_output is None:
+               logger.error("JAVA_HOME variable needs to be set. Pls set it and rerun the script")
+               sys.exit()
             # Stop NDB
             logger.info("Stopping NDB")
             cmd1 = 'cd '+ ndb_path
@@ -1224,7 +1252,16 @@ class NDBMigration(object):
                     ndb_data[ndb_version]['devices'].json()['nodeData'])
                 ndb_data[ndb_version]['filters_list'] = ndb_data[
                     ndb_version]['filters'].json().keys()
+                nodeIdList = []
                 for i in range(0, num_of_devices):
+                    nodeIdList.append(ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeId'])
+                    if ndb_data[ndb_version]['devices'].json()[
+                       'nodeData'][i]['nodeName'] == '':
+                            for key in self.devices_dict.keys():
+                                if self.devices_dict[key]['dpid'] in ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeId']:
+                                    logger.error("nodeName for device %s is empty"
+                                        % self.devices_dict[key]['host_name/IP'])
+                                    return 0
                     ndb_data[ndb_version]['devices_list'].append(
                         ndb_data[ndb_version]['devices'].json()[
                             'nodeData'][i]['nodeName'])
@@ -1233,15 +1270,20 @@ class NDBMigration(object):
                         ndb_data[ndb_version]['connections'].json()[j]['rule']['name'])
                 for i in range(0, num_of_devices):
                     dev_id = ndb_data[ndb_version]['devices_list'][i]
-                    ndb_data[ndb_version]['ports_list'][dev_id] = []
+                    ndb_data[ndb_version]['ports_list'][dev_id] = []  
                 for k in range(0, len(ndb_data[ndb_version]['ports'].json())):
                     node = ndb_data[ndb_version]['ports'].json()[k].keys()[0]
                     port = ndb_data[ndb_version]['ports'].json()[k][node]['name']
                     if 'Ethernet' not in ndb_data[ndb_version]['ports'].json()[
-                            k][node]['name']:
+                        k][node]['name']:
                         port = port.replace('Eth', 'Ethernet')
-
-                    ndb_data[ndb_version]['ports_list'][node].append(port)
+                    if node in nodeIdList:
+                        ndb_data[ndb_version]['ports_list'][node].append(port)
+                noPorts = 1
+                for key in ndb_data[ndb_version]['ports_list'].keys():
+                    if ndb_data[ndb_version]['ports_list'][key] == []:
+                        noPorts = noPorts * 0
+                self.configs = noPorts
                 with open(self.reportfile, "a") as self.filepointer:
                     self.filepointer.write(
                         "\t\tDEVICES PRESENT IN NDB\n")
@@ -1278,6 +1320,38 @@ class NDBMigration(object):
         try:
             import_flag = 1
             import_status = {}
+            self.configs = 0
+            if self.configs == 0:
+                logger.info("Adding the NXAPI devices in NDB")
+                fail_add_flag = 0
+                with requests.session() as s_obj:
+                    s_obj.get(self.web_url, verify=False)
+                    s_obj.post(self.login_url, data=self.login_payload, verify=False)
+                    get_admin = s_obj.get(self.get_admin_url, verify=False)
+                    if get_admin.status_code != 200:
+                        return 0
+                self.device_info = {}
+                self.device_info['type'] = 'ip'
+                self.device_info['connectiontype'] = 'NXAPI'
+                self.device_url = self.device_url + 'add'
+                for device in self.devices_dict.keys():
+                    self.device_info['username'] = self.devices_dict[device]['username']
+                    self.device_info['password'] = self.devices_dict[device]['password']
+                    self.device_info['address'] = self.devices_dict[device]['host_name/IP']
+                    self.device_response = s_obj.post(self.device_url, data=self.device_info, verify=False)
+                    if self.device_response.status_code == 200:
+                        logger.info("NXAPI device %s added in NDB" % self.device_info['address'])
+                    else:
+                        logger.error("NXAPI device %s not added in NDB" % self.device_info['address'])
+                        fail_add_flag = 1
+                if fail_add_flag == 0:
+                    logger.info("All the OF devices are converted to NXAPI and added in NDB")
+                    return import_flag
+                else:
+                    import_flag = 0
+                    self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
+                    return import_flag
+
             if import_rerunflag and "ndb_import" in self.migrate_state.keys():
                 passed_devices = []
                 for key in self.migrate_state['ndb_import'].keys():
@@ -1538,6 +1612,12 @@ class NDBMigration(object):
             # Stop the latest NDB if its running
             java_cmd = 'ps -ef | grep java'
             latest_ndb_flag = 0
+            cmd = "echo $JAVA_HOME"
+            _, stdout, _ = ssh.exec_command(cmd)
+            java_home_output = stdout.read()
+            if java_home_output is None:
+               logger.error("JAVA_HOME variable needs to be set. Pls set it and rerun the script")
+               sys.exit()
             _, stdout, _ = ssh.exec_command(java_cmd)
             count = 0
             while not stdout.channel.eof_received:
