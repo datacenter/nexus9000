@@ -580,6 +580,7 @@ def revert_configs(dev_dict, migrate_state, backup_file):
         update_conn = switch_status(dev_dict)
         dev_dict['conn_obj'] = update_conn
         conn = dev_dict['conn_obj']
+        migrate_state['revert_device_conversion'][threading.current_thread().name] = OrderedDict()
         migrate_state['revert_device_conversion'][threading.current_thread().name][
             'overall_status'] = "PASS"
         return dev_dict, migrate_state
