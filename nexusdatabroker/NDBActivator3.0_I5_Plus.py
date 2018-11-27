@@ -7,6 +7,7 @@ import sys
 import copy
 import time
 import logging
+import zipfile
 from cli import *
 
 class Nexus(object):
@@ -327,7 +328,7 @@ class Guestshell(Nexus):
 
     def change_ndb_perm(self, guest_path):
         """Proc to change the directory permission through guestshell"""
-        perm_cmd = 'guestshell run chmod -Rf 777' + guest_path
+        perm_cmd = 'guestshell run chmod -Rf 777 ' + guest_path
         try:
             cli(perm_cmd)
             return True
@@ -342,10 +343,12 @@ class NDB(Guestshell):
 
     def extract_ndb(self, file_name, path_to_extract):
         """Extract the NDB zip file to given path"""
-        path_to_extract = path_to_extract
-        unzip_cmd = 'sudo unzip ' + file_name + ' -d ' + path_to_extract
+                                         
+                                                                   
         try:
-            subprocess.check_output(unzip_cmd, shell=True)
+            zip_ref = zipfile.ZipFile(file_name, 'r')
+            zip_ref.extractall(path_to_extract)
+            zip_ref.close()
             return True
         except:
             return False
@@ -583,6 +586,10 @@ def guestshell():
         logger.error("Something went wrong while extracting zip file")
         ndb_obj.remove_file('xnc')
         sys.exit(0)
+    
+    add_resp = add_content(ndb_obj, xnc_path)
+    if not add_resp:
+        logger.warning("Something went wrong while adding platform information under xnc/embedded")    
     # Copying xnc directory to guestshell
     copy_resp = ndb_obj.gs_copy_ndb(xnc_path, guest_path)
     if not copy_resp:
@@ -599,9 +606,6 @@ def guestshell():
     ndb_perm_resp = ndb_obj.change_ndb_perm(ndb_path)
     if not ndb_perm_resp:
         logger.error("Something went wrong while changing the permission of xnc directory")
-    add_resp = add_content(ndb_obj, ndb_path)
-    if not add_resp:
-        logger.warning("Something went wrong while adding platform information under xnc/embedded")
     nxapi_resp = ndb_obj.enable_nxapi_feature()
     if not nxapi_resp:
         logger.error("Something went wrong while enable feature nxapi in switch")
