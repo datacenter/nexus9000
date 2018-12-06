@@ -19,6 +19,7 @@ from Exscript.protocols import SSH2
 from configobj import ConfigObj
 import Migrate
 import pdb
+import ast
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -167,6 +168,7 @@ class NDBMigration(object):
         try:
             if job_id != '':
                 self.rerun_flag = 1
+                self.configs = 1
                 if job_id.endswith('/'):
                     read_file = (self.dir_path + '/' + job_id + 'Backup/statefile'
                                  + job_id.strip('job.''/') + '.json')
@@ -211,6 +213,7 @@ class NDBMigration(object):
                     sys.exit()
             self.old_ndbversion = self.get_ndbversion(self.server_oldpath)
             self.new_ndbversion = self.get_ndbversion(self.server_newpath)
+            #self.get_ndb_data(self.old_ndbversion)
             if 'ndb_upgrade' not in state_items or self.migrate_state['ndb_upgrade'] == 'FAIL':
                 if not self.rerun_flag:
                     logger.info("Getting the devices and connections info before upgrade")
@@ -421,7 +424,7 @@ class NDBMigration(object):
                     self.update_state()
                     self.migrate_state['device_conversion']['device_conversion_status'] = "PASS"
                     for key in self.migrate_state['device_conversion'].keys():
-                        if "device_conversion_status" in key:
+                        if "device_conversion_status" in key or "overall_status" in key:
                             continue
                         if "FAIL" in self.migrate_state['device_conversion'][key].values():
                             self.migrate_state['device_conversion'][key]['overall_status'] = "FAIL"
@@ -457,7 +460,7 @@ class NDBMigration(object):
                             "\t\t DEVICE CONVERSION : Pass \n\n")
                     self.migrate_state['device_conversion']['device_conversion_status'] = "PASS"
                     for key in self.migrate_state['device_conversion'].keys():
-                        if "device_conversion_status" in key:
+                        if "device_conversion_status" in key or "overall_status" in self.migrate_state['device_conversion'][key].keys():
                             continue
                         if "FAIL" in self.migrate_state['device_conversion'][key].values():
                             self.migrate_state['device_conversion'][key]['overall_status'] = "FAIL"
@@ -954,7 +957,7 @@ class NDBMigration(object):
             dev_key = []
             for dev_item in downgradable_devices:
                 threading_devices[dev_item] = ThreadWithReturnValue(
-                    target=Migrate.revert_nxos, args=(self.devices_dict[dev_item],),
+                    target=Migrate.revert_nxos, args=(self.devices_dict[dev_item], self.backup_file),
                     name=self.devices_dict[dev_item]['host_name/IP']
                 )
                 dev_key.append(dev_item)
@@ -1145,8 +1148,13 @@ class NDBMigration(object):
                         if (get_devices_response.status_code == 200
                                 and len(get_devices_response.json()['nodeData'])
                                 == self.num_of_devices):
-                            upgradeflag = 1
-                            break
+                            ports_info = s_obj.get(
+                                self.get_ports_url, verify=False)
+                            if ports_info == self.ndb_data['ports_list']:
+                                upgradeflag = 1
+                                break
+                            else:
+                                upgradeFlag = 0
                         else:
                             time.sleep(20)
                 except Exception as content:
@@ -1254,14 +1262,21 @@ class NDBMigration(object):
                     ndb_version]['filters'].json().keys()
                 nodeIdList = []
                 for i in range(0, num_of_devices):
-                    nodeIdList.append(ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeId'])
-                    if ndb_data[ndb_version]['devices'].json()[
+                    nodeIdList.append(ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeName'])
+                    if self.rerun_flag == 0:
+                      if ndb_data[ndb_version]['devices'].json()[
                        'nodeData'][i]['nodeName'] == '':
                             for key in self.devices_dict.keys():
                                 if self.devices_dict[key]['dpid'] in ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeId']:
                                     logger.error("nodeName for device %s is empty"
                                         % self.devices_dict[key]['host_name/IP'])
                                     return 0
+                      for key in self.devices_dict.keys():
+                        if self.devices_dict[key]['dpid'] in ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeId']:
+                            self.devices_dict[key]['name'] = ast.literal_eval(json.dumps(ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeName']))
+                    else:
+                      for key in self.devices_dict.keys():
+                         self.devices_dict[key]['name'] = ast.literal_eval(json.dumps(ndb_data[ndb_version]['devices'].json()['nodeData'][i]['nodeName']))					
                     ndb_data[ndb_version]['devices_list'].append(
                         ndb_data[ndb_version]['devices'].json()[
                             'nodeData'][i]['nodeName'])
@@ -1279,11 +1294,30 @@ class NDBMigration(object):
                         port = port.replace('Eth', 'Ethernet')
                     if node in nodeIdList:
                         ndb_data[ndb_version]['ports_list'][node].append(port)
-                noPorts = 1
-                for key in ndb_data[ndb_version]['ports_list'].keys():
-                    if ndb_data[ndb_version]['ports_list'][key] == []:
-                        noPorts = noPorts * 0
-                self.configs = noPorts
+                self.configs = 0
+                self.ndb_data = {}
+                self.ndb_data['ports_list'] = ndb_data[ndb_version]['ports_list']
+                for key in ndb_data[ndb_version]['ports_list'].keys():				
+                    if ndb_data[ndb_version]['ports_list'][key] != []:
+                        self.configs = 1
+                self.devices_noconfigs_dict = {}
+                self.devices_withconfigs_dict = {}
+                devices_noconfigs = []
+                devices_withconfigs = []
+                for key in self.ndb_data['ports_list'].keys():
+                    if self.ndb_data['ports_list'][key] == []:
+                        devices_noconfigs.append(key)
+                    if self.ndb_data['ports_list'][key] != []:
+                        devices_withconfigs.append(key)
+                for key in self.devices_dict.keys():
+                    for device in devices_withconfigs:
+                        if self.devices_dict[key]['name'] in device:
+                            self.devices_withconfigs_dict[key] = copy.deepcopy(self.devices_dict[key])
+                for key in self.devices_dict.keys():
+                    for device in devices_noconfigs:
+                        if self.devices_dict[key]['name'] in device:
+                            self.devices_noconfigs_dict[key] = copy.deepcopy(self.devices_dict[key])
+                        
                 with open(self.reportfile, "a") as self.filepointer:
                     self.filepointer.write(
                         "\t\tDEVICES PRESENT IN NDB\n")
@@ -1320,44 +1354,14 @@ class NDBMigration(object):
         try:
             import_flag = 1
             import_status = {}
-            self.configs = 0
-            if self.configs == 0:
-                logger.info("Adding the NXAPI devices in NDB")
-                fail_add_flag = 0
-                with requests.session() as s_obj:
-                    s_obj.get(self.web_url, verify=False)
-                    s_obj.post(self.login_url, data=self.login_payload, verify=False)
-                    get_admin = s_obj.get(self.get_admin_url, verify=False)
-                    if get_admin.status_code != 200:
-                        return 0
-                self.device_info = {}
-                self.device_info['type'] = 'ip'
-                self.device_info['connectiontype'] = 'NXAPI'
-                self.device_url = self.device_url + 'add'
-                for device in self.devices_dict.keys():
-                    self.device_info['username'] = self.devices_dict[device]['username']
-                    self.device_info['password'] = self.devices_dict[device]['password']
-                    self.device_info['address'] = self.devices_dict[device]['host_name/IP']
-                    self.device_response = s_obj.post(self.device_url, data=self.device_info, verify=False)
-                    if self.device_response.status_code == 200:
-                        logger.info("NXAPI device %s added in NDB" % self.device_info['address'])
-                    else:
-                        logger.error("NXAPI device %s not added in NDB" % self.device_info['address'])
-                        fail_add_flag = 1
-                if fail_add_flag == 0:
-                    logger.info("All the OF devices are converted to NXAPI and added in NDB")
-                    return import_flag
-                else:
-                    import_flag = 0
-                    self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
-                    return import_flag
-
+            logger.info("Adding the NXAPI devices in NDB")
+            fail_add_flag = 0
             if import_rerunflag and "ndb_import" in self.migrate_state.keys():
                 passed_devices = []
                 for key in self.migrate_state['ndb_import'].keys():
                     if "ndb_import_status" in key:
                         continue
-                    if self.migrate_state['ndb_import'][key]['import_status'] == "PASS":
+                    if self.migrate_state['ndb_import'][key]['ndb_import_status'] == "PASS":
                         passed_devices.append(key)
                 import_json_file = jobpath + '/Backup/' + 'import.json'
                 with open(import_json_file, 'r+') as fileobj:
@@ -1454,46 +1458,40 @@ class NDBMigration(object):
                     self.import_apply_url, data=json.dumps(import_payload),
                     headers=headers)
                 self.migrate_state['ndb_import'] = OrderedDict()
+                self.migrate_state['ndb_import']['ndb_import_status'] = "PASS"
                 import_apply_flag = 0
-                if import_rerunflag:
-                    num_of_failed_devices = len(self.devices_dict) - len(passed_devices)
-                    if (import_apply_response.status_code == 200
-                            and len(import_apply_response.json()['capabilityList'])
-                            == num_of_failed_devices):
-                        logger.info("The devices are ready to be imported")
-                        import_apply_flag = 1
-                else:
-                    if (import_apply_response.status_code == 200
-                            and len(import_apply_response.json()['capabilityList'])
-                            == num_of_devices):
-                        logger.info("The devices are ready to be imported")
-                        import_apply_flag = 1
+                logger.info("Import apply resp %s" % import_apply_response.json())
+                if (import_apply_response.status_code == 200
+                        and len(import_apply_response.json()['capabilityList'])
+                        == num_of_devices):
+                    logger.info("The devices are ready to be imported")
+                    import_apply_flag = 1
                 if not import_apply_flag:                     
                     logger.error("Few devices are not reachable from NDB")
                     for key in self.devices_dict.keys():
                         ipAdd = self.devices_dict[key]['host_name/IP']
                         import_status[ipAdd] = "FAIL"
                         if len(import_apply_response.json()['capabilityList']) == 0:
-                            logger.error("None of devices are up and ready to be imported")
+                            logger.error("%s device is not up and not ready to be imported" % ipAdd)
                             self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
                             import_flag = 0
-                            return import_flag
+                            break
                         for i in range(0, len(import_apply_response.json()['capabilityList'])):
                             if (self.devices_dict[key][
                                     'host_name/IP'] == import_apply_response.json()[
                                         'capabilityList'][i]['ipAddress']):
                                 import_status[ipAdd] = "PASS"
-                        if import_status[ipAdd] != "PASS":
-                            self.migrate_state['ndb_import'][ipAdd] = {}
-                            self.migrate_state['ndb_import'][ipAdd]['import_status'] = "FAIL"
-                            logger.error("Import not successful for device %s" % ipAdd)
+                            if import_status[ipAdd] != "PASS":
+                                self.migrate_state['ndb_import'][ipAdd] = {}
+                                self.migrate_state['ndb_import'][ipAdd]['import_status'] = "FAIL"
+                                logger.error("Import not successful for device %s" % ipAdd)
                     import_flag = 0
                 if (import_apply_response.status_code != 200
                         or len(import_apply_response.json()['capabilityList']) == 0):
                     logger.error("NDB import of data failed")
                     import_flag = 0
                     self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
-                    return import_flag
+                    #return import_flag
                 import_continue_payload = import_apply_response.json()
                 for i in range(0, num_of_devices):
                     import_continue_payload['accepted'] = True
@@ -1504,7 +1502,6 @@ class NDBMigration(object):
                     logger.error("NDB import of data failed")
                     import_flag = 0
                     self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
-                    return import_flag
                 else:
                     for i in range(0, len(import_continue_response.json()['nodes'])):
                         if import_continue_response.json()['nodes'][i]['status'] == 'Success':
@@ -1516,17 +1513,61 @@ class NDBMigration(object):
                             node_ip = import_continue_response.json()['nodes'][i]['ipAddress']
                             self.migrate_state['ndb_import'][node_ip] = OrderedDict()
                             self.migrate_state['ndb_import'][node_ip]['import_status'] = "PARTIAL"
-                            logger.info("Import not successful for device %s" % node_ip)
+                            logger.info("Import was partially successful for device %s" % node_ip)
                             import_flag = 0
                             self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
                     if import_flag == 0:
                         self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
                     else:
                         self.migrate_state['ndb_import']['ndb_import_status'] = "PASS"
+            with requests.session() as s_obj:
+                s_obj.get(self.web_url, verify=False)
+                s_obj.post(self.login_url, data=self.login_payload, verify=False)
+                get_admin = s_obj.get(self.get_admin_url, verify=False)
+                if get_admin.status_code != 200:
+                    return 0
+                self.device_info = {}
+                self.device_info['type'] = 'ip'
+                self.device_info['connectiontype'] = 'NXAPI'
+                self.device_add_url = self.device_url + 'add'
+                self.remove_device_url = self.device_url + 'remove'
+                self.device_get_resp = s_obj.get(self.get_devices_url,verify=False)
+                for device in self.devices_dict.keys():
+                    self.device_info['username'] = self.devices_dict[device]['username']
+                    self.device_info['password'] = self.devices_dict[device]['password']
+                    self.device_info['address'] = self.devices_dict[device]['host_name/IP']
+                    ip_add = self.device_info['address']
+                    
+                    self.device_response = s_obj.post(self.device_add_url, data=self.device_info, verify=False)
+                    if self.device_response.status_code == 200:
+                        if self.device_response.json()['code'] == "SUCCESS":
+                            logger.info("Adding the NXAPI %s device with no configs in NDB" % ip_add)
+                            self.migrate_state['ndb_import'][ip_add] = OrderedDict()
+                            logger.info("NXAPI device %s added in NDB" % self.device_info['address'])
+                            self.migrate_state['ndb_import'][ip_add]['ndb_import_status'] = "PASS"
+                        elif self.device_response.json()['code'] =="CONFLICT":
+                            pass
+                        elif self.device_response.json()['code'] == "INTERNALERROR":
+                            self.device_remove_info = {}
+                            self.device_remove_info['container'] = 'default'
+                            self.device_remove_info['address'] = str([self.devices_dict[device]['host_name/IP']])
+                            self.device_remove_response = s_obj.post(self.remove_device_url, data = self.device_remove_info, verify=False)
+                    else:
+                        logger.error("NXAPI device %s not added in NDB" % self.device_info['address'])
+                        self.migrate_state['ndb_import'][ip_add] = OrderedDict()
+                        self.migrate_state['ndb_import'][ip_add]['ndb_import_status'] = "FAIL"
+                        fail_add_flag = 1
+
+                if fail_add_flag == 0:
+                    pass
+                else:
+                    import_flag = 0
+                    self.migrate_state['ndb_import']['ndb_import_status'] = "FAIL"
             return import_flag
 
         except Exception as content:
             logger.error("%s", content)
+
     def ndb_export(self):
         """Exporting configuration from latest NDB"""
         try:
@@ -1578,15 +1619,26 @@ class NDBMigration(object):
                             return export_flag
                         num_of_devices = len(
                                 download_exportjsonresponse.json()['nodes'])
-                        logger.info("Checking if all the device configs got exported")
-                        if num_of_devices != len(self.devices_dict):
-                            logger.error("All the devices did not get exported")
-                            logger.error("Pls check if all devices are up")
+                        if self.devices_noconfigs_dict == {}:
+                            logger.info("Checking if all the device configs got exported")
+                            if num_of_devices != len(self.devices_dict):
+                                logger.error("All the devices did not get exported")
+                                logger.error("Pls check if all devices are up")
+                                export_flag = 0
+                                return export_flag
+                        if self.devices_noconfigs_dict != {} and num_of_devices == 0:
+                            logger.error("Export data is not being fetched in NDB."
+                                         "Hence cannot export NDB config")
                             export_flag = 0
                             return export_flag
+                        if self.devices_noconfigs_dict != {}:
+                            if len(self.devices_dict) != len(self.devices_noconfigs_dict) + num_of_devices:
+                                logger.error("Few devices might be down and hence not exported")
+                                export_flag = 0
+                                return export_flag
                         for i in range(0, num_of_devices):
                             if download_exportjsonresponse.json()['nodes'][i]['ipAddress'] == "":
-                                for switch_key in self.devices_dict.keys():
+                                for switch_key in self.devices_withconfigs_dict.keys():
                                     if download_exportjsonresponse.json()['nodes'][i]['nodeId'] in self.devices_dict[switch_key]['dpid']:
                                         download_exportjsonresponse.json()['nodes'][i]['ipAddress'] = self.devices_dict[switch_key]['host_name/IP']
                                     else:
