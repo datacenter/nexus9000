@@ -83,6 +83,9 @@ def get_platform(conn, lock):
         for line in out.split("\n"):
             line = line.strip()
             if ("Chassis" in line or 'chassis' in line) and 'cisco' in line:
+                if '(' and ')' in line :
+                   seperator = '('
+                   line = line.split(seperator)[0]
                 if len(line.split()) >= 4:
                     platform = line.split()[2]
                     platform_flag = 1
@@ -234,6 +237,11 @@ def remove_virtualsevice(conn, lock, switch_ova):
         virtual_service_json = conn.response
         virtual_service_json = virtual_service_json.strip(
             "show virtual-service detail name "+ vname + " | json ")
+        virtual_service_json = virtual_service_json.strip("\r\n")
+        if virtual_service_json == "":
+            module_logger.info("%s - Virtual service %s was already removed",
+                threading.current_thread().name, vname)
+            return 1
         vservice_output = json.loads(virtual_service_json)
         vservice_state = vservice_output['TABLE_detail']['ROW_detail']['state']
         pkg_name = vservice_output['TABLE_detail']['ROW_detail']['package_name']
@@ -369,14 +377,18 @@ def add_nxapi_hard(conn, lock, platform, dev_dict, map_dict, migrate_state):
             'add_nxapi_hardwareconfig'] = "PASS"
         for cmd_item in hard_cmd_list:
             cmd = 'configure terminal ; ' + cmd_item
+            module_logger.info("%s - hardware command sent %s", threading.current_thread().name, cmd)
             conn.execute(cmd)
-            if 'ERROR' in conn.response or 'TCAM region configuration exceeded' in conn.response:
+            module_logger.info("%s - hardware command response %s",threading.current_thread().name, conn.response)
+            if 'ifacl minimum size should be 128' in conn.response:
+                conn.execute("hardware profile tcam region ifacl 128")
+            if 'ERROR' in conn.response or 'TCAM region configuration exceeded' in conn.response or 'should not exceed' in conn.response:
                 lock.acquire()
                 fail_flag = True
                 lock.release()
                 migrate_state['device_conversion'][threading.current_thread().name][
                     'add_nxapi_hardwareconfig'] = "FAIL"
-                module_logger.error("%s - Error while configuring TCAM with below command\n", threading.current_thread().name, cmd_item)
+                module_logger.error("%s - Error while configuring TCAM with below command\n%s\n", threading.current_thread().name, cmd_item)
                 module_logger.debug("%s - Error with following exception\n%s\nNeed to revert "
                                     "the configs", threading.current_thread().name, conn.response)
                 break
@@ -727,7 +739,7 @@ def switch_uptime(conn):
                             threading.current_thread().name)
         module_logger.debug(err_data)
 
-def revert_nxos(dev_dict):
+def revert_nxos(dev_dict, backup_file):
     """Revert switch configuration"""
     state_dict = {"overall_status": "FAIL"}
     try:
@@ -786,8 +798,13 @@ def revert_nxos(dev_dict):
                                        "waiting for switch to complete installation",
                                        threading.current_thread().name, kickstart_image,
                                        system_image)
+                    cmd = 'write erase'
+                    conn.send(cmd)
+                    conn.send('y\r')                              
+                    cmd = 'copy' + backup_file + ' startup-config'
+                    conn.execute(cmd)
                     cmd = ('install all kickstart bootflash:' + kickstart_image
-                           + ' system bootflash:' + system_image)
+                           + ' system bootflash:' + system_image + ' no-save bios-force')
                 if cmd != '':
                     state_dict[item] = OrderedDict()
                     state_dict[item] = copy.deepcopy(dev_dict[item])
@@ -804,17 +821,18 @@ def revert_nxos(dev_dict):
                         conn.set_prompt(switch_prompt)
                         conn.send('y\r')                              
                         time.sleep(300)
+                        state_dict[item]['downgrade_status'] = "PASS"
                         update_conn, upgrade_status = switch_status(dev_dict, item)
                         dev_dict['conn_obj'] = update_conn
                         conn = dev_dict['conn_obj']
                         if upgrade_status:
                             module_logger.info("%s - %s, Downgrade successful",
                                                threading.current_thread().name, item)
-                            state_dict[item]['downgrade_status'] = 'PASS'
+                            state_dict[item]['switch_up_status'] = 'PASS'
                         else:
                             module_logger.info("%s - %s, Downgrade failed",
                                                threading.current_thread().name, item)
-                            state_dict[item]['downgrade_status'] = 'FAIL'
+                            state_dict[item]['switch_up_status'] = 'FAIL'
         cmd = ''
         if 'nxos' in dev_dict['switch_image'].keys():
             nxos_image = dev_dict['switch_image']['nxos'].strip()
@@ -827,8 +845,14 @@ def revert_nxos(dev_dict):
             module_logger.info("%s - Loading kickstart image - %s, system image - %s and waiting "
                                "for switch to complete installation",
                                threading.current_thread().name, kickstart_image, system_image)
+            cmd = 'write erase'
+            conn.send(cmd)
+            conn.send('y\r')                              
+            cmd = 'copy' + backup_file + ' startup-config'
+            conn.execute(cmd)
             cmd = ('install all kickstart bootflash:' + kickstart_image
-                   + ' system bootflash:' + system_image)
+                   + ' system bootflash:' + system_image + ' no-save bios-force')
+            module_logger.info("install cmd %s", cmd)
         if cmd != '':
             switch_prompt = conn.get_prompt()
             expected_prompt = 'n]'
@@ -836,27 +860,29 @@ def revert_nxos(dev_dict):
             state_dict["switch_image"] = OrderedDict()
             state_dict["switch_image"] = copy.deepcopy(dev_dict['switch_image'])
             conn.execute(cmd)
+            module_logger.info("install cmd response %s", conn.response)
             if "Invalid command" in conn.response:
                 module_logger.error("Trying to load invalid image")
             else:
                 conn.set_prompt(switch_prompt)
                 conn.send('y\r')                              
                 time.sleep(300)
+                state_dict["switch_image"]['downgrade_status'] = "PASS"
                 update_conn, upgrade_status = switch_status(dev_dict, 'switch_image')
                 dev_dict['conn_obj'] = update_conn
                 conn = dev_dict['conn_obj']
                 if upgrade_status:
                     module_logger.info("%s - switch_image, Downgrade successful",
                                        threading.current_thread().name)
-                    state_dict["switch_image"]['downgrade_status'] = 'PASS'
+                    state_dict["switch_image"]['switch_up_status'] = 'PASS'
                 else:
                     module_logger.info("%s - switch_image, Downgrade failed",
                                        threading.current_thread().name)
-                    state_dict["switch_image"]['downgrade_status'] = 'FAIL'
+                    state_dict["switch_image"]['switch_up_status'] = 'FAIL'
         state_dict["overall_status"] = "PASS"
         for item in state_dict:
             if 'NXOS_Image' in item or 'switch_image' in item:
-                if state_dict[item]['downgrade_status'] == "FAIL":
+                if state_dict[item]['downgrade_status'] == "FAIL" or state_dict[item]['switch_up_status'] == 'FAIL':
                     state_dict["overall_status"] = "FAIL"
                     break
         return dev_dict, state_dict
@@ -960,22 +986,23 @@ def upgrade_switch(dev_dict):
                         conn.set_prompt(switch_prompt)
                         conn.send('y\r')                              
                         time.sleep(300)
+                        state_dict[item]['upgrade_status'] = 'PASS'
                         update_conn, upgrade_status = switch_status(dev_dict, item)
                         dev_dict['conn_obj'] = update_conn
                         conn = dev_dict['conn_obj']
                         if upgrade_status:
                             module_logger.info("%s - %s, upgrade successful",
                                                threading.current_thread().name, item)
-                            state_dict[item]['upgrade_status'] = 'PASS'
+                            state_dict[item]['switch_up_status'] = 'PASS'
                         else:
                             module_logger.info("%s - %s, upgrade failed",
                                                threading.current_thread().name, item)
                             upgrade_fail_flag = True
-                            state_dict[item]['upgrade_status'] = 'FAIL'
+                            state_dict[item]['switch_up_status'] = 'FAIL'
         state_dict["overall_status"] = "PASS"
         for item in state_dict:
             if 'NXOS_Image' in item:
-                if state_dict[item]['upgrade_status'] == "FAIL":
+                if state_dict[item]['upgrade_status'] == "FAIL" or state_dict[item]['switch_up_status'] == "FAIL":
                     state_dict["overall_status"] = "FAIL"
                     break
         return dev_dict, state_dict
