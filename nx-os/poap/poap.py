@@ -1,5 +1,5 @@
 #!/bin/env python
-#md5sum="a39fc249d01b49ddee8c119275eaace7"
+#md5sum="0b19d4c72717f1d0f62a46fd07420f04"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -45,14 +45,16 @@ options = {
    "password": "password",
    "hostname": "2.1.1.1",
    "transfer_protocol": "scp",
-   "mode": "hostname",
+   "mode": "serial_number",
    "target_system_image": "nxos.7.0.3.I4.4.bin",
 }
 
 
 def download_scripts_and_agents():
     """
-    Downloads user scripts, agents, and data after installing the target image, but before reload
+    Downloads user scripts, agents, and data after downloading config, but before installing
+    the target image.  If an application is to be installed in the native Linux environment,
+    uncomment and update the call to install_shell_script() as needed.
     The parameters are as follows:
         source_path: the server path or source path where the source file lives (e.g. /tftpboot)
         source_file: the name of the file on the server / source to download (e.g. agents.tar)
@@ -96,6 +98,11 @@ def download_scripts_and_agents():
     """
     # download_user_app(source_location, "bootflash_agent.sh", "/bootflash",
     #                  "different_name_agent.sh")
+
+    """
+    Install a shell script that has already been downloaded
+    """
+    # install_shell_script("/bootflash", "poap_install")
 
 
 def download_user_app(source_path, source_file, dest_path="/bootflash", dest_file="", unpack=False,
@@ -159,6 +166,58 @@ def download_user_app(source_path, source_file, dest_path="/bootflash", dest_fil
             remove_file(dst)
 
 
+def install_shell_script(source_path, source_file):
+    """
+    Install a user shell script.
+    The users's shell script is copied to /etc/init.d, and chkconfig is run
+    so that the user's script will get executed when the switch boots.
+    source_path: the source directory the file we want to install resides in
+    source_file: the source file to install
+    """
+
+    fullpath = os.path.join(source_path, source_file)
+
+    poap_log("Installing %s" % fullpath)
+
+    try:
+        os.system("cp %s /etc/init.d" % fullpath)
+    except Exception as e:
+        poap_log("Failed to copy %s: %s" % (fullpath, str(e)))
+    else:
+        poap_log("Copy %s to /etc/init.d succeeded" % fullpath)
+
+    for i in range (0, 10):
+        try:
+            os.system("/usr/sbin/chkconfig --add %s" % source_file)
+        except Exception as e:
+            poap_log("Failed to chkconfig add %s: %s" % (source_file, str(e)))
+        else:
+            poap_log("Chkconfig add %s succeeded" % source_file)
+            if (os.system("ls /etc/rc3.d/*%s" % source_file) == 0):
+                poap_log("Chkconfig file exists, exiting retry loop")
+                break
+            else:
+                poap_log("Chkconfig file does not exist, sleeping and looping")
+                time.sleep(2)
+
+    for i in range (0, 10):
+        try:
+            os.system("/usr/sbin/chkconfig --level 3 %s on" % source_file)
+        except Exception as e:
+            poap_log("Failed to chkconfig level 3 %s on: %s" % (source_file, str(e)))
+        else:
+            poap_log("Chkconfig level 3 %s on succeeded" % source_file)
+            if (os.system("ls /etc/rc3.d/*%s" % source_file) == 0):
+                poap_log("Chkconfig file exists, exiting retry loop")
+                break
+            else:
+                poap_log("Chkconfig file does not exist, sleeping and looping")
+                time.sleep(2)
+
+    os.system("sync")
+    time.sleep(5)
+
+
 def set_defaults_and_validate_options():
     """
     Sets all the default values and creates needed variables for POAP to work.
@@ -220,7 +279,7 @@ def set_defaults_and_validate_options():
 
     # Midway system and kickstart source file name.
     # This should be a 6.x U6 or greater dual image.
-    # Required only if moving from pre 6.x U6 image to 7.x image.
+    # Required only if moving from pre 6.x U6 image to 7.x/higher image.
     set_default("midway_system_image", "")
     set_default("midway_kickstart_image", "")
     # --- USB related settings ---
@@ -249,6 +308,7 @@ def set_defaults_and_validate_options():
     set_default("personality_path", "/var/lib/tftpboot")
     set_default("source_tarball", "personality.tar")
     set_default("destination_tarball", options["source_tarball"])
+    set_default("compact_image", False)
 
     # Check that options are valid
     validate_options()
@@ -498,6 +558,13 @@ def split_config_not_needed():
     image newer than or equal to 7.0(3)I4(1), we don't need reloads to apply configs
     """
     global options
+
+    """
+    Device running in n3k mode still requires splitting of config.
+    """
+    if not 'START' in open('/tmp/first_setup.log').readline():
+        return False
+
     nxos_major = 0
     nxos_rev = 0
 
@@ -545,6 +612,40 @@ def split_config_not_needed():
     # NXOS 7.0.3.I3 or less
     return False
 
+def mtc_shut_member_ports(line, config_file_first):
+    """
+    In case bundling of any ports is done for mtc we shut down all the member
+    ports. Apply speed 40000 followed by no shut on the first bundle port.
+    Rest of the port configuration is handled as part of second config file.
+    """
+    global empty_first_file
+    intf = map(int, re.findall('\d+', line))[0]
+    port = map(int, re.findall('\d+', line))[1]
+    if(port!=0):
+        config_file_first.write('interface Ethernet' + str(intf) + '/' + str(port) + '\n')
+        config_file_first.write("shut\n")
+        config_file_first.write('interface Ethernet' + str(intf) + '/' + str(port+1) + '\n')
+        config_file_first.write("shut\n")
+        config_file_first.write('interface Ethernet' + str(intf) + '/' + str(port+2) + '\n')
+        config_file_first.write("shut\n")
+        config_file_first.write('interface Ethernet' + str(intf) + '/' + str(port+3) + '\n')
+        config_file_first.write("shut\n")
+        config_file_first.write('interface Ethernet' + str(intf) + '/' + str(port) + '\n')
+        config_file_first.write("speed 40000\n")
+        config_file_first.write("no shut\n")
+        empty_first_file=0
+        return 1
+    else:
+        return 0
+
+def is_mtc():
+    """
+    Checks is the box is mtc or not using show module cli.
+    MTC boxes are have mod id number as 3548
+    """
+    sh_mod_output = cli("show module")
+    if(sh_mod_output.find("3548") != -1):
+        return 1
 
 def split_config_file():
     """
@@ -575,6 +676,8 @@ def split_config_file():
         line = config_file.readline()
 
     while line != "":
+        if (line.find("interface Ethernet") == 0):
+            intf_eth_line=line
         if res_temp_flag == 1 and not skip_split_config:
             if line.find("arp-ether") != -1 \
                or line.find("copp") != -1\
@@ -646,13 +749,20 @@ def split_config_file():
                 res_temp_flag = 0
         if line.startswith("hardware profile tcam resource template"):
             res_temp_flag = 1
+        if ((line.find("speed 40000") != -1) and is_mtc()):
+            mtc_shut_member_ports(intf_eth_line, config_file_first)
+            #Don't include speed in second config file.
+            res_flag_dontprint = 1
         if res_temp_flag == 0 and line.startswith("system vlan") \
                 or line.startswith("hardware profile portmode") \
                 or line.startswith("hardware profile forwarding-mode warp") \
+                or line.startswith("hardware profile forwarding-mode openflow-hybrid") \
+                or line.startswith("hardware profile forwarding-mode openflow-only") \
                 or line.startswith("hardware profile tcam") \
                 or line.startswith("type fc") \
                 or line.startswith("fabric-mode 40G") \
                 or line.startswith("system urpf") \
+                or line.startswith("no system urpf") \
                 or line.startswith("hardware profile ipv6") \
                 or line.startswith("system routing") \
                 or line.startswith("hardware profile multicast service-reflect") \
@@ -780,12 +890,28 @@ def get_md5(filename):
     file_hdl.close()
     return ""
 
+def get_bootflash_size():
+    """
+    Gets the bootflash size in KB from CLI.
+    Output is handled differently for 6.x and 7.x or higher version.
+    """
+    cli_output = cli("show version")
+    if legacy:
+        result = re.search(r'bootflash:\s+(\d+)', cli_output[1])
+        if result is not None:
+            return int(result.group(1))
+    else:
+        result = re.search(r'bootflash:\s+(\d+)', cli_output)
+        if result is not None:
+            return int(result.group(1))
+    poap_log("Unable to get bootflash size")
 
-def do_copy(source="", dest="", login_timeout=10, dest_tmp=""):
+
+def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
     """
     Copies the file provided from source to destination. Source could
     be USB or external server. Appropriate copy function is required
-    based on whether the switch runs 6.x or 7.x image.
+    based on whether the switch runs 6.x or 7.x or higher image.
     """
     poap_log("Copying file options source=%s destination=%s "
              "login_timeout=%s destination_tmp=%s" % (source,
@@ -834,14 +960,24 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp=""):
         else:
             # Add the destination path
             copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
-            copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
-                protocol, user, host, source, copy_tmp, vrf)
+            if compact is True:
+                copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
+                    protocol, user, host, source, copy_tmp, vrf)
+            else:
+                copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
+                    protocol, user, host, source, copy_tmp, vrf)
             poap_log("Command is : %s" % copy_cmd)
             try:
                 cli(copy_cmd)
             except Exception as e:
+                poap_log("Copy failed: %s" % str(e))
+                # scp compact can fail due to reasons of current image version or
+                # platform do not support it; Try normal scp in such cases
+                if compact is True and ("Syntax error while parsing" in str(e) or \
+                     "Compaction is not supported on this platform" in str(e)):
+                    return False
                 # Remove extra junk in the message
-                if "no such file" in str(e):
+                elif "no such file" in str(e):
                     abort("Copy of %s failed: no such file" % source)
                 elif "Permission denied" in str(e):
                     abort("Copy of %s failed: permission denied" % source)
@@ -865,6 +1001,7 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp=""):
         abort("Failed to rename %s to %s: %s" % (dest_tmp, dest, str(e)))
 
     poap_log("Renamed %s to %s" % (dest_tmp, dest))
+    return True
 
 
 def create_destination_directories():
@@ -988,6 +1125,13 @@ def copy_system():
         poap_log("Currently running image is target image. Skipping system image download")
         return
 
+    # do compact scp of system image if bootflash size is <= 2GB and "compact_image" option is enabled
+    if get_bootflash_size() <= 2000000 and options["compact_image"] is True and options["transfer_protocol"] is "scp":
+        poap_log("INFO: Try image copy with compact option...")
+        do_compact = True
+    else:
+        do_compact = False
+
     org_file = options["destination_system_image"]
     if options["disable_md5"] is False:
         copy_md5_info(options["target_image_path"], options["target_system_image"])
@@ -995,16 +1139,22 @@ def copy_system():
         remove_file(os.path.join(options["destination_path"], "%s.md5" %
                                  options["target_system_image"]))
         poap_log("MD5 for system image from server: %s" % md5_sum_given)
-        if md5_sum_given and os.path.exists(os.path.join(options["destination_path"], org_file)):
-            if verify_md5(md5_sum_given, os.path.join(options["destination_path"], org_file)):
+        if md5_sum_given and os.path.exists(os.path.join(options["destination_path"], options["target_system_image"])):
+            if verify_md5(md5_sum_given, os.path.join(options["destination_path"], options["target_system_image"])):
                 poap_log("File %s already exists and MD5 matches" %
-                         os.path.join(options["destination_path"], org_file))
+                         os.path.join(options["destination_path"], options["target_system_image"]))
+                """
+                For multi-level install when the target system image is already
+                present in the box, overwrite midway_system image name that is
+                stored in destination_system_image with target_system_image.
+                """
+                options["destination_system_image"] = options["target_system_image"]
                 del_system_image = False
                 return
         elif not md5_sum_given:
             abort("Invalid MD5 from server: %s" % md5_sum_given)
         else:
-            poap_log("File %s does not exist on switch" % org_file)
+            poap_log("File %s does not exist on switch" % options["target_system_image"])
 
     tmp_file = "%s.tmp" % org_file
     timeout = options["timeout_copy_system"]
@@ -1014,9 +1164,13 @@ def copy_system():
 
     poap_log("INFO: Starting Copy of System Image")
 
-    do_copy(src, org_file, timeout, tmp_file)
+    ret = do_copy(src, org_file, timeout, tmp_file, do_compact)
+    if do_compact is True and ret is False:
+        poap_log("INFO: compact copy failed; Try normal copy...")
+        do_compact = False
+        do_copy(src, org_file, timeout, tmp_file)
 
-    if options["disable_md5"] is False and md5_sum_given:
+    if options["disable_md5"] is False and md5_sum_given and do_compact is False:
         if not verify_md5(md5_sum_given,
                           os.path.join(options["destination_path"], org_file)):
             abort("#### System file %s MD5 verification failed #####\n" % os.path.join(
@@ -1038,10 +1192,16 @@ def copy_kickstart():
         md5_sum_given = get_md5(options["target_kickstart_image"])
         remove_file(os.path.join(options["destination_path"], "%s.md5" %
                                  options["target_kickstart_image"]))
-        if md5_sum_given and os.path.exists(os.path.join(options["destination_path"], org_file)):
-            if verify_md5(md5_sum_given, os.path.join(options["destination_path"], org_file)):
+        if md5_sum_given and os.path.exists(os.path.join(options["destination_path"], options["target_kickstart_image"])):
+            if verify_md5(md5_sum_given, os.path.join(options["destination_path"], options["target_kickstart_image"])):
                 poap_log("INFO: File %s already exists and MD5 matches" %
-                         os.path.join(options["destination_path"], org_file))
+                         os.path.join(options["destination_path"], options["target_kickstart_image"]))
+                """
+                For multi-level install when the target kickstart image is already
+                present in the box, overwrite midway_kickstart image name that is
+                stored in destination_kickstart_image with target_kickstart_image.
+                """
+                options["destination_kickstart_image"] = options["target_kickstart_image"]
                 del_kickstart_image = False
                 return
 
@@ -1062,7 +1222,7 @@ def copy_kickstart():
 
 def install_images_7_x():
     """
-    Invoked when trying to install a 7.x image. Boot variables are
+    Invoked when trying to install a 7.x or higher image. Boot variables are
     set appropriately and the startup config is updated.
     """
     poap_log("Checking if bios upgrade is needed")
@@ -1070,7 +1230,7 @@ def install_images_7_x():
         poap_log("Installing new BIOS (will take up to 5 minutes. Don't abort)")
         install_bios()
 
-    poap_log("Installing 7x NXOS image")
+    poap_log("Installing NXOS image")
 
     system_image_path = os.path.join(options["destination_path"],
                                      options["destination_system_image"])
@@ -1283,7 +1443,7 @@ def set_cfg_file_location():
 def get_version():
     """
     Gets the image version of the switch from CLI.
-    Output is handled differently for 6.x and 7.x version.
+    Output is handled differently for 6.x and 7.x or higher version.
     """
     cli_output = cli("show version")
     if legacy:
@@ -1300,7 +1460,7 @@ def get_version():
 def get_bios_version():
     """
     Gets the BIOS version of the switch from CLI.
-    Output is handled differently for 6.x and 7.x version.
+    Output is handled differently for 6.x and 7.x/higher version.
     """
     cli_output = cli("show version")
     if legacy:
@@ -1340,16 +1500,17 @@ def install_bios():
 def is_bios_upgrade_needed():
     """
     Check if bios upgrade is required. It's required when the current
-    bios is not 3.x and image upgrade is from 6.x to 7.x
+    bios is not 3.x and image upgrade is from 6.x to 7.x or higher
     """
     global single_image
+    last_upgrade_bios = 3
     ver = get_version()
     bios = get_bios_version()
     poap_log("Switch is running version %s with bios version %s"
              " image %s single_image %d" % (ver, bios, options["target_system_image"],
                                             single_image))
-    if re.match("nxos.7", options["target_system_image"]):
-        poap_log("Upgrading to a nxos 7.x image")
+    if re.match("nxos.", options["target_system_image"]):
+        poap_log("Upgrading to a nxos image")
         try:
             bios_number = float(bios)
         except ValueError:
@@ -1359,10 +1520,18 @@ def is_bios_upgrade_needed():
             except ValueError:
                 poap_log("Could not convert BIOS '%s' to a number, using text match")
                 bios_number = bios
-
-        if bios_number < 3:
+        try:
+            chassis_out = cli("show chassis-family")
+            chassis = chassis_out.split()
+            if chassis[-1] == 'Fretta':
+                last_upgrade_bios = 1
+        except:
+            poap_log("Could not find chassis family.")
+        
+        poap_log("Comparing present BIOS version %d with base version %d" % (bios_number, last_upgrade_bios))
+        if bios_number < last_upgrade_bios:
             poap_log("Bios needs to be upgraded as switch is "
-                     "running bios version less than 3.0")
+                     "running older bios version")
             return True
     poap_log("Bios upgrade not needed")
     return False
@@ -1384,39 +1553,51 @@ def find_upgrade_index_from_match(image_info):
     N9K images have always been greater revisions than anything in this path so this
     method will return len(upgrade_path) on N9K
     """
-    upgrade_path = [('5', '0', '3', '5', '1'), ('6', '0', '2', '6', '2'),
+    upgrade_path = [('5', '0', '3', '5', '1'), ('6', '0', '2', '6', '2a'),
                     ('6', '0', '2', '6', '7')]
 
     major = image_info.group(1)
     minor = image_info.group(2)
     revision = image_info.group(3)
-    branch = image_info.group(4)
-    release = image_info.group(5)
+    #Ignore the branch and release details for 9.2 or higher versions
+    if major < 9:
+       branch = image_info.group(4)
+       release = image_info.group(5)
+    else:
+       branch=0
+       release=0
 
     i = 0
 
-    # Major
-    while i < len(upgrade_path) and major > upgrade_path[i][0]:
-        i += 1
-    # Minor
-    while i < len(upgrade_path) and minor > upgrade_path[i][1]:
-        i += 1
-    # Revision
-    while i < len(upgrade_path) and revision > upgrade_path[i][2]:
-        i += 1
-    # Branch
-    while i < len(upgrade_path) and branch > upgrade_path[i][3]:
-        i += 1
-    # Release
-    while i < len(upgrade_path) and release > upgrade_path[i][4]:
-        i += 1
-
-    if i < len(upgrade_path) and major == upgrade_path[i][0] and minor == upgrade_path[i][1] \
-       and revision == upgrade_path[i][2] and branch == upgrade_path[i][3] \
-       and release == upgrade_path[i][4]:
-        poap_log("On upgrade version")
-        i += 1
-
+    while i < len(upgrade_path):
+        # Major
+        if major < upgrade_path[i][0]:
+            return i
+        elif major > upgrade_path[i][0]:
+            i += 1
+        # Minor
+        elif minor < upgrade_path[i][1]:
+            return i
+        elif minor > upgrade_path[i][1]:
+            i += 1
+        # Revision
+        elif revision < upgrade_path[i][2]:
+            return i
+        elif  revision > upgrade_path[i][2]:
+            i += 1
+        # Branch
+        elif branch < upgrade_path[i][3]:
+            return i
+        elif branch > upgrade_path[i][3]:
+            i += 1
+        # Release
+        elif release < upgrade_path[i][4]:
+            return i
+        elif release > upgrade_path[i][4]:
+            i += 1
+        else:
+            #Exact match, return next index
+            return i + 1
     return i
 
 
@@ -1492,19 +1673,25 @@ def set_next_upgrade_from_upgrade_path():
     # Check currently running image
     version = get_version()
 
-    image_info = re.match("(\d+)\.(\d+)\((\d+)\)[A-Z](\d+)\((\w+)\)", version)
+    image_info = re.match("(\d+)\.(\d+)\((\d+)\)[A-Z]+(\d+)\((\w+)\)", version)
     if image_info is None:
-        abort("Failed to extract image information from %s" % version)
+        #try the regex match for 9.2(1) or higher version scheme
+        image_info = re.match("(\d+)\.(\d+)\((\d+)\)", version)
+        if image_info is None:
+            abort("Failed to extract image information from %s" % version)
 
     current_idx = find_upgrade_index_from_match(image_info)
 
     # Check the target image
-    image_info = re.search("[\w-]+\.(\d+)\.(\d+)\.(\d+)\.[A-Z](\d+)\.(\w+)",
+    image_info = re.search("[\w-]+\.(\d+)\.(\d+)\.(\d+)\.[A-Z]+(\d+)\.(\w+)",
                            options["target_system_image"])
 
     if image_info is None:
-        poap_log("Failed to match target image: %s" % options["target_system_image"])
-        exit(1)
+        #try the regex match for 9.2 or higher version scheme
+        image_info = re.search("[\w-]+\.(\d+)\.(\d+)\.(\d+)", options["target_system_image"])
+        if image_info is None:
+            poap_log("Failed to match target image: %s" % options["target_system_image"])
+            exit(1)
 
     target_idx = find_upgrade_index_from_match(image_info)
 
@@ -1664,7 +1851,7 @@ def check_multilevel_install():
     """
     Checks whether or not the multi-level install procedure is needed. Sets
     multi_step_install to True if it is needed. Also sets single_image to
-    True if the target image is a 7x image.
+    True if the target image is a 7x or higher image.
     """
     global options, single_image
 
@@ -1674,7 +1861,7 @@ def check_multilevel_install():
     else:
         set_next_upgrade_from_upgrade_path()
 
-    if re.match("nxos.7", options["target_system_image"]) \
+    if re.match("nxos.", options["target_system_image"]) \
        or re.match("n9000", options["target_system_image"]):
         poap_log("Single image is set")
         single_image = True
@@ -1737,10 +1924,14 @@ def main():
     create_destination_directories()
 
     check_multilevel_install()
-    # In two step install we just copy the midway image and
-    # reboot. Config copy happens in the second step.
+    # In two step install we just copy the midway image and reboot.
+    # Config copy and script download happens in the second step.
     if multi_step_install is False:
         copy_config()
+
+        # Download user scripts and agents
+        download_scripts_and_agents()
+        # End of multi_step_install is False block
 
     copy_system()
 
@@ -1756,9 +1947,6 @@ def main():
 
     # Cleanup midway images if any
     cleanup_temp_images()
-
-    # Download user scripts and agents
-    download_scripts_and_agents()
 
     # Invoke personality restore if personality is enabled
     if options["mode"] == "personality":
