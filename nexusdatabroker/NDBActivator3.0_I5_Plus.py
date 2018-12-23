@@ -8,6 +8,7 @@ import copy
 import time
 import logging
 import zipfile
+import fileinput
 from cli import *
 
 class Nexus(object):
@@ -171,6 +172,25 @@ class Nexus(object):
         file_path = '/bootflash/' + file_name
         try:
             return bool(os.path.exists(file_path))
+        except:
+            return False
+
+    def modify_content(self, user, embedded_path):
+        """Replace the content of the files in xnc/embedded/i5 directory"""
+        try:
+            make_path = embedded_path + '/make-systemctl-env.sh'
+            if bool(os.path.exists(make_path)):
+                for line in fileinput.input(make_path, inplace=1):
+                    print line.replace("guestshell", user)
+            service_path = embedded_path + '/ndb.service'
+            if bool(os.path.exists(service_path)):
+                for line in fileinput.input(service_path, inplace=1):
+                    print line.replace("guestshell", user)
+            trigger_path = embedded_path + 'trigger.sh'
+            if bool(os.path.exists(trigger_path)):
+                for line in fileinput.input(trigger_path, inplace=1):
+                    print line.replace("guestshell", user)
+            return True
         except:
             return False
 
@@ -586,10 +606,15 @@ def guestshell():
         logger.error("Something went wrong while extracting zip file")
         ndb_obj.remove_file('xnc')
         sys.exit(0)
-    
+    embedded_path = xnc_path + '/embedded/i5'
+    modify_resp = ndb_obj.modify_content(c_user, embedded_path)
+    if not modify_resp:
+        logger.error("Something went wrong while replacing file information under xnc/embedded directory")
+        ndb_obj.remove_file('xnc')
+        sys.exit(0)
     add_resp = add_content(ndb_obj, xnc_path)
     if not add_resp:
-        logger.warning("Something went wrong while adding platform information under xnc/embedded")    
+        logger.warning("Something went wrong while adding platform information under xnc/embedded directory")
     # Copying xnc directory to guestshell
     copy_resp = ndb_obj.gs_copy_ndb(xnc_path, guest_path)
     if not copy_resp:
