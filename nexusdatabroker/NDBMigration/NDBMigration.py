@@ -138,6 +138,8 @@ class NDBMigration(object):
                           + self.variable['login_url'])
         self.save_url = (self.conn_type + "://" + self.server_ip + ":"
                          + self.port + self.variable['save_url'])
+        self.save_admin_url = (self.conn_type + "://" + self.server_ip + ":"
+                         + self.port + self.variable['save_admin_url'])
         self.download_url = (self.conn_type + "://" + self.server_ip + ":"
                              +self.port+self.variable['download_url'])
         self.get_connections_url = (self.conn_type + "://" + self.server_ip + ":"
@@ -1025,6 +1027,12 @@ class NDBMigration(object):
                     else:
                         logger.error("Error while saving the configuration")
                         return 0
+                    save_admin_response = s_obj.post(self.save_admin_url, verify=False)
+                    if save_admin_response.status_code == 200:
+                        logger.info("Administration Page save successful")
+                    else:
+                        logger.error("Error while saving the administration configuration")
+                        return 0
             logger.info("Downloading the NDB zip file from current NDB")
             currentndbzipfile = ndb_version + '.zip'
             with requests.session() as s_obj:
@@ -1148,13 +1156,8 @@ class NDBMigration(object):
                         if (get_devices_response.status_code == 200
                                 and len(get_devices_response.json()['nodeData'])
                                 == self.num_of_devices):
-                            ports_info = s_obj.get(
-                                self.get_ports_url, verify=False)
-                            if ports_info == self.ndb_data['ports_list']:
-                                upgradeflag = 1
-                                break
-                            else:
-                                upgradeFlag = 0
+                            upgradeflag = 1
+                            break
                         else:
                             time.sleep(20)
                 except Exception as content:
@@ -1795,11 +1798,18 @@ def check_device_support(devices_dict, rerun_flag, backup_file):
             # Check tcam values to be multiples of 256
             tcam_flag = 0
             for key, value in tcam_regions.iteritems():
-                if int(value)%256 != 0:
-                    logger.error("In Device %s, please provide the TCAM values"
+                if "3064" not in platform:
+                    if int(value)%256 != 0:
+                        logger.error("In Device %s, please provide the TCAM values"
                                  " in multiples of 256", switch_ip)
-                    tcam_flag = 1
-                    break
+                        tcam_flag = 1
+                        break
+                elif "3064" in platform:
+                    if int(value - 128)%256 != 0:
+                        logger.error("In Device %s, please provide the TCAM values"
+                                 " in multiples of 256 starting from 128", switch_ip)
+                        tcam_flag = 1
+                        break
             if tcam_flag == 1:
                 support_flag = 0
                 break
