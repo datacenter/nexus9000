@@ -1676,7 +1676,7 @@ def set_next_upgrade_from_upgrade_path():
     image_info = re.match("(\d+)\.(\d+)\((\d+)\)[A-Z]+(\d+)\((\w+)\)", version)
     if image_info is None:
         #try the regex match for 9.2(1) or higher version scheme
-        image_info = re.match("(\d+)\.(\d+)\((\d+)\)", version)
+        image_info = re.match("(\d+)\.(\d+)\((\d+)[a-z]?\)", version)
         if image_info is None:
             abort("Failed to extract image information from %s" % version)
 
