@@ -959,13 +959,22 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
                     raise
         else:
             # Add the destination path
-            copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
+            # Check if the password is empty to avoid syntax errors in the cli
+            if not password:
+                copy_cmd = "terminal dont-ask ; terminal password \'\' ; "
+            else:
+                copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
             if compact is True:
                 copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
                     protocol, user, host, source, copy_tmp, vrf)
             else:
-                copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
-                    protocol, user, host, source, copy_tmp, vrf)
+                #Check if user is empty to remove it (avoid name resolution)
+                if not user:
+                    copy_cmd += "copy %s://%s%s %s vrf %s" % (
+                        protocol, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)
             poap_log("Command is : %s" % copy_cmd)
             try:
                 cli(copy_cmd)
