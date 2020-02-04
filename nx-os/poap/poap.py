@@ -282,6 +282,7 @@ def set_defaults_and_validate_options():
     # Required only if moving from pre 6.x U6 image to 7.x/higher image.
     set_default("midway_system_image", "")
     set_default("midway_kickstart_image", "")
+    set_default("skip_multi_level", False)
     # --- USB related settings ---
     # USB slot info. By default its USB slot 1, if not specified specifically.
     # collina2 has 2 usb ports. To enable poap in usb slot 2 user has to set the
@@ -1854,6 +1855,11 @@ def check_multilevel_install():
     True if the target image is a 7x or higher image.
     """
     global options, single_image
+    
+    # User wants to override multi level install
+    if options["skip_multi_level"] == True:
+        single_image = True
+        return
 
     # User wants to override the midway image
     if options["midway_system_image"] != "":
