@@ -270,6 +270,7 @@ def set_defaults_and_validate_options():
     set_default("destination_kickstart_image", options["target_kickstart_image"])
     set_default("destination_midway_system_image", "midway_system.bin")
     set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
+    set_default("skip_multi_level", False)
 
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
@@ -1854,6 +1855,11 @@ def check_multilevel_install():
     True if the target image is a 7x or higher image.
     """
     global options, single_image
+    
+    # User wants to override multi level install
+    if options["skip_multi_level"] == True:
+        single_image = True
+        return
 
     # User wants to override the midway image
     if options["midway_system_image"] != "":
