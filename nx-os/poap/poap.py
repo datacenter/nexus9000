@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 #md5sum="0b19d4c72717f1d0f62a46fd07420f04"
 """
 If any changes are made to this script, please run the below command
@@ -217,7 +217,6 @@ def install_shell_script(source_path, source_file):
     os.system("sync")
     time.sleep(5)
 
-
 def set_defaults_and_validate_options():
     """
     Sets all the default values and creates needed variables for POAP to work.
@@ -246,7 +245,7 @@ def set_defaults_and_validate_options():
         required_parameters.add("hostname")
 
     # If we are missing any required parameters
-    missing_parameters = required_parameters.difference(options.keys())
+    missing_parameters = required_parameters.difference(list(options.keys()))
     if len(missing_parameters) != 0:
         poap_log("Required parameters are missing:")
         abort("Missing %s" % ", ".join(missing_parameters))
@@ -269,8 +268,12 @@ def set_defaults_and_validate_options():
     set_default("destination_system_image", options["target_system_image"])
     set_default("destination_kickstart_image", options["target_kickstart_image"])
     set_default("destination_midway_system_image", "midway_system.bin")
-    set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
     set_default("skip_multi_level", False)
+    set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
+    set_default("serial_number","");
+    set_default("target_inst_path", "")
+    set_default("certificate_ca","")
+    set_default("crypto_password","")
 
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
@@ -908,7 +911,7 @@ def get_bootflash_size():
     poap_log("Unable to get bootflash size")
 
 
-def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
+def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, dont_abort=False):
     """
     Copies the file provided from source to destination. Source could
     be USB or external server. Appropriate copy function is required
@@ -962,11 +965,19 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
             # Add the destination path
             copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
             if compact is True:
-                copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
-                    protocol, user, host, source, copy_tmp, vrf)
+                if global_use_kstack is True:
+                    copy_cmd += "copy %s://%s@%s%s %s compact vrf %s use-kstack" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)
             else:
-                copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
-                    protocol, user, host, source, copy_tmp, vrf)
+                if global_use_kstack is True:
+                    copy_cmd += "copy %s://%s@%s%s %s vrf %s use-kstack" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)
             poap_log("Command is : %s" % copy_cmd)
             try:
                 cli(copy_cmd)
@@ -979,7 +990,10 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
                     return False
                 # Remove extra junk in the message
                 elif "no such file" in str(e):
-                    abort("Copy of %s failed: no such file" % source)
+                    if (dont_abort == True):
+                        pass
+                    else:
+                        abort("Copy of %s failed: no such file" % source)
                 elif "Permission denied" in str(e):
                     abort("Copy of %s failed: permission denied" % source)
                 elif "No space left on device" in str(e):
@@ -996,6 +1010,8 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
     poap_log("*** Downloaded file is of size %s ***" % file_size)
 
     dest = os.path.join(options["destination_path"], dest)
+    if (dont_abort == True): 
+        return True
     try:
         os.rename(dest_tmp, dest)
     except KeyError as e:
@@ -1314,6 +1330,99 @@ def install_images():
     else:
         poap_log("Multi-level install not set, installed images")
 
+#Procedure to intall using ISSU install command
+def install_issu():
+    system_image_path = os.path.join(options["destination_path"],
+                                     options["destination_system_image"])
+    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    
+    img_upgrade_cmd = "config terminal ; terminal dont-ask"
+    img_upgrade_cmd += " ; install all nxos %s non-interruptive override" % system_image_path
+    try:
+        output = cli(img_upgrade_cmd)
+        file = open("/bootflash/install_output.txt","w")
+        file.write(output)
+        file.close()
+    except Exception as e:
+        s = os.statvfs("/bootflash/")
+        freespace = (s.f_bavail * s.f_frsize)
+        total_size = (s.f_blocks * s.f_frsize)
+        percent_free = (float(freespace) / float(total_size)) * 100
+        poap_log("%0.2f%% bootflash free" % percent_free)
+        abort("Image install failed: %s" % str(e))
+   
+def copy_install_license():
+    """
+    Copies the license files in golden and serial number folder 
+    and installs the license files.
+    """
+    serial_path = options["target_inst_path"] + options["serial_number"] + "/*.lic"
+    poap_log("Checking for licences to install.")
+
+    timeout = options["timeout_copy_system"]
+    os.system("mkdir -p /bootflash/poap_files")
+    dst = "poap_files/"
+
+    do_copy(serial_path, dst, timeout, dst, False, True)
+
+    for file in os.listdir("/bootflash/poap_files"):
+        if file.endswith(".lic"):
+            poap_log("Installing license file. %s" % file)
+            cli("terminal dont-ask ; install license bootflash:poap_files/%s" % file)
+
+def copy_install_rpm():
+    """
+    Copies the rpm files from golden and serial number folder 
+    and installs the rpms for next reload
+    """
+    golden_path = options["target_inst_path"] + "golden/*.rpm"
+    serial_path = options["target_inst_path"] + options["serial_number"] + "/*.rpm"
+    poap_log("Checking for rpm files to install.")
+
+    timeout = options["timeout_copy_system"]
+    os.system("mkdir -p /bootflash/poap_files")
+    dst = "poap_files/"
+
+    do_copy(serial_path, dst, timeout, dst, False, True)
+    do_copy(golden_path, dst, timeout, dst, False, True)
+    for file in os.listdir("/bootflash/poap_files"):
+        if file.endswith(".rpm"):
+            poap_log("Installing rpm file: %s" % file)
+            rpmtype = subprocess.check_output("/usr/bin/rpm -qp --queryformat %%{NXOSRPMTYPE} /bootflash/poap_files/%s", shell=True)
+            if (len(rpmtype) != 0):
+                os.system("cp /bootflash/poap_files/%s /bootflash/.rpmsstore/patching/localrepo/" % file)
+                os.system("createrepo /bootflash/.rpmsstore/patching/localrepo/")
+            else:
+                os.system("cp /bootflash/poap_files/%s /bootflash/.rpmsstore/patching/thirdparty/" % file)
+                os.system("createrepo /bootflash/.rpmsstore/patching/thirdparty/")
+            os.system("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s >> /bootflash/.rpmstore/nxos_rpms_persisted" % file)
+            os.system("sed -i -e '$a\' /bootflash/.rpmstore/nxos_rpms_persisted") 
+
+def copy_install_certificate():
+    """
+    Copies the certificatee files in golden and serial number folder
+    and installs the license files.
+    """
+    serial_path_p12 = options["target_inst_path"] + options["serial_number"] + "/*.p12"
+    serial_path_pem = options["target_inst_path"] + options["serial_number"] + "/*.pem"
+    poap_log("Checking for certificates to install.")
+
+    timeout = options["timeout_copy_system"]
+    os.system("mkdir -p /bootflash/poap_files")
+    dst = "poap_files/"
+
+    do_copy(serial_path_pem, dst, timeout, dst, False, True)
+    
+    if (len(options["certificate_ca"])==0):
+        poap_log("No CA server specified.")
+        return
+    else:
+        do_copy(serial_path_p12, dst, timeout, dst, False, True)
+        for file in os.listdir("/bootflash/poap_files"):
+            if file.endswith(".p12"):
+                poap_log("Installing certificate file. %s" % file)
+                cli("config t ; crypto ca trustpoint %s" % options["certificate_ca"])
+                cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
 
 def verify_freespace():
     """
@@ -1325,7 +1434,7 @@ def verify_freespace():
     freespace = (s.f_bavail * s.f_frsize) / 1024
     poap_log("Free bootflash space is %s" % freespace)
 
-    if options["required_space"] > freespace:
+    if int(options["required_space"]) > freespace:
         abort("*** Not enough bootflash space to continue POAP ***")
 
 
@@ -1339,6 +1448,7 @@ def set_cfg_file_serial():
     if 'POAP_SERIAL' in os.environ:
         poap_log("serial number %s" % os.environ['POAP_SERIAL'])
         options["source_config_file"] = "conf.%s" % os.environ['POAP_SERIAL']
+        options["serial_number"] = os.environ['POAP_SERIAL']
     poap_log("Selected conf file name : %s" % options["source_config_file"])
 
 
@@ -1353,12 +1463,14 @@ def set_cfg_file_mac():
             poap_log("usb slot is 2")
 
         config_file = "conf_%s.cfg" % os.environ['POAP_RMAC']
+        options["serial_number"] = os.environ['POAP_RMAC']
         poap_log("Router MAC conf file name : %s" % config_file)
         if os.path.exists("/usbslot%d/%s" % (usbslot, config_file)):
             options["source_config_file"] = config_file
             poap_log("Selected conf file name : %s" % options["source_config_file"])
             return
         config_file = "conf_%s.cfg" % os.environ['POAP_MGMT_MAC']
+        options["serial_number"] = os.environ['POAP_MGMT_MAC']
         poap_log("MGMT MAC conf file name : %s" % config_file)
         if os.path.exists("/usbslot%d/%s" % (options["usb_slot"], config_file)):
             options["source_config_file"] = config_file
@@ -1368,6 +1480,7 @@ def set_cfg_file_mac():
         if 'POAP_MAC' in os.environ:
             poap_log("Interface MAC %s" % os.environ['POAP_MAC'])
             options["source_config_file"] = "conf_%s.cfg" % os.environ['POAP_MAC']
+            options["serial_number"] = os.environ['POAP_MAC']
             poap_log("Selected conf file name : %s" % options["source_config_file"])
 
 
@@ -1561,7 +1674,7 @@ def find_upgrade_index_from_match(image_info):
     minor = image_info.group(2)
     revision = image_info.group(3)
     #Ignore the branch and release details for 9.2 or higher versions
-    if major < 9:
+    if int(major) < 9:
        branch = image_info.group(4)
        release = image_info.group(5)
     else:
@@ -1811,16 +1924,19 @@ def setup_mode():
                        "personality", "raw"]
     if options["mode"] == "location":
         set_cfg_file_location()
+        options["serial_number"] = os.environ['POAP_SERIAL']
     elif options["mode"] == "serial_number":
         set_cfg_file_serial()
     elif options["mode"] == "mac":
         set_cfg_file_mac()
     elif options["mode"] == "hostname":
         set_cfg_file_host()
+        options["serial_number"] = os.environ['POAP_SERIAL']
     elif options["mode"] == "personality":
         initialize_personality()
     elif options["mode"] == "raw":
         # Don't need to change the name of the config file
+        options["serial_number"] = os.environ['POAP_SERIAL']
         pass
     else:
         poap_log("Invalid mode selected: %s" % options["mode"])
@@ -1855,7 +1971,7 @@ def check_multilevel_install():
     True if the target image is a 7x or higher image.
     """
     global options, single_image
-    
+
     # User wants to override multi level install
     if options["skip_multi_level"] == True:
         single_image = True
@@ -1940,6 +2056,10 @@ def main():
         # End of multi_step_install is False block
 
     copy_system()
+    if (len(options["target_inst_path"]) != 0):
+        copy_install_license()
+        copy_install_rpm()
+        copy_install_certificate()
 
     if single_image is False:
         copy_kickstart()
@@ -1948,6 +2068,8 @@ def main():
     # install images
     if single_image is False:
         install_images()
+    elif global_upgrade_bios:
+        install_issu()
     else:
         install_images_7_x()
 
@@ -1983,3 +2105,4 @@ if __name__ == "__main__":
                      .format(fname, exc_tb.tb_lineno))
             exc_tb = exc_tb.tb_next
         abort()
+
