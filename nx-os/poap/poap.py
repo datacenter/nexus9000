@@ -49,6 +49,14 @@ options = {
    "target_system_image": "nxos.7.0.3.I4.4.bin",
 }
 
+"""
+Setting global_use_kstack to True makes copy operation use the 
+kstack option to copy images.
+Setting global_upgrade_bios to True makes sure BIOS gets upgraded
+to latest BIOS available with the new image.
+"""
+global_use_kstack = False
+global_upgrade_bios = False
 
 def download_scripts_and_agents():
     """
