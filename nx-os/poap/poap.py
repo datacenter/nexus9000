@@ -282,7 +282,8 @@ def set_defaults_and_validate_options():
     set_default("target_inst_path", "")
     set_default("certificate_ca","")
     set_default("crypto_password","")
-
+    set_default("use_nxos_boot", False)
+    
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
 
@@ -1288,6 +1289,22 @@ def install_images_7_x():
 
     poap_log("INFO: Configuration successful")
 
+def install_nxos_issu():
+
+    system_image_path = os.path.join(options["destination_path"],
+                                     options["destination_system_image"])
+    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    try:
+        cli("copy running-config startup-config")
+    except SyntaxError:
+        poap_log("WARNING: copy run to start failed")
+
+    try:
+        poap_log("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
+        cli("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
+    except Exception as e:
+        poap_log("Failed to ISSU to image %s" % system_image_path)
+        abort(str(e))
 
 # Procedure to install both kickstart and system images
 def install_images():
@@ -1376,7 +1393,9 @@ def copy_install_license():
     for file in os.listdir("/bootflash/poap_files"):
         if file.endswith(".lic"):
             poap_log("Installing license file. %s" % file)
+            poap_log("Executing cli : install license bootflash:poap_files/%s" %file)
             cli("terminal dont-ask ; install license bootflash:poap_files/%s" % file)
+            poap_log("Installed license succesfully.")
 
 def copy_install_rpm():
     """
@@ -1398,13 +1417,16 @@ def copy_install_rpm():
             poap_log("Installing rpm file: %s" % file)
             rpmtype = subprocess.check_output("/usr/bin/rpm -qp --queryformat %%{NXOSRPMTYPE} /bootflash/poap_files/%s", shell=True)
             if (len(rpmtype) != 0):
+                poap_log("RPM is a nxos RPM. executing clis for the same.")
                 os.system("cp /bootflash/poap_files/%s /bootflash/.rpmsstore/patching/localrepo/" % file)
                 os.system("createrepo /bootflash/.rpmsstore/patching/localrepo/")
             else:
+                poap_log("RPM is a third-party RPM. Executing clis for the same")
                 os.system("cp /bootflash/poap_files/%s /bootflash/.rpmsstore/patching/thirdparty/" % file)
                 os.system("createrepo /bootflash/.rpmsstore/patching/thirdparty/")
             os.system("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s >> /bootflash/.rpmstore/nxos_rpms_persisted" % file)
             os.system("sed -i -e '$a\' /bootflash/.rpmstore/nxos_rpms_persisted") 
+            poap_log("RPM %s scheduled ot be installed on next reload. " % file)
 
 def copy_install_certificate():
     """
@@ -1412,6 +1434,7 @@ def copy_install_certificate():
     and installs the license files.
     """
     serial_path_p12 = options["target_inst_path"] + options["serial_number"] + "/*.p12"
+    serial_path_pfx = options["target_inst_path"] + options["serial_number"] + "/*.pfx"
     serial_path_pem = options["target_inst_path"] + options["serial_number"] + "/*.pem"
     poap_log("Checking for certificates to install.")
 
@@ -1426,12 +1449,16 @@ def copy_install_certificate():
         return
     else:
         do_copy(serial_path_p12, dst, timeout, dst, False, True)
+        do_copy(serail_path_pfx, dst, timeout, dst, False, True)
         for file in os.listdir("/bootflash/poap_files"):
-            if file.endswith(".p12"):
+            if (file.endswith(".p12") or file.endswith(".pfx")):
                 poap_log("Installing certificate file. %s" % file)
+                poap_log("Execute cli : config t ; crypto ca trustpoint %s" % options["certificate_ca"])
                 cli("config t ; crypto ca trustpoint %s" % options["certificate_ca"])
+                poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
                 cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
-
+                poap_log("Installed certificate %s succesfully" % file)
+                
 def verify_freespace():
     """
     Checks if the available space in bootflash is sufficient enough to
@@ -2078,7 +2105,7 @@ def main():
         install_images()
     elif global_upgrade_bios:
         install_issu()
-    else:
+    elif options["use_nxos_boot"]:
         install_images_7_x()
 
     # Cleanup midway images if any
@@ -2097,6 +2124,9 @@ def main():
     cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
     poap_log("Done copying the second scheduled cfg")
     remove_file(os.path.join("/bootflash", options["split_config_second"]))
+    if (options["use_nxos_boot"] is False):
+        install_nxos_issu()
+
     log_hdl.close()
     exit(0)
 
