@@ -1436,6 +1436,7 @@ def copy_install_certificate():
     serial_path_p12 = options["target_inst_path"] + options["serial_number"] + "/*.p12"
     serial_path_pfx = options["target_inst_path"] + options["serial_number"] + "/*.pfx"
     serial_path_pem = options["target_inst_path"] + options["serial_number"] + "/*.pem"
+    serial_path_ssh = options["target_inst_path"] + options["serial_number"] + "/*.pub"
     poap_log("Checking for certificates to install.")
 
     timeout = options["timeout_copy_system"]
@@ -1443,6 +1444,7 @@ def copy_install_certificate():
     dst = "poap_files/"
 
     do_copy(serial_path_pem, dst, timeout, dst, False, True)
+    do_copy(serial_path_ssh, dst, timeout, dst, False, True)
     
     if (len(options["certificate_ca"])==0):
         poap_log("No CA server specified.")
