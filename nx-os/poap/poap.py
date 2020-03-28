@@ -326,7 +326,7 @@ def set_defaults_and_validate_options():
     # Check that options are valid
     validate_options()
 
-
+    
 def validate_options():
     """
     Validates that the options provided by the user are valid.
@@ -334,7 +334,8 @@ def validate_options():
     """
     if os.environ.get("POAP_PHASE", None) == "USB" and options["mode"] == "personality":
         abort("POAP Personality is not supported via USB!")
-
+        
+    os.system("rm -rf /bootflash/poap_files")
     # Compare the list of what options users have to what options we actually support.
     supplied_options = set(options.keys())
     # Anything extra shouldn't be there
@@ -1300,10 +1301,12 @@ def install_nxos_issu():
         poap_log("WARNING: copy run to start failed")
 
     try:
+        os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
         cli("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
     except Exception as e:
         poap_log("Failed to ISSU to image %s" % system_image_path)
+        os.system("rm -rf /tmp/poap_issu_started")
         abort(str(e))
 
 # Procedure to install both kickstart and system images
@@ -1460,6 +1463,16 @@ def copy_install_certificate():
                 poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
                 cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
                 poap_log("Installed certificate %s succesfully" % file)
+                
+def copy_standby_files():
+    """
+    Checks if the standby module is present and copies the
+    poap_files folder to standby bootflash.
+    """
+    standby = cli("show module | grep standby")
+    if(len(standby) > 0):
+        os.system("cp -rf /bootflash/poap_files /bootflash_sup-remote/")
+
                 
 def verify_freespace():
     """
@@ -2097,6 +2110,7 @@ def main():
         copy_install_license()
         copy_install_rpm()
         copy_install_certificate()
+        copy_standby_files()
 
     if single_image is False:
         copy_kickstart()
