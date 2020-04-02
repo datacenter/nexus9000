@@ -280,7 +280,7 @@ def set_defaults_and_validate_options():
     set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
     set_default("serial_number","");
     set_default("target_inst_path", "")
-    set_default("certificate_ca","")
+    set_default("ca_trustpoint","")
     set_default("crypto_password","")
     set_default("use_nxos_boot", False)
     
@@ -992,7 +992,6 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
             try:
                 cli(copy_cmd)
             except Exception as e:
-                poap_log("Copy failed: %s" % str(e))
                 # scp compact can fail due to reasons of current image version or
                 # platform do not support it; Try normal scp in such cases
                 if compact is True and ("Syntax error while parsing" in str(e) or \
@@ -1001,14 +1000,16 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
                 # Remove extra junk in the message
                 elif "no such file" in str(e):
                     if (dont_abort == True):
+                        poap_log("Copy Failed. File/Directory not found")
                         pass
                     else:
                         abort("Copy of %s failed: no such file" % source)
                 elif "Permission denied" in str(e):
                     abort("Copy of %s failed: permission denied" % source)
                 elif "No space left on device" in str(e):
-                    abort("No space left on device")
+                    abort("Copy failed: No space left on device")
                 else:
+                    poap_log("Copy failed: %s" % str(e))
                     raise
 
     try:
@@ -1405,7 +1406,7 @@ def copy_install_rpm():
     Copies the rpm files from golden and serial number folder 
     and installs the rpms for next reload
     """
-    golden_path = options["target_inst_path"] + "golden/*.rpm"
+    common_path = options["target_inst_path"] + "poap_common/*.rpm"
     serial_path = options["target_inst_path"] + options["serial_number"] + "/*.rpm"
     poap_log("Checking for rpm files to install.")
 
@@ -1414,7 +1415,7 @@ def copy_install_rpm():
     dst = "poap_files/"
 
     do_copy(serial_path, dst, timeout, dst, False, True)
-    do_copy(golden_path, dst, timeout, dst, False, True)
+    do_copy(common_path, dst, timeout, dst, False, True)
     for file in os.listdir("/bootflash/poap_files"):
         if file.endswith(".rpm"):
             poap_log("Installing rpm file: %s" % file)
@@ -1436,10 +1437,9 @@ def copy_install_certificate():
     Copies the certificatee files in golden and serial number folder
     and installs the license files.
     """
-    serial_path_p12 = options["target_inst_path"] + options["serial_number"] + "/*.p12"
-    serial_path_pfx = options["target_inst_path"] + options["serial_number"] + "/*.pfx"
     serial_path_pem = options["target_inst_path"] + options["serial_number"] + "/*.pem"
     serial_path_ssh = options["target_inst_path"] + options["serial_number"] + "/*.pub"
+    common_path_ssh = options["target_inst_path"] + "poap_common/*.pub"
     poap_log("Checking for certificates to install.")
 
     timeout = options["timeout_copy_system"]
@@ -1448,22 +1448,35 @@ def copy_install_certificate():
 
     do_copy(serial_path_pem, dst, timeout, dst, False, True)
     do_copy(serial_path_ssh, dst, timeout, dst, False, True)
+    do_copy(common_path_ssh, dst, timeout, dst, False, True)
     
-    if (len(options["certificate_ca"])==0):
+    if (len(options["ca_trustpoint"])==0):
         poap_log("No CA server specified.")
         return
     else:
-        do_copy(serial_path_p12, dst, timeout, dst, False, True)
-        do_copy(serail_path_pfx, dst, timeout, dst, False, True)
-        for file in os.listdir("/bootflash/poap_files"):
-            if (file.endswith(".p12") or file.endswith(".pfx")):
-                poap_log("Installing certificate file. %s" % file)
-                poap_log("Execute cli : config t ; crypto ca trustpoint %s" % options["certificate_ca"])
-                cli("config t ; crypto ca trustpoint %s" % options["certificate_ca"])
-                poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
-                cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s %s" % (options["certificate_ca"], file, options["crypto_password"]))
-                poap_log("Installed certificate %s succesfully" % file)
-                
+        for ca in options["ca_trustpoint"]:
+            ca_apply = 0
+            tmp_cmd = "mkdir -p /bootflash/poap_files/" + ca
+            os.system(tmp_cmd)
+            dst = "poap_files/" + ca + "/"
+            serial_path_p12 = options["target_inst_path"] + options["serial_number"] + "/" + ca + "/*.p12"
+            serial_path_pfx = options["target_inst_path"] + options["serial_number"] + "/" + ca + "/*.pfx"
+            do_copy(serial_path_p12, dst, timeout, dst, False, True)
+            do_copy(serial_path_pfx, dst, timeout, dst, False, True)
+            tmp_dir = "/bootflash/poap_files/" + ca
+            for file in os.listdir(tmp_dir):
+                if (file.endswith(".p12") or file.endswith(".pfx")):
+                    poap_log("Installing certificate file. %s" % file)
+                    if (ca_apply == 0):
+                        poap_log("Execute cli : config t ; crypto ca trustpoint %s" % ca)
+                        cli("config t ; crypto ca trustpoint %s" % ca)
+                        ca_apply = 1
+                    poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, options["crypto_password"]))
+                    cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, options["crypto_password"]))
+                    poap_log("Installed certificate %s succesfully" % file)
+            crypto_installed  = cli("show crypto ca trustpoints > poap_trustpoints")
+
+            
 def copy_standby_files():
     """
     Checks if the standby module is present and copies the
