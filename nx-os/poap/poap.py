@@ -283,6 +283,7 @@ def set_defaults_and_validate_options():
     set_default("ca_trustpoint","")
     set_default("crypto_password","")
     set_default("use_nxos_boot", False)
+    set_default("https_ignore_certificate", False)
     
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
@@ -981,6 +982,13 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
                 else:
                     copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
                         protocol, user, host, source, copy_tmp, vrf)
+            elif (protocol is "https" and options[https_ignore_certificate] is True):
+                if global_use_kstack is True:
+                    copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s use-kstack" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)              
             else:
                 if global_use_kstack is True:
                     copy_cmd += "copy %s://%s@%s%s %s vrf %s use-kstack" % (
