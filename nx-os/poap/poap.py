@@ -1471,7 +1471,7 @@ def parse_poap_yaml():
     dictionary = yaml.load(stream)
     if ("Version" not in dictionary):
         abort("Version keyword not found in yaml. Cannot proceed with installation.")
-    elif ("Version" in dictionary and dictionary["Version"].strip() is not "1"):
+    elif ("Version" in dictionary and dictionary["Version"] is not 1):
         abort("Version given is not 1. Cannot be parsed for installation.")
 
    
@@ -1531,7 +1531,7 @@ def copy_install_rpm():
                 os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
                 os.system("createrepo --update /bootflash/.rpmstore/patching/patchrepo/")
                 patch_count = patch_count + 1
-                activate_list  = activate_list + file + " "
+                activate_list  = activate_list + file.replace(".rpm", " ")
             else:
                 if (len(rpmtype) != 0 and 'feature' in rpmtype):
                     poap_log("RPM is a nxos RPM. executing clis for the same.")
