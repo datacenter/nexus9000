@@ -2240,7 +2240,7 @@ def main():
         # End of multi_step_install is False block
 
     if (len(options["install_path"]) != 0):
-        parse_poap_yaml
+        parse_poap_yaml()
         copy_install_license()
         copy_install_rpm()
         copy_install_certificate()
