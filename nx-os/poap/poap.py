@@ -1213,7 +1213,7 @@ def copy_system():
         return
 
     # do compact scp of system image if bootflash size is <= 2GB and "compact_image" option is enabled
-    if get_bootflash_size() <= 2000000 and options["compact_image"] is True and options["transfer_protocol"] is "scp":
+    if options["compact_image"] is True and options["transfer_protocol"] is "scp":
         poap_log("INFO: Try image copy with compact option...")
         do_compact = True
     else:
