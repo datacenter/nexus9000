@@ -1203,12 +1203,7 @@ def copy_system():
     """
     global del_system_image
     md5_sum_given = None
-    
-    if (len(options["install_path"]) != 0):
-        stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-        dictionary = yaml.load(stream)
-        if ("Target_image" in dictionary):
-            options["target_system_image"] = dictionary["Target_image"]
+  
             
     if options["disable_md5"] is True and target_system_image_is_currently_running():
         poap_log("Currently running image is target image. Skipping system image download")
@@ -1475,6 +1470,9 @@ def parse_poap_yaml():
         abort("Version keyword not found in yaml. Cannot proceed with installation.")
     elif ("Version" in dictionary and dictionary["Version"] is not 1):
         abort("Version given is not 1. Cannot be parsed for installation.")
+    if ("Target_image" in dictionary):
+        options["target_system_image"] = dictionary["Target_image"]
+        options["destination_system_image"] = dictionary["Target_image"]
 
    
 def copy_install_license():
@@ -2231,6 +2229,8 @@ def main():
     # the directory structure needed, if any
     create_destination_directories()
 
+    if (len(options["install_path"]) != 0):
+        parse_poap_yaml()
     check_multilevel_install()
     # In two step install we just copy the midway image and reboot.
     # Config copy and script download happens in the second step.
@@ -2242,7 +2242,6 @@ def main():
         # End of multi_step_install is False block
 
     if (len(options["install_path"]) != 0):
-        parse_poap_yaml()
         copy_install_license()
         copy_install_rpm()
         copy_install_certificate()
