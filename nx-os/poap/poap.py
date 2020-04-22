@@ -1070,12 +1070,14 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
     poap_log("*** Downloaded file is of size %s ***" % file_size)
 
     dest = os.path.join(options["destination_path"], dest)
-    if (dont_abort == True): 
-        return True
+
     try:
         os.rename(dest_tmp, dest)
     except KeyError as e:
-        abort("Failed to rename %s to %s: %s" % (dest_tmp, dest, str(e)))
+        if (dont_abort == True): 
+            return True
+        else:
+            abort("Failed to rename %s to %s: %s" % (dest_tmp, dest, str(e)))
 
     poap_log("Renamed %s to %s" % (dest_tmp, dest))
     return True
@@ -1485,7 +1487,7 @@ def copy_install_license():
     dictionary = yaml.load(stream)
     os.system("mkdir -p /bootflash/poap_files")
     if ("License" in dictionary):
-        for lic in dictionary["License"].split(','):
+        for lic in dictionary["License"]:
             serial_path = options["install_path"] + lic.strip()
 
             timeout = options["timeout_copy_system"]
@@ -1509,7 +1511,7 @@ def copy_install_rpm():
     dictionary = yaml.load(stream)
     os.system("mkdir -p /bootflash/poap_files")
     if ("RPM" in dictionary):
-        for rpm in dictionary["RPM"].split(','):
+        for rpm in dictionary["RPM"]:
             rpm = rpm.strip()
             serial_path = options["install_path"] + rpm
 
@@ -1526,14 +1528,14 @@ def copy_install_rpm():
             rpm_string = "/usr/bin/rpm -qp --queryformat %{NXOSRPMTYPE} /bootflash/poap_files/" + file
             rpmgrp = subprocess.check_output(group_string, shell=True)
             rpmtype = subprocess.check_output(rpm_string, shell=True)
-            if (len(rpmgrp) != 0 and 'Patch-RPM' in rpmgrp):
+            if (len(rpmgrp) != 0 and 'Patch-RPM' in str(rpmgrp)):
                 poap_log("RPM is a patch RPM. executing clis for the same.")
                 os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
                 os.system("createrepo --update /bootflash/.rpmstore/patching/patchrepo/")
                 patch_count = patch_count + 1
                 activate_list  = activate_list + file.replace(".rpm", " ")
             else:
-                if (len(rpmtype) != 0 and 'feature' in rpmtype):
+                if (len(rpmtype) != 0 and 'feature' in str(rpmtype)):
                     poap_log("RPM is a nxos RPM. executing clis for the same.")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/localrepo/" % file)
                     os.system("createrepo /bootflash/.rpmstore/patching/localrepo/")
@@ -1561,7 +1563,7 @@ def copy_install_certificate():
 
     os.system("mkdir -p /bootflash/poap_files")
     if ("Certificate" in dictionary):
-        for cert in dictionary["Certificate"].split(','):
+        for cert in dictionary["Certificate"]:
             cert  = cert.strip()
             serial_path = options["install_path"] + cert
 
@@ -1580,7 +1582,7 @@ def copy_install_certificate():
             os.system(tmp_cmd)
             dst = "poap_files/" + ca + "/"
             if ("Trustpoint" in dictionary and ca in dictionary["Trustpoint"]):
-                for tp_cert in dictionary["Trustpoint"][ca].split(','):
+                for tp_cert in dictionary["Trustpoint"][ca]:
                     tp_cert = tp_cert.strip()
                     serial_path = options["install_path"] + tp_cert
                     do_copy(serial_path, dst, timeout, dst, False)
