@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="0b19d4c72717f1d0f62a46fd07420f04"
+#md5sum="ce9365bc7c6a0dec8c295ebf4e842204"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -403,6 +403,61 @@ def set_default(key, value):
     # mistype any options
     valid_options.add(key)
 
+def byte2str(byte_str):
+    '''Ensuring python2 to python3 compatibility for subprocess outputs'''
+    try:
+        byte_str = byte_str.decode()
+    except (UnicodeDecodeError, AttributeError):
+        pass
+    return byte_str
+
+def rollback_rpm_license_certificates():
+    '''Rolling back installed rpms,licenses and certificates during abort'''
+    try:
+        fpx = open("/bootflash/poap_files/success_install_list")
+    except:
+        return
+    rollback_files = fpx.readlines()
+    for file in rollback_files:
+        file = file.strip('\n')
+        if file.endswith(".rpm"):
+            group_string = "/usr/bin/rpm -qp --qf %{GROUP} /bootflash/poap_files/" + file
+            rpm_string = "/usr/bin/rpm -qp --queryformat %{NXOSRPMTYPE} /bootflash/poap_files/" + file
+            rpmgrp = subprocess.check_output(group_string, shell=True)
+            rpmtype = subprocess.check_output(rpm_string, shell=True)
+            rpmgrp = byte2str(rpmgrp)
+            rpmtype = byte2str(rpmtype)
+            if (len(rpmgrp) != 0 and 'Patch-RPM' in rpmgrp):
+                poap_log("Rolling back patch RPM %s" %(file))
+                os.system("rm -rf /bootflash/.rpmstore/patching/patchrepo/%s" %file)
+                removal_entry = file.replace(".rpm", "")
+                entry_removal_string = "sed -i '1,$d' /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf"
+                os.system(entry_removal_string)
+                os.system("createrepo --update /bootflash/.rpmstore/patching/patchrepo/")
+            else:
+                if (len(rpmtype) != 0 and 'feature' in rpmtype):
+                    poap_log("Rolling back NXOS RPM %s" %(file))
+                    os.system("rm -rf /bootflash/.rpmstore/patching/localrepo/%s" %file)
+                    os.system("createrepo --update /bootflash/.rpmstore/patching/localrepo/")
+                else:
+                    poap_log("Rolling back thirdparty RPM %s" %(file))
+                    os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)
+                    os.system("createrepo --update /bootflash/.rpmstore/thirdparty/")
+            poap_log("Removal of RPM names from nxos_rpms_persisted list")
+            rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
+            rpm_name = byte2str(rpm_name)
+            rpm_persisted_removal_string = "sed -i '/^{0}$/d' /bootflash/.rpmstore/nxos_rpms_persisted" .format(rpm_name)
+            os.system(rpm_persisted_removal_string)
+        elif(file.endswith(".lic")):
+            poap_log("Rolling back license file:%s" %file)
+            cli("terminal dont-ask ; clear license %s" % file)
+        else:
+            poap_log("Rolling back trustpoint:%s" %file)
+            cli("config t ; no crypto ca trustpoint %s" %file)
+    os.system("rm -rf /bootflash/poap_files")
+    standby = cli("show module | grep ha-standby")
+    if(len(standby) > 0):
+        os.system("rm -rf /bootflash_sup-remote/poap_files") 
 
 def abort(msg=None):
     """
@@ -412,7 +467,8 @@ def abort(msg=None):
 
     if msg is not None:
         poap_log(msg)
-
+    
+    rollback_rpm_license_certificates()
     cleanup_files()
     close_log_handle()
     exit(1)
@@ -1502,6 +1558,7 @@ def copy_install_license():
             poap_log("Executing cli : install license bootflash:poap_files/%s" %file)
             cli("terminal dont-ask ; install license bootflash:poap_files/%s" % file)
             poap_log("Installed license succesfully.")
+            os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
 
 def copy_install_rpm():
     """
@@ -1553,6 +1610,7 @@ def copy_install_rpm():
                 patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
                 os.system(patch_append_str)
             poap_log("RPM %s scheduled to be installed on next reload. " % file)
+        os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
 
 def copy_install_certificate():
     """
@@ -1594,6 +1652,7 @@ def copy_install_certificate():
                     if (ca_apply == 0):
                         poap_log("Execute cli : config t ; crypto ca trustpoint %s" % ca)
                         cli("config t ; crypto ca trustpoint %s" % ca)
+                        os.system('echo "' + ca + '" >> /bootflash/poap_files/success_install_list')
                         ca_apply = 1
                     poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, options["crypto_password"]))
                     cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, options["crypto_password"]))
