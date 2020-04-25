@@ -1178,7 +1178,7 @@ def copy_md5_info(file_path, file_name):
     if os.environ['POAP_PHASE'] != "USB":
         poap_log("File transfer_protocol = %s" % options["transfer_protocol"])
     
-    if ("yaml" in src):
+    if ("yaml" in src or "yml" in src):
         do_copy(src, md5_file_name, timeout, tmp_file, False, True)
         # True is passed as last parameter so that script does not abort on copy failure.
     else:
@@ -1420,6 +1420,7 @@ def install_nxos_issu():
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
         cli("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
+        time.sleep(5)
     except Exception as e:
         poap_log("Failed to ISSU to image %s" % system_image_path)
         os.system("rm -rf /tmp/poap_issu_started")
@@ -1515,14 +1516,19 @@ def parse_poap_yaml():
                 abort("#### Yaml file %s MD5 verification failed #####\n" % os.path.join(
                          options["destination_path"], org_file))
     except:
-        copy_md5_info(options["install_path"]+ options["serial_number"] + "/",options["serial_number"] + ".yml")
-        md5_sum_given = get_md5(options["serial_number"] + ".yml")
-        do_copy(alt_path, dst, timeout, dst)
-        if options["disable_md5"] is False and md5_sum_given:
-            if not verify_md5(md5_sum_given,
+        try:
+            copy_md5_info(options["install_path"]+ options["serial_number"] + "/",options["serial_number"] + ".yml")
+            md5_sum_given = get_md5(options["serial_number"] + ".yml")
+            do_copy(alt_path, dst, timeout, dst)
+            if options["disable_md5"] is False and md5_sum_given:
+                if not verify_md5(md5_sum_given,
                           "/bootflash/poap_device_recipe.yaml"):
-                abort("#### Yaml file %s MD5 verification failed #####\n" % os.path.join(
+                    abort("#### Yaml file %s MD5 verification failed #####\n" % os.path.join(
                          options["destination_path"], org_file))
+        except:
+            poap_log("Although 'install_path' is set in poap script file, proceeding with legacy poap workflow because yaml file for device is not found")
+            options["install_path"] = ""
+            return
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
     dictionary = yaml.load(stream)
     if ("Version" not in dictionary):
