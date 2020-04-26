@@ -320,8 +320,6 @@ def set_defaults_and_validate_options():
     set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
     set_default("serial_number","");
     set_default("install_path", "")
-    set_default("ca_trustpoint","")
-    set_default("crypto_password","")
     set_default("use_nxos_boot", False)
     set_default("https_ignore_certificate", False)
     
@@ -1633,37 +1631,34 @@ def copy_install_certificate():
             serial_path = options["install_path"] + cert
 
             timeout = options["timeout_copy_system"]
-            dst = "poap_files/"
+            dst = "poap_files/" + cert.split('/')[-1]
 
             do_copy(serial_path, dst, timeout, dst, False)
-
-    if (len(options["ca_trustpoint"])==0):
-        poap_log("No CA server specified.")
-        return
-    else:
-        for ca in options["ca_trustpoint"]:
+    if ("Trustpoint" in dictionary):
+        for ca in dictionary["Trustpoint"].keys():
             ca_apply = 0
             tmp_cmd = "mkdir -p /bootflash/poap_files/" + ca
             os.system(tmp_cmd)
             dst = "poap_files/" + ca + "/"
-            if ("Trustpoint" in dictionary and ca in dictionary["Trustpoint"]):
-                for tp_cert in dictionary["Trustpoint"][ca]:
-                    tp_cert = tp_cert.strip()
-                    serial_path = options["install_path"] + tp_cert
-                    do_copy(serial_path, dst, timeout, dst, False)
-            tmp_dir = "/bootflash/poap_files/" + ca
-            for file in os.listdir(tmp_dir):
+            for tp_cert, crypto_pass in dictionary["Trustpoint"][ca].items():
+                tp_cert = tp_cert.strip()
+                dst = dst + tp_cert.split('/')[-1]
+                serial_path = options["install_path"] + tp_cert
+                do_copy(serial_path, dst, timeout, dst, False)
+                file = tp_cert.split('/')[-1]
                 if (file.endswith(".p12") or file.endswith(".pfx")):
                     poap_log("Installing certificate file. %s" % file)
                     if (ca_apply == 0):
                         poap_log("Execute cli : config t ; crypto ca trustpoint %s" % ca)
                         cli("config t ; crypto ca trustpoint %s" % ca)
-                        os.system('echo "' + ca + '" >> /bootflash/poap_files/success_install_list')
+                        config_file_second.write("crypto ca trustpoint %s" % ca)
                         ca_apply = 1
-                    poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, options["crypto_password"]))
-                    cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, options["crypto_password"]))
+                    poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
+                    cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
+                    config_file_second.write("crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
                     poap_log("Installed certificate %s succesfully" % file)
-            crypto_installed  = cli("show crypto ca trustpoints > poap_trustpoints")
+                else:
+                    poap_log("Invalid filetype for certificate installation. file: %s" % file)
             
             
 def copy_standby_files():
