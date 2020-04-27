@@ -42,9 +42,6 @@ versions where upgrading will take time
 """
 # script_timeout=1800
 # --- Start of user editable settings ---
-# Host name and user credentials
-# script_timeout=1800
-# --- Start of user editable settings ---
 # Host name and user credential
 # Uncomment the install_path option to install licenses, rpms,
 # and certificates through script. ca_trustpoint field is a list required
@@ -73,8 +70,11 @@ versions where upgrading will take time
 #   - rpm3.rpm
 # Certificate : [ssh1.pub, XYZ12345/ssh2key.pub]
 # Trustpoint :
-#     CA1 : [cert_1.p12, XYZ12345/CA1/cert_2.pfx]
-#     CA2 : [CA2/XYZ12345/cert_3.p12]
+#     CA1 :
+#         cert_1.p12 : password1 (priv_key_passphrase)
+#         XYZ12345/CA1/cert_2.pfx : password2
+#     CA2 :
+#         CA2/XYZ12345/cert_3.p12 : password3
 #
 # Additionally a "Target_image" can also be defined in .yaml file for a box to override the
 # target image for that specific box as opposed to the target_image given as common to all boxes
