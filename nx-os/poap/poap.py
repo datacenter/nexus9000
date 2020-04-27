@@ -1652,6 +1652,7 @@ def copy_install_certificate():
                     if (ca_apply == 0):
                         poap_log("Execute cli : config t ; crypto ca trustpoint %s" % ca)
                         cli("config t ; crypto ca trustpoint %s" % ca)
+                        os.system('echo "' + ca + '" >> /bootflash/poap_files/success_install_list')
                         config_file_second.write("crypto ca trustpoint %s" % ca)
                         ca_apply = 1
                     poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
