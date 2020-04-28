@@ -1625,6 +1625,7 @@ def copy_install_certificate():
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
     dictionary = yaml.load(stream)
     config_file_second = open(os.path.join("/bootflash", options["split_config_second"]), "a+")
+    timeout = options["timeout_copy_system"]
 
     os.system("mkdir -p /bootflash/poap_files")
     if ("Certificate" in dictionary):
@@ -1632,7 +1633,6 @@ def copy_install_certificate():
             cert  = cert.strip()
             serial_path = options["install_path"] + cert
 
-            timeout = options["timeout_copy_system"]
             dst = "poap_files/" + cert.split('/')[-1]
 
             do_copy(serial_path, dst, timeout, dst, False)
