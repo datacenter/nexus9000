@@ -501,7 +501,7 @@ def init_globals():
     multi_step_install = False
 
     # confirm image deletion
-    del_system_image = True
+    del_system_image = False
     # confirm image deletion
     del_kickstart_image = True
 
@@ -1318,6 +1318,7 @@ def copy_system():
                          options["destination_path"], org_file))
     poap_log("INFO: Completed Copy of System Image to %s" % os.path.join(
         options["destination_path"], org_file))
+    del_system_image = True
 
 
 def copy_kickstart():
@@ -1552,7 +1553,7 @@ def copy_install_license():
             serial_path = options["install_path"] + lic.strip()
 
             timeout = options["timeout_copy_system"]
-            dst = "poap_files/"
+            dst = "poap_files/" + lic.split('/')[-1]
 
             do_copy(serial_path, dst, timeout, dst, False)
 
@@ -1578,7 +1579,7 @@ def copy_install_rpm():
             serial_path = options["install_path"] + rpm
 
             timeout = options["timeout_copy_system"]
-            dst = "poap_files/"
+            dst = "poap_files/" + rpm.split('/')[-1]
             
             do_copy(serial_path, dst, timeout, dst, False)
     patch_count = 0
