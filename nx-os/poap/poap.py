@@ -34,8 +34,6 @@ except ImportError:
     from cli import *
     legacy = False
 
-dictionary = {}
-    
 """
 Increasing the script timeout to handle the legacy nxos
 versions where upgrading will take time
