@@ -1647,13 +1647,9 @@ def copy_install_certificate():
                 if (file.endswith(".p12") or file.endswith(".pfx")):
                     poap_log("Installing certificate file. %s" % file)
                     if (ca_apply == 0):
-                        poap_log("Execute cli : config t ; crypto ca trustpoint %s" % ca)
-                        cli("config t ; crypto ca trustpoint %s" % ca)
-                        config_file_second.write("crypto ca trustpoint %s" % ca)
+                        config_file_second.write("crypto ca trustpoint %s\n" % ca)
                         ca_apply = 1
-                    poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
-                    cli("terminal dont-ask ; config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
-                    config_file_second.write("crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
+                    config_file_second.write("crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s\n" % (ca, ca, file, crypto_pass))
                     poap_log("Installed certificate %s succesfully" % file)
                 else:
                     poap_log("Invalid filetype for certificate installation. file: %s" % file)
