@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="ce9365bc7c6a0dec8c295ebf4e842204"
+#md5sum="3d2b9106fc2cacf8a92f9f272d194779"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -447,9 +447,6 @@ def rollback_rpm_license_certificates():
         elif(file.endswith(".lic")):
             poap_log("Rolling back license file:%s" %file)
             cli("terminal dont-ask ; clear license %s" % file)
-        else:
-            poap_log("Rolling back trustpoint:%s" %file)
-            cli("config t ; no crypto ca trustpoint %s" %file)
     os.system("rm -rf /bootflash/poap_files")
     standby = cli("show module | grep ha-standby")
     if(len(standby) > 0):
@@ -1607,13 +1604,14 @@ def copy_install_rpm():
                 rpm_append_str = "/usr/bin/rpm -qp --qf %{NAME} /bootflash/poap_files/" + file + " >> /bootflash/.rpmstore/nxos_rpms_persisted"
                 os.system(rpm_append_str)
                 os.system('echo "" >> /bootflash/.rpmstore/nxos_rpms_persisted')
-            if (patch_count > 0):
-                os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
-                os.system('echo "" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
-                patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
-                os.system(patch_append_str)
             poap_log("RPM %s scheduled to be installed on next reload. " % file)
-        os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
+            os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
+    if (patch_count > 0):
+        os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+        os.system('echo "" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+        patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+        os.system(patch_append_str)
+        
 
 def copy_install_certificate():
     """
@@ -1651,7 +1649,6 @@ def copy_install_certificate():
                     if (ca_apply == 0):
                         poap_log("Execute cli : config t ; crypto ca trustpoint %s" % ca)
                         cli("config t ; crypto ca trustpoint %s" % ca)
-                        os.system('echo "' + ca + '" >> /bootflash/poap_files/success_install_list')
                         config_file_second.write("crypto ca trustpoint %s" % ca)
                         ca_apply = 1
                     poap_log("Execute cli :  config t ; crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s" % (ca, ca, file, crypto_pass))
