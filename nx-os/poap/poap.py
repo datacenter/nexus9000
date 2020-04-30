@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="3d2b9106fc2cacf8a92f9f272d194779"
+#md5sum="f6e5265173c6ce5865c586c8b3aa1112"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -427,18 +427,18 @@ def rollback_rpm_license_certificates():
                 poap_log("Rolling back patch RPM %s" %(file))
                 os.system("rm -rf /bootflash/.rpmstore/patching/patchrepo/%s" %file)
                 removal_entry = file.replace(".rpm", "")
-                entry_removal_string = "sed -i '1,$d' /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf"
+                entry_removal_string = "sed -i 's/ {0}//g' /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
                 os.system(entry_removal_string)
-                os.system("createrepo --update /bootflash/.rpmstore/patching/patchrepo/")
+                os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
             else:
                 if (len(rpmtype) != 0 and 'feature' in rpmtype):
                     poap_log("Rolling back NXOS RPM %s" %(file))
                     os.system("rm -rf /bootflash/.rpmstore/patching/localrepo/%s" %file)
-                    os.system("createrepo --update /bootflash/.rpmstore/patching/localrepo/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/localrepo/")
                 else:
                     poap_log("Rolling back thirdparty RPM %s" %(file))
                     os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)
-                    os.system("createrepo --update /bootflash/.rpmstore/thirdparty/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/thirdparty/")
             poap_log("Removal of RPM names from nxos_rpms_persisted list")
             rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
             rpm_name = byte2str(rpm_name)
@@ -1602,6 +1602,8 @@ def check_if_rpm_in_file(file_name, rpm):
     """
     Check if any line in the file contains given rpm
     """
+    if(not(os.path.exists(file_name))):
+        return True
     with open(file_name, 'r') as read_obj:
         for line in read_obj:
             if rpm in line:
@@ -1615,7 +1617,7 @@ def install_rpm():
     """
     
     patch_count = 0
-    activate_list = "reload_activate_list = "
+    activate_list = "committed_list = "
     for file in os.listdir("/bootflash/poap_files"):
         if file.endswith(".rpm"):
             poap_log("Installing rpm file: %s" % file)
@@ -1624,20 +1626,25 @@ def install_rpm():
             rpmgrp = subprocess.check_output(group_string, shell=True)
             rpmtype = subprocess.check_output(rpm_string, shell=True)
             if (len(rpmgrp) != 0 and 'Patch-RPM' in str(rpmgrp)):
-                poap_log("RPM is a patch RPM. executing clis for the same.")
-                os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
-                os.system("createrepo --update /bootflash/.rpmstore/patching/patchrepo/")
-                patch_count = patch_count + 1
-                activate_list  = activate_list + file.replace(".rpm", " ")
+                patch_rpm_name = file.replace(".rpm", "")
+                if(not check_if_rpm_in_file("/bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf", patch_rpm_name)):
+                    poap_log("RPM is a patch RPM. executing clis for the same.")
+                    os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
+                    patch_count = patch_count + 1
+                    activate_list  = activate_list + file.replace(".rpm", " ")
+                    os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
             else:
                 if (len(rpmtype) != 0 and 'feature' in str(rpmtype)):
                     poap_log("RPM is a nxos RPM. executing clis for the same.")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/localrepo/" % file)
-                    os.system("createrepo /bootflash/.rpmstore/patching/localrepo/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/patching/localrepo/")
+                    os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
                 else:
                     poap_log("RPM is a third-party RPM. Executing clis for the same")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)
-                    os.system("createrepo /bootflash/.rpmstore/thirdparty/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/thirdparty/")
+                    os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
                 rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
                 rpm_name = byte2str(rpm_name)
                 if not check_if_rpm_in_file("/bootflash/.rpmstore/nxos_rpms_persisted", rpm_name):
@@ -1645,14 +1652,27 @@ def install_rpm():
                     os.system(rpm_append_str)
                     os.system('echo "" >> /bootflash/.rpmstore/nxos_rpms_persisted')
             poap_log("RPM %s scheduled to be installed on next reload. " % file)
-            os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
     if (patch_count > 0):
-        os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
-        os.system('echo "" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
-        patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
-        os.system(patch_append_str)
+        if((os.path.exists("/bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf"))):
+            fp = open("/bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf", 'r')
+            patching_meta = fp.readlines()
+            patching_meta = ''.join(patching_meta)
+            if("committed_list" in patching_meta):
+                activate_list = activate_list.replace("committed_list = ", "")
+                patch_append_str = 'sed -i "/committed_list/ s/$/ {0}/" /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'.format(activate_list)
+                os.system(patch_append_str)
+            elif("[patching]" in patching_meta):
+                patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+                os.system(patch_append_str)
+            else:
+                os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+                patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+                os.system(patch_append_str)
+        else:
+            os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+            patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+            os.system(patch_append_str)
         
-
 def install_certificate():
     """
     Installs the certificate files.
