@@ -1518,7 +1518,7 @@ def parse_poap_yaml():
             md5_sum_given = get_md5(options["serial_number"] + ".yml")
             do_copy(alt_path, dst, timeout, dst)
             if options["disable_md5"] is False and md5_sum_given:
-            md5_verification = verify_md5(md5_sum_given,
+                md5_verification = verify_md5(md5_sum_given,
                           "/bootflash/poap_device_recipe.yaml")
             if not md5_verification:
                     abort("#### Yaml file %s MD5 verification failed #####\n" % dst)
