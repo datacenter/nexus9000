@@ -1413,7 +1413,7 @@ def install_nxos_issu():
     try:
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
-        cli("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
+        cli("terminal dont-ask ; install all nxos %s non-interruptive ; write erase" % system_image_path)
         time.sleep(5)
     except Exception as e:
         poap_log("Failed to ISSU to image %s" % system_image_path)
@@ -1528,6 +1528,8 @@ def parse_poap_yaml():
                 poap_log("Although 'install_path' is set in poap script file, proceeding with legacy poap workflow because yaml file for device is not found")
                 options["install_path"] = ""
                 return
+        if not md5_verification:
+            exit(1)
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
     dictionary = yaml.load(stream)
     if ("Version" not in dictionary):
@@ -1590,13 +1592,24 @@ def install_license():
     Installs the license files.
     """
 
+    conf_file_second = os.path.join("/bootflash", options["split_config_second"])
+    tmp_file_second = conf_file_second + ".tmp"
+    tmp_file_write = open(tmp_file_second, 'w')
     for file in os.listdir("/bootflash/poap_files"):
         if file.endswith(".lic"):
-            poap_log("Installing license file. %s" % file)
-            poap_log("Executing cli : install license bootflash:poap_files/%s" %file)
-            cli("terminal dont-ask ; install license bootflash:poap_files/%s" % file)
+            poap_log("Installing license file: %s" % file)
+            conf_file_second = os.path.join("/bootflash", options["split_config_second"])
+            tmp_file_second = conf_file_second + ".tmp"
+
+            tmp_file_write.write("install license bootflash:poap_files/%s\n" % file)
             poap_log("Installed license succesfully.")
-            os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
+    tmp_file_write.close()
+    with open(conf_file_second, 'r') as read_file, open (tmp_file_second, 'a+') as write_file:
+        write_file.write(read_file.read())
+    os.rename(tmp_file_second, conf_file_second)
+
+    poap_log("Installed licenses succesfully.")
+
             
 def check_if_rpm_in_file(file_name, rpm):
     """
