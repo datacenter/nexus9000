@@ -652,8 +652,11 @@ def sigterm_handler(signum, stack):
     A signal handler for the SIGTERM signal. Cleans up and exits
     """
     poap_log("INFO: SIGTERM Handler")
-    cleanup_files()
-    log_hdl.close()
+    if (len(options["install_path"]) != 0):
+        abort("Cleaning up rpms")
+    else:
+        cleanup_files()
+        log_hdl.close()
     exit(1)
 
 
@@ -1494,15 +1497,15 @@ def parse_poap_yaml():
     """
     Parses the <serial_number>.yaml file and populates the dictionary
     """
-    copy_path = options["install_path"]+ options["serial_number"] + "/" + options["serial_number"] + ".yaml"
-    alt_path = options["install_path"]+ options["serial_number"] + "/" + options["serial_number"] + ".yml"
+    copy_path = options["install_path"] + "/" + options["serial_number"] + "/" + options["serial_number"] + ".yaml"
+    alt_path = options["install_path"] + "/" + options["serial_number"] + "/" + options["serial_number"] + ".yml"
     timeout = options["timeout_copy_system"]
     dst = "poap_device_recipe.yaml"
     md5_sum_given = None
     md5_verification = True
     
     try:
-        copy_md5_info(options["install_path"]+ options["serial_number"] + "/",options["serial_number"] + ".yaml")
+        copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yaml")
         md5_sum_given = get_md5(options["serial_number"] + ".yaml", True)
         do_copy(copy_path, dst, timeout, dst, False, True)
         # True is passed as last parameter so that script does not abort on copy failure.
@@ -1514,7 +1517,7 @@ def parse_poap_yaml():
                 time.sleep(2)
     except:
         try:
-            copy_md5_info(options["install_path"]+ options["serial_number"] + "/",options["serial_number"] + ".yml")
+            copy_md5_info(os.path.join(options["install_path"]+ options["serial_number"]), options["serial_number"] + ".yml")
             md5_sum_given = get_md5(options["serial_number"] + ".yml")
             do_copy(alt_path, dst, timeout, dst)
             if options["disable_md5"] is False and md5_sum_given:
@@ -1552,7 +1555,7 @@ def copy_poap_files():
 
     if ("License" in dictionary):
         for lic in dictionary["License"]:
-            serial_path = options["install_path"] + lic.strip()
+            serial_path = os.path.join(options["install_path"], lic.strip())
 
             dst = "poap_files/" + lic.split('/')[-1]
 
@@ -1561,7 +1564,7 @@ def copy_poap_files():
     if ("RPM" in dictionary):
         for rpm in dictionary["RPM"]:
             rpm = rpm.strip()
-            serial_path = options["install_path"] + rpm
+            serial_path = os.path.join(options["install_path"], rpm)
 
             dst = "poap_files/" + rpm.split('/')[-1]
 
@@ -1570,7 +1573,7 @@ def copy_poap_files():
     if ("Certificate" in dictionary):
         for cert in dictionary["Certificate"]:
             cert  = cert.strip()
-            serial_path = options["install_path"] + cert
+            serial_path = os.path.join(options["install_path"], cert)
 
             dst = "poap_files/" + cert.split('/')[-1]
 
@@ -1583,7 +1586,7 @@ def copy_poap_files():
             for tp_cert, crypto_pass in dictionary["Trustpoint"][ca].items():
                 tp_cert = tp_cert.strip()
                 dst = dst + tp_cert.split('/')[-1]
-                serial_path = options["install_path"] + tp_cert
+                serial_path = os.path.join(options["install_path"], tp_cert)
                 do_copy(serial_path, dst, timeout, dst, False)
 
    
