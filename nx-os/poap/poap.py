@@ -1517,7 +1517,7 @@ def parse_poap_yaml():
                 time.sleep(2)
     except:
         try:
-            copy_md5_info(os.path.join(options["install_path"]+ options["serial_number"]), options["serial_number"] + ".yml")
+            copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yml")
             md5_sum_given = get_md5(options["serial_number"] + ".yml")
             do_copy(alt_path, dst, timeout, dst)
             if options["disable_md5"] is False and md5_sum_given:
