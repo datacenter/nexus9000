@@ -652,7 +652,7 @@ def sigterm_handler(signum, stack):
     A signal handler for the SIGTERM signal. Cleans up and exits
     """
     poap_log("INFO: SIGTERM Handler")
-    if (len(options["install_path"]) != 0):
+    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
         abort("Cleaning up rpms")
     else:
         cleanup_files()
@@ -2345,7 +2345,7 @@ def main():
     # the directory structure needed, if any
     create_destination_directories()
 
-    if (len(options["install_path"]) != 0):
+    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
         parse_poap_yaml()
     check_multilevel_install()
     # In two step install we just copy the midway image and reboot.
@@ -2357,7 +2357,7 @@ def main():
         download_scripts_and_agents()
         # End of multi_step_install is False block
 
-    if (len(options["install_path"]) != 0):
+    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
         copy_poap_files()
         install_license()
         install_rpm()
