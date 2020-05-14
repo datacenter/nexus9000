@@ -2184,10 +2184,10 @@ def get_system_image_from_tarball():
         # Legacy personality support
         match = re.search("IMAGEFILE_(.+)", file_name)
         if match:
-            options["target_system_image"] = match.group(1)
+            options["target_system_image"] = byte2str(match.group(1))
         # File container way
         elif os.path.basename(file_name) == "IMAGEFILE":
-            options["target_system_image"] = tar.extractfile(file_name).read().strip()
+            options["target_system_image"] = byte2str(tar.extractfile(file_name).read().strip())
 
     if options.get("target_system_image") is None:
         abort("Failed to find system image filename from tarball")
@@ -2203,8 +2203,7 @@ def override_options_for_personality():
 
     options["target_image_path"] = options["personality_path"]
     poap_log("target_image_path option set to personality_path (%s)" % options["personality_path"])
-    if options["destination_system_image"]:
-        options["destination_system_image"] = options["target_system_image"]
+    options["destination_system_image"] = options["target_system_image"]
 
 
 def initialize_personality():
