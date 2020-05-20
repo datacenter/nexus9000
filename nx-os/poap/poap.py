@@ -644,6 +644,8 @@ def cleanup_files():
         cleanup_file_from_option("destination_kickstart_image")
     # Destination config
     cleanup_file_from_option("destination_config")
+    os.system("rm -rf /bootflash/poap_files")
+    os.system("rm -rf /bootflash_sup-remote/poap_files")
 
 
 def sig_handler_no_exit(signum, stack):
@@ -1511,21 +1513,31 @@ def parse_poap_yaml():
     md5_verification = True
     
     try:
-        copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yaml")
-        md5_sum_given = get_md5(options["serial_number"] + ".yaml", True)
-        do_copy(copy_path, dst, timeout, dst, False, True)
+        if options["disable_md5"] is False:
+            copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yaml")
+            md5_sum_given = get_md5(options["serial_number"] + ".yaml")
+            md5_verification = False
+            do_copy(copy_path, dst, timeout, dst, False, False)
+        else:
+            do_copy(copy_path, dst, timeout, dst, False, True)
         # True is passed as last parameter so that script does not abort on copy failure.
         if options["disable_md5"] is False and md5_sum_given:
             md5_verification = verify_md5(md5_sum_given,
-                          "/bootflash/poap_device_recipe.yaml")
+                      "/bootflash/poap_device_recipe.yaml")
             if not md5_verification:
                 abort("#### Yaml file %s MD5 verification failed #####\n" % dst)
                 time.sleep(2)
     except:
         try:
-            copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yml")
-            md5_sum_given = get_md5(options["serial_number"] + ".yml")
-            do_copy(alt_path, dst, timeout, dst)
+            if not md5_verification:
+                exit(1)
+            if options["disable_md5"] is False:
+                copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yml")
+                md5_sum_given = get_md5(options["serial_number"] + ".yml")
+                md5_verification = False
+                do_copy(alt_path, dst, timeout, dst)
+            else:
+                do_copy(alt_path, dst, timeout, dst, False, True)
             if options["disable_md5"] is False and md5_sum_given:
                 md5_verification = verify_md5(md5_sum_given,
                           "/bootflash/poap_device_recipe.yaml")
