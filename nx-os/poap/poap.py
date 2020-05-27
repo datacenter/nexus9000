@@ -1423,8 +1423,9 @@ def install_nxos_issu():
 
     try:
         os.system("touch /tmp/poap_issu_started")
-        poap_log("terminal dont-ask ; install all nxos %s non-interruptive" % system_image_path)
-        cli("terminal dont-ask ; install all nxos %s non-interruptive ; write erase" % system_image_path)
+        poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
+        cli("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
+        cli("terminal dont-ask ; write erase")
         time.sleep(5)
     except Exception as e:
         poap_log("Failed to ISSU to image %s" % system_image_path)
