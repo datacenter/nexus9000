@@ -1086,7 +1086,7 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
                 else:
                     copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
                         protocol, user, host, source, copy_tmp, vrf)
-            elif (protocol is "https" and options[https_ignore_certificate] is True):
+            elif (protocol is "https" and options["https_ignore_certificate"] is True):
                 if global_use_kstack is True:
                     copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s use-kstack" % (
                         protocol, user, host, source, copy_tmp, vrf)
@@ -1663,6 +1663,7 @@ def install_rpm():
     for file in os.listdir("/bootflash/poap_files"):
         if file.endswith(".rpm"):
             poap_log("Installing rpm file: %s" % file)
+            os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
             group_string = "/usr/bin/rpm -qp --qf %{GROUP} /bootflash/poap_files/" + file
             rpm_string = "/usr/bin/rpm -qp --queryformat %{NXOSRPMTYPE} /bootflash/poap_files/" + file
             rpmgrp = subprocess.check_output(group_string, shell=True)
@@ -1677,7 +1678,6 @@ def install_rpm():
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
                     patch_count = patch_count + 1
                     activate_list  = activate_list + file.replace(".rpm", " ")
-                    os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
             else:
                 if (len(rpmtype) != 0 and 'feature' in str(rpmtype)):
                     poap_log("RPM is a nxos RPM. executing clis for the same.")
@@ -1685,14 +1685,12 @@ def install_rpm():
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/localrepo/" % file)
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/patching/localrepo/")
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/patching/localrepo/")
-                    os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
                 else:
                     poap_log("RPM is a third-party RPM. Executing clis for the same")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/thirdparty/")
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/thirdparty/" % file)
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/thirdparty/")
-                    os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
                 rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
                 rpm_name = byte2str(rpm_name)
                 if not check_if_rpm_in_file("/bootflash/.rpmstore/nxos_rpms_persisted", rpm_name):
@@ -2403,8 +2401,10 @@ def main():
 
     if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
         copy_poap_files()
+        time.sleep(2)
         install_license()
         install_rpm()
+        time.sleep(2)
         install_certificate()
         copy_standby_files()
         
