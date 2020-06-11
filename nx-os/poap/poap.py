@@ -426,6 +426,7 @@ def rollback_rpm_license_certificates():
             if (len(rpmgrp) != 0 and 'Patch-RPM' in rpmgrp):
                 poap_log("Rolling back patch RPM %s" %(file))
                 os.system("rm -rf /bootflash/.rpmstore/patching/patchrepo/%s" %file)
+                os.system("rm -rf /bootflash_sup-remote/.rpmstore/patching/patchrepo/%s" %file)
                 removal_entry = file.replace(".rpm", "")
                 entry_removal_string = "sed -i 's/ {0}//g' /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
                 standby_removal_string = "sed -i 's/ {0}//g' /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
@@ -629,7 +630,7 @@ def cleanup_files():
     global options, log_hdl
     global del_system_image, del_kickstart_image
 
-    poap_log("Cleanup all files")
+    poap_log("\n\nCleanup all files")
 
     # Destination config
     cleanup_file_from_option("destination_config")
@@ -646,7 +647,7 @@ def cleanup_files():
     cleanup_file_from_option("destination_config")
     os.system("rm -rf /bootflash/poap_files")
     os.system("rm -rf /bootflash_sup-remote/poap_files")
-
+    os.system("rm -rf /bootflash/poap_replay01.cfg")
 
 def sig_handler_no_exit(signum, stack):
     """
@@ -1416,10 +1417,6 @@ def install_nxos_issu():
     system_image_path = os.path.join(options["destination_path"],
                                      options["destination_system_image"])
     system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
-    try:
-        cli("copy running-config startup-config")
-    except SyntaxError:
-        poap_log("WARNING: copy run to start failed")
 
     try:
         os.system("touch /tmp/poap_issu_started")
@@ -1568,6 +1565,41 @@ def parse_poap_yaml():
     if ("Target_image" in dictionary):
         options["target_system_image"] = dictionary["Target_image"]
         options["destination_system_image"] = dictionary["Target_image"]
+        
+        
+def validate_yaml_file():
+    """
+    Validates all the input filenames in the yaml file and throws error
+    for wrong extension/rpm filename format.
+    """
+    stream = open("/bootflash/poap_device_recipe.yaml", 'r')
+    dictionary = yaml.load(stream)
+    wrong_files = []
+
+    if ("License" in dictionary):
+        for lic in dictionary["License"]:
+             lic = lic.strip()
+             if not lic.endswith('.lic'):
+                 wrong_files += [lic]
+    if ("RPM" in dictionary):
+        for rpm in dictionary["RPM"]:
+             rpm = rpm.strip()
+             if not rpm.endswith('.rpm'):
+                 wrong_files += [rpm]
+
+    if ("Trustpoint" in dictionary):
+        for ca in dictionary["Trustpoint"].keys():
+            for cert, crypto_pass in dictionary["Trustpoint"][ca].items():
+                cert = cert.strip()
+                if not (cert.endswith('.pfx') or cert.endswith('.p12')):
+                    wrong_files += [cert]
+
+    if len(wrong_files) > 0:
+        poap_log("Expected extensions are .lic for licenses, .rpm for RPM files and .pfx or .p12 for Trustpoint based certificates.")
+        poap_log("The below files have wrong extension. Please rename in rpm source location and update YAML file accordingly.")
+        for file in wrong_files:
+            poap_log(file)
+        abort()
 
         
 def copy_poap_files():
@@ -1595,6 +1627,16 @@ def copy_poap_files():
             dst = "poap_files/" + rpm.split('/')[-1]
 
             do_copy(serial_path, dst, timeout, dst, False)
+        for rpm in dictionary["RPM"]:
+            rpm = rpm.strip()
+            name_str = "rpm -qp --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm' /bootflash/poap_files/"+ rpm.split('/')[-1]
+            orig_name = subprocess.check_output(name_str, shell=True)
+            orig_name = byte2str(orig_name)
+            if (orig_name != rpm.split('/')[-1]):
+                poap_log ("ERROR : RPM file %s does not match RPM package naming convention. Expected name: %s" %(rpm.split('/')[-1],orig_name))
+                rpm_error = True
+        if rpm_error:
+            abort("Please correct the above rpm files in rpm source location and update YAML file accordingly.")
   
     if ("Certificate" in dictionary):
         for cert in dictionary["Certificate"]:
@@ -1753,8 +1795,6 @@ def install_certificate():
                         ca_apply = 1
                     config_file_second.write("crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s\n" % (ca, ca, file, crypto_pass))
                     poap_log("Installed certificate %s succesfully" % file)
-                else:
-                    poap_log("Invalid filetype for certificate installation. file: %s" % file)
             
             
 def copy_standby_files():
@@ -2400,6 +2440,7 @@ def main():
         # End of multi_step_install is False block
 
     if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+        validate_yaml_file()
         copy_poap_files()
         time.sleep(2)
         install_license()
