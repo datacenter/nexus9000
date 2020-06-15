@@ -1422,6 +1422,7 @@ def install_nxos_issu():
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
         cli("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
+        time.sleep(5)
         cli("terminal dont-ask ; write erase")
         time.sleep(5)
     except Exception as e:
@@ -1620,6 +1621,7 @@ def copy_poap_files():
             do_copy(serial_path, dst, timeout, dst, False)
 
     if ("RPM" in dictionary):
+        rpm_error = False
         for rpm in dictionary["RPM"]:
             rpm = rpm.strip()
             serial_path = os.path.join(options["install_path"], rpm)
@@ -2447,6 +2449,7 @@ def main():
         install_rpm()
         time.sleep(2)
         install_certificate()
+        time.sleep(2)
         copy_standby_files()
         
     copy_system()
