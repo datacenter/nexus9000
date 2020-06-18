@@ -689,7 +689,12 @@ def split_config_not_needed():
     # (n9000-dk9, 6, 1, 2, I1, 1, bin)
 
     parts = options['target_system_image'].split(".")
-    # number of parts should above 7 as above for us to check if its supported
+    
+    # for latest images, it is (nxos, 9, minor, mr, bin)
+    if int(parts[1]) == 9:
+        return True
+    
+    # number of parts should above 7 as above for us to check if its supported if not 9.x
     if len(parts) < 7:
         return False
 
