@@ -41,42 +41,50 @@ versions where upgrading will take time
 # script_timeout=1800
 # --- Start of user editable settings ---
 # Host name and user credential
-# Uncomment the install_path option to install licenses, rpms,
-# and certificates through script. ca_trustpoint field is a list required
-# to specify the trustpoints.
-# A file named <serial-number>.yaml is to be placed inside folder named
+# Add the install_path option to install licenses, rpms,
+# and certificates through script from the path mentioned. 
+# A file named <serial-number>.yaml is to be placed inside a folder named serial-number
 # which has details of files to be installed for the particular box.
+# eg. if option added is "install_path" : "/tftpboot/"
+# expected file is /tftpboot/<serial-number>/<serial-number>.yaml
 # Keywords to be used are Version, License, RPM, Certificate and Trustpoint.
 # Version is a mandatory keyword and it should be 1 for this release.
 # License : All the license files to be installed need to be listed in this
-# section in comman separated line. Path should be relative to install_path
+# section in proper yaml syntax. Path should be relative to install_path
 # RPM : All rpm files to be installed need to be listed in this section in
-# comma separated line. Path should be relative to install_path
+# proper yaml syntax. Path should be relative to install_path
 # Certificate: All certificate files and public key files which do not have a
-# trustpoint associated need to be listed in this section in comma separated way.
+# trustpoint associated need to be listed in this section in proper yaml syntax.
 # These will only be copied to bootflash/poap_files/
-# Trustpoint : All pkcs12 certificates obtained from CA and need trustpoint to be
-# configured need to be listed against the correct ca_trustpoint for the same certificate
-# in a comma separated way.
-# Sample YAML file: (name XYZ12345.yaml)
-# Version : 1
-# Description : Yaml for box XYZ12345 poap provisioning. N9k Leaf mode box
-# License : [license1.lic, XYZ12345/license2.lic, folder1/license3.lic]
-# RPM : 
-#   - rpm1.rpm 
-#   - patches/reload/rpm2-reload.rpm
-#   - rpm3.rpm
-# Certificate : [ssh1.pub, XYZ12345/ssh2key.pub]
-# Trustpoint :
-#     CA1 :
-#         cert_1.p12 : password1 (priv_key_passphrase)
-#         XYZ12345/CA1/cert_2.pfx : password2
-#     CA2 :
-#         CA2/XYZ12345/cert_3.p12 : password3
+# Trustpoint : All pkcs12 certificates obtained from CA and which need trustpoint to be
+# configured need to be listed against the correct CA-trustpoint name for 
+# the same certificate with passphrase in proper yaml syntax.
 #
+# Sample YAML file (name XYZ12345.yaml)
+# ----------------------------------------------------------------------------
+# Version: 1
+# Certificate:
+# - ssh_key1.pub
+# - XYZ12345/nxapi_server_key.pem
+# - XYZ12345/nxapi_server_cert.pem
+# License:
+# - XYZ12345/XYZ12345_1.lic
+# - XYZ12345_2.lic
+# RPM:
+# - POAP_TPARTY_AND_PATCH_RPMS/chef-12.19.33-1.nexus7.x86_64.rpm
+# - mtx-openconfig-vlan-1.0.0.206-9.3.5.lib32_n9000.rpm
+# - POAP_TPARTY_AND_PATCH_RPMS/nxos.POAP_SMU_BGP_RELOAD-n9k_ALL-1.0.0-9.3.5.lib32_n9000.rpm
+# Target_image: nxos.9.3.5.bin
+# Trustpoint:
+#   Z1_TP:
+#     POAP_TP_FILES/XYZ12345/Z1_TP.pfx: passphrase1
+#   Z2_TP:
+#     POAP_TP_FILES/XYZ12345/Z2_TP.p12: passphrase2
+# ----------------------------------------------------------------------------
 # Additionally a "Target_image" can also be defined in .yaml file for a box to override the
-# target image for that specific box as opposed to the target_image given as common to all boxes
-# through script.
+# target image for that specific box as opposed to the target_system_image given as common to all boxes
+# through script. If Target_image mentioned in yaml then that image should be kept only in 
+# target_system_image path mentioned within poap script. No relative path support for Target_image in yaml file
 
 options = {
    "username": "root",
