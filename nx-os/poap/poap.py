@@ -1694,7 +1694,7 @@ def install_license():
         write_file.write(read_file.read())
     os.rename(tmp_file_second, conf_file_second)
 
-    poap_log("Installed licenses succesfully.")
+    poap_log("Installed all licenses succesfully.")
 
             
 def check_if_rpm_in_file(file_name, rpm):
