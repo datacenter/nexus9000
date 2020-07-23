@@ -1,5 +1,5 @@
-#!/bin/env python
-#md5sum="0b19d4c72717f1d0f62a46fd07420f04"
+#!/bin/env python3
+#md5sum="f6e5265173c6ce5865c586c8b3aa1112"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -19,6 +19,7 @@ import time
 from time import gmtime, strftime
 import tarfile
 import errno
+import yaml
 
 try:
     import subprocess as sp
@@ -39,7 +40,52 @@ versions where upgrading will take time
 """
 # script_timeout=1800
 # --- Start of user editable settings ---
-# Host name and user credentials
+# Host name and user credential
+# Add the install_path option to install licenses, rpms,
+# and certificates through script from the path mentioned. 
+# A file named <serial-number>.yaml is to be placed inside a folder named serial-number
+# which has details of files to be installed for the particular box.
+# eg. if option added is "install_path" : "/tftpboot/"
+# expected file is /tftpboot/<serial-number>/<serial-number>.yaml
+# Keywords to be used are Version, License, RPM, Certificate and Trustpoint.
+# Version is a mandatory keyword and it should be 1 for this release.
+# License : All the license files to be installed need to be listed in this
+# section in proper yaml syntax. Path should be relative to install_path
+# RPM : All rpm files to be installed need to be listed in this section in
+# proper yaml syntax. Path should be relative to install_path
+# Certificate: All certificate files and public key files which do not have a
+# trustpoint associated need to be listed in this section in proper yaml syntax.
+# These will only be copied to bootflash/poap_files/
+# Trustpoint : All pkcs12 certificates obtained from CA and which need trustpoint to be
+# configured need to be listed against the correct CA-trustpoint name for 
+# the same certificate with passphrase in proper yaml syntax.
+#
+# Sample YAML file (name XYZ12345.yaml)
+# ----------------------------------------------------------------------------
+# Version: 1
+# Certificate:
+# - ssh_key1.pub
+# - XYZ12345/nxapi_server_key.pem
+# - XYZ12345/nxapi_server_cert.pem
+# License:
+# - XYZ12345/XYZ12345_1.lic
+# - XYZ12345_2.lic
+# RPM:
+# - POAP_TPARTY_AND_PATCH_RPMS/chef-12.19.33-1.nexus7.x86_64.rpm
+# - mtx-openconfig-vlan-1.0.0.206-9.3.5.lib32_n9000.rpm
+# - POAP_TPARTY_AND_PATCH_RPMS/nxos.POAP_SMU_BGP_RELOAD-n9k_ALL-1.0.0-9.3.5.lib32_n9000.rpm
+# Target_image: nxos.9.3.5.bin
+# Trustpoint:
+#   Z1_TP:
+#     POAP_TP_FILES/XYZ12345/Z1_TP.pfx: passphrase1
+#   Z2_TP:
+#     POAP_TP_FILES/XYZ12345/Z2_TP.p12: passphrase2
+# ----------------------------------------------------------------------------
+# Additionally a "Target_image" can also be defined in .yaml file for a box to override the
+# target image for that specific box as opposed to the target_system_image given as common to all boxes
+# through script. If Target_image mentioned in yaml then that image should be kept only in 
+# target_system_image path mentioned within poap script. No relative path support for Target_image in yaml file
+
 options = {
    "username": "root",
    "password": "password",
@@ -49,6 +95,14 @@ options = {
    "target_system_image": "nxos.7.0.3.I4.4.bin",
 }
 
+"""
+Setting global_use_kstack to True makes copy operation use the 
+kstack option to copy images.
+Setting global_upgrade_bios to True makes sure BIOS gets upgraded
+to latest BIOS available with the new image.
+"""
+global_use_kstack = False
+global_upgrade_bios = False
 
 def download_scripts_and_agents():
     """
@@ -217,7 +271,6 @@ def install_shell_script(source_path, source_file):
     os.system("sync")
     time.sleep(5)
 
-
 def set_defaults_and_validate_options():
     """
     Sets all the default values and creates needed variables for POAP to work.
@@ -246,7 +299,7 @@ def set_defaults_and_validate_options():
         required_parameters.add("hostname")
 
     # If we are missing any required parameters
-    missing_parameters = required_parameters.difference(options.keys())
+    missing_parameters = required_parameters.difference(list(options.keys()))
     if len(missing_parameters) != 0:
         poap_log("Required parameters are missing:")
         abort("Missing %s" % ", ".join(missing_parameters))
@@ -269,8 +322,13 @@ def set_defaults_and_validate_options():
     set_default("destination_system_image", options["target_system_image"])
     set_default("destination_kickstart_image", options["target_kickstart_image"])
     set_default("destination_midway_system_image", "midway_system.bin")
+    set_default("skip_multi_level", False)
     set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
-
+    set_default("serial_number","");
+    set_default("install_path", "")
+    set_default("use_nxos_boot", False)
+    set_default("https_ignore_certificate", False)
+    
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
 
@@ -314,7 +372,7 @@ def set_defaults_and_validate_options():
     # Check that options are valid
     validate_options()
 
-
+    
 def validate_options():
     """
     Validates that the options provided by the user are valid.
@@ -322,7 +380,9 @@ def validate_options():
     """
     if os.environ.get("POAP_PHASE", None) == "USB" and options["mode"] == "personality":
         abort("POAP Personality is not supported via USB!")
-
+        
+    os.system("rm -rf /bootflash/poap_files")
+    os.system("rm -rf /bootflash_sup-remote/poap_files")
     # Compare the list of what options users have to what options we actually support.
     supplied_options = set(options.keys())
     # Anything extra shouldn't be there
@@ -348,6 +408,65 @@ def set_default(key, value):
     # mistype any options
     valid_options.add(key)
 
+def byte2str(byte_str):
+    '''Ensuring python2 to python3 compatibility for subprocess outputs'''
+    try:
+        byte_str = byte_str.decode()
+    except (UnicodeDecodeError, AttributeError):
+        pass
+    return byte_str
+
+def rollback_rpm_license_certificates():
+    '''Rolling back installed rpms,licenses and certificates during abort'''
+    try:
+        fpx = open("/bootflash/poap_files/success_install_list")
+    except:
+        return
+    rollback_files = fpx.readlines()
+    for file in rollback_files:
+        file = file.strip('\n')
+        if file.endswith(".rpm"):
+            group_string = "/usr/bin/rpm -qp --qf %{GROUP} /bootflash/poap_files/" + file
+            rpm_string = "/usr/bin/rpm -qp --queryformat %{NXOSRPMTYPE} /bootflash/poap_files/" + file
+            rpmgrp = subprocess.check_output(group_string, shell=True)
+            rpmtype = subprocess.check_output(rpm_string, shell=True)
+            rpmgrp = byte2str(rpmgrp)
+            rpmtype = byte2str(rpmtype)
+            if (len(rpmgrp) != 0 and 'Patch-RPM' in rpmgrp):
+                poap_log("Rolling back patch RPM %s" %(file))
+                os.system("rm -rf /bootflash/.rpmstore/patching/patchrepo/%s" %file)
+                os.system("rm -rf /bootflash_sup-remote/.rpmstore/patching/patchrepo/%s" %file)
+                removal_entry = file.replace(".rpm", "")
+                entry_removal_string = "sed -i 's/ {0}//g' /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
+                standby_removal_string = "sed -i 's/ {0}//g' /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
+                os.system(entry_removal_string)
+                os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
+                os.system(standby_removal_string)
+                os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+            else:
+                if (len(rpmtype) != 0 and 'feature' in rpmtype):
+                    poap_log("Rolling back NXOS RPM %s" %(file))
+                    os.system("rm -rf /bootflash/.rpmstore/patching/localrepo/%s" %file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/localrepo/")
+                    os.system("rm -rf /bootflash_sup-remote/.rpmstore/patching/localrepo/%s" %file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                else:
+                    poap_log("Rolling back thirdparty RPM %s" %(file))
+                    os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/thirdparty/")
+                    os.system("rm -rf /bootflash_sup-remote/.rpmstore/thirdparty/%s" %file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/thirdparty/")
+            poap_log("Removal of RPM names from nxos_rpms_persisted list")
+            rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
+            rpm_name = byte2str(rpm_name)
+            rpm_persisted_removal_string = "sed -i '/^{0}$/d' /bootflash/.rpmstore/nxos_rpms_persisted" .format(rpm_name)
+            standby_persisted_removal_string = "sed -i '/^{0}$/d' /bootflash_sup-remote/.rpmstore/nxos_rpms_persisted" .format(rpm_name)
+            os.system(rpm_persisted_removal_string)
+            os.system(standby_persisted_removal_string)
+    os.system("rm -rf /bootflash/poap_files")
+    standby = cli("show module | grep ha-standby")
+    if(len(standby) > 0):
+        os.system("rm -rf /bootflash_sup-remote/poap_files") 
 
 def abort(msg=None):
     """
@@ -357,7 +476,8 @@ def abort(msg=None):
 
     if msg is not None:
         poap_log(msg)
-
+    
+    rollback_rpm_license_certificates()
     cleanup_files()
     close_log_handle()
     exit(1)
@@ -392,7 +512,7 @@ def init_globals():
     multi_step_install = False
 
     # confirm image deletion
-    del_system_image = True
+    del_system_image = False
     # confirm image deletion
     del_kickstart_image = True
 
@@ -519,7 +639,7 @@ def cleanup_files():
     global options, log_hdl
     global del_system_image, del_kickstart_image
 
-    poap_log("Cleanup all files")
+    poap_log("\n\nCleanup all files")
 
     # Destination config
     cleanup_file_from_option("destination_config")
@@ -534,7 +654,9 @@ def cleanup_files():
         cleanup_file_from_option("destination_kickstart_image")
     # Destination config
     cleanup_file_from_option("destination_config")
-
+    os.system("rm -rf /bootflash/poap_files")
+    os.system("rm -rf /bootflash_sup-remote/poap_files")
+    os.system("rm -rf /bootflash/poap_replay01.cfg")
 
 def sig_handler_no_exit(signum, stack):
     """
@@ -548,8 +670,11 @@ def sigterm_handler(signum, stack):
     A signal handler for the SIGTERM signal. Cleans up and exits
     """
     poap_log("INFO: SIGTERM Handler")
-    cleanup_files()
-    log_hdl.close()
+    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+        abort("Cleaning up rpms")
+    else:
+        cleanup_files()
+        log_hdl.close()
     exit(1)
 
 
@@ -573,7 +698,12 @@ def split_config_not_needed():
     # (n9000-dk9, 6, 1, 2, I1, 1, bin)
 
     parts = options['target_system_image'].split(".")
-    # number of parts should above 7 as above for us to check if its supported
+    
+    # for latest images, it is (nxos, 9, minor, mr, bin)
+    if int(parts[1]) == 9:
+        return True
+    
+    # number of parts should above 7 as above for us to check if its supported if not 9.x
     if len(parts) < 7:
         return False
 
@@ -860,7 +990,7 @@ def verify_md5(md5given, filename):
     return False
 
 
-def get_md5(filename):
+def get_md5(filename, skip_abort = False):
     """
     Fetches the md5 value from .md5 file.
     Args:
@@ -871,9 +1001,12 @@ def get_md5(filename):
     md5_filename = "%s.md5" % filename
 
     if not os.path.exists(os.path.join(options["destination_path"], md5_filename)):
-        abort("MD5 file is missing (%s does not exist!)"
+        if (skip_abort is False):
+            abort("MD5 file is missing (%s does not exist!)"
               % os.path.join(options["destination_path"], filename))
-
+        else:
+            raise
+            
     file_hdl = open(os.path.join(options["destination_path"], md5_filename), "r")
     line = file_hdl.readline()
     while line != "":
@@ -908,7 +1041,7 @@ def get_bootflash_size():
     poap_log("Unable to get bootflash size")
 
 
-def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
+def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, dont_abort=False):
     """
     Copies the file provided from source to destination. Source could
     be USB or external server. Appropriate copy function is required
@@ -962,16 +1095,30 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
             # Add the destination path
             copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
             if compact is True:
-                copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
-                    protocol, user, host, source, copy_tmp, vrf)
+                if global_use_kstack is True:
+                    copy_cmd += "copy %s://%s@%s%s %s compact vrf %s use-kstack" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+            elif (protocol is "https" and options["https_ignore_certificate"] is True):
+                if global_use_kstack is True:
+                    copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s use-kstack" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)              
             else:
-                copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
-                    protocol, user, host, source, copy_tmp, vrf)
+                if global_use_kstack is True:
+                    copy_cmd += "copy %s://%s@%s%s %s vrf %s use-kstack" % (
+                        protocol, user, host, source, copy_tmp, vrf)
+                else:
+                    copy_cmd += "copy %s://%s@%s%s %s vrf %s" % (
+                        protocol, user, host, source, copy_tmp, vrf)
             poap_log("Command is : %s" % copy_cmd)
             try:
                 cli(copy_cmd)
             except Exception as e:
-                poap_log("Copy failed: %s" % str(e))
                 # scp compact can fail due to reasons of current image version or
                 # platform do not support it; Try normal scp in such cases
                 if compact is True and ("Syntax error while parsing" in str(e) or \
@@ -979,12 +1126,17 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
                     return False
                 # Remove extra junk in the message
                 elif "no such file" in str(e):
-                    abort("Copy of %s failed: no such file" % source)
+                    if (dont_abort == True):
+                        poap_log("Copy Failed. File/Directory not found")
+                        pass
+                    else:
+                        abort("Copy of %s failed: no such file" % source)
                 elif "Permission denied" in str(e):
                     abort("Copy of %s failed: permission denied" % source)
                 elif "No space left on device" in str(e):
-                    abort("No space left on device")
+                    abort("Copy failed: No space left on device")
                 else:
+                    poap_log("Copy failed: %s" % str(e))
                     raise
 
     try:
@@ -996,10 +1148,14 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False):
     poap_log("*** Downloaded file is of size %s ***" % file_size)
 
     dest = os.path.join(options["destination_path"], dest)
+
     try:
         os.rename(dest_tmp, dest)
     except KeyError as e:
-        abort("Failed to rename %s to %s: %s" % (dest_tmp, dest, str(e)))
+        if (dont_abort == True): 
+            return True
+        else:
+            abort("Failed to rename %s to %s: %s" % (dest_tmp, dest, str(e)))
 
     poap_log("Renamed %s to %s" % (dest_tmp, dest))
     return True
@@ -1040,8 +1196,12 @@ def copy_md5_info(file_path, file_name):
                  src, os.path.join(options["destination_path"], md5_file_name)))
     if os.environ['POAP_PHASE'] != "USB":
         poap_log("File transfer_protocol = %s" % options["transfer_protocol"])
-
-    do_copy(src, md5_file_name, timeout, tmp_file)
+    
+    if ("yaml" in src or "yml" in src):
+        do_copy(src, md5_file_name, timeout, tmp_file, False, True)
+        # True is passed as last parameter so that script does not abort on copy failure.
+    else:
+        do_copy(src, md5_file_name, timeout, tmp_file)
 
 
 def copy_config():
@@ -1121,13 +1281,14 @@ def copy_system():
     """
     global del_system_image
     md5_sum_given = None
-
+  
+            
     if options["disable_md5"] is True and target_system_image_is_currently_running():
         poap_log("Currently running image is target image. Skipping system image download")
         return
 
     # do compact scp of system image if bootflash size is <= 2GB and "compact_image" option is enabled
-    if get_bootflash_size() <= 2000000 and options["compact_image"] is True and options["transfer_protocol"] is "scp":
+    if options["compact_image"] is True and options["transfer_protocol"] is "scp":
         poap_log("INFO: Try image copy with compact option...")
         do_compact = True
     else:
@@ -1178,6 +1339,7 @@ def copy_system():
                          options["destination_path"], org_file))
     poap_log("INFO: Completed Copy of System Image to %s" % os.path.join(
         options["destination_path"], org_file))
+    del_system_image = True
 
 
 def copy_kickstart():
@@ -1264,6 +1426,23 @@ def install_images_7_x():
 
     poap_log("INFO: Configuration successful")
 
+def install_nxos_issu():
+
+    system_image_path = os.path.join(options["destination_path"],
+                                     options["destination_system_image"])
+    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+
+    try:
+        os.system("touch /tmp/poap_issu_started")
+        poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
+        cli("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
+        time.sleep(5)
+        cli("terminal dont-ask ; write erase")
+        time.sleep(5)
+    except Exception as e:
+        poap_log("Failed to ISSU to image %s" % system_image_path)
+        os.system("rm -rf /tmp/poap_issu_started")
+        abort(str(e))
 
 # Procedure to install both kickstart and system images
 def install_images():
@@ -1314,7 +1493,336 @@ def install_images():
     else:
         poap_log("Multi-level install not set, installed images")
 
+#Procedure to intall using ISSU install command
+def install_issu():
+    system_image_path = os.path.join(options["destination_path"],
+                                     options["destination_system_image"])
+    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    
+    img_upgrade_cmd = "config terminal ; terminal dont-ask"
+    img_upgrade_cmd += " ; install all nxos %s non-interruptive override" % system_image_path
+    try:
+        output = cli(img_upgrade_cmd)
+        file = open("/bootflash/install_output.txt","w")
+        file.write(output)
+        file.close()
+    except Exception as e:
+        s = os.statvfs("/bootflash/")
+        freespace = (s.f_bavail * s.f_frsize)
+        total_size = (s.f_blocks * s.f_frsize)
+        percent_free = (float(freespace) / float(total_size)) * 100
+        poap_log("%0.2f%% bootflash free" % percent_free)
+        abort("Image install failed: %s" % str(e))
+        
+def parse_poap_yaml():
+    """
+    Parses the <serial_number>.yaml file and populates the dictionary
+    """
+    copy_path = options["install_path"] + "/" + options["serial_number"] + "/" + options["serial_number"] + ".yaml"
+    alt_path = options["install_path"] + "/" + options["serial_number"] + "/" + options["serial_number"] + ".yml"
+    timeout = options["timeout_copy_system"]
+    dst = "poap_device_recipe.yaml"
+    md5_sum_given = None
+    md5_verification = True
+    
+    try:
+        if options["disable_md5"] is False:
+            copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yaml")
+            md5_sum_given = get_md5(options["serial_number"] + ".yaml")
+            md5_verification = False
+            do_copy(copy_path, dst, timeout, dst, False, False)
+        else:
+            do_copy(copy_path, dst, timeout, dst, False, True)
+        # True is passed as last parameter so that script does not abort on copy failure.
+        if options["disable_md5"] is False and md5_sum_given:
+            md5_verification = verify_md5(md5_sum_given,
+                      "/bootflash/poap_device_recipe.yaml")
+            if not md5_verification:
+                abort("#### Yaml file %s MD5 verification failed #####\n" % dst)
+                time.sleep(2)
+    except:
+        try:
+            if not md5_verification:
+                exit(1)
+            if options["disable_md5"] is False:
+                copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yml")
+                md5_sum_given = get_md5(options["serial_number"] + ".yml")
+                md5_verification = False
+                do_copy(alt_path, dst, timeout, dst)
+            else:
+                do_copy(alt_path, dst, timeout, dst, False, True)
+            if options["disable_md5"] is False and md5_sum_given:
+                md5_verification = verify_md5(md5_sum_given,
+                          "/bootflash/poap_device_recipe.yaml")
+            if not md5_verification:
+                    abort("#### Yaml file %s MD5 verification failed #####\n" % dst)
+                    time.sleep(2)
+        except:
+            if md5_verification:
+                poap_log("Although 'install_path' is set in poap script file, proceeding with legacy poap workflow because yaml file for device is not found")
+                options["install_path"] = ""
+                return
+        if not md5_verification:
+            exit(1)
+    stream = open("/bootflash/poap_device_recipe.yaml", 'r')
+    dictionary = yaml.load(stream)
+    none_value_found = False
+    for k in dictionary.keys():
+        if dictionary[k] is None:
+            none_value_found = True
+            poap_log("Key {} has value None".format(k))
+    if none_value_found:
+        abort("Yaml has got keys with value None. Remove unwanted keys from yaml file.")
+    if ("Version" not in dictionary):
+        abort("Version keyword not found in yaml. Cannot proceed with installation.")
+    elif ("Version" in dictionary and dictionary["Version"] is not 1):
+        abort("Version given is not 1. Cannot be parsed for installation.")
+    if ("Target_image" in dictionary):
+        options["target_system_image"] = dictionary["Target_image"]
+        options["destination_system_image"] = dictionary["Target_image"]
+        
+        
+def validate_yaml_file():
+    """
+    Validates all the input filenames in the yaml file and throws error
+    for wrong extension/rpm filename format.
+    """
+    stream = open("/bootflash/poap_device_recipe.yaml", 'r')
+    dictionary = yaml.load(stream)
+    wrong_files = []
 
+    if ("License" in dictionary):
+        for lic in dictionary["License"]:
+             lic = lic.strip()
+             if not lic.endswith('.lic'):
+                 wrong_files += [lic]
+    if ("RPM" in dictionary):
+        for rpm in dictionary["RPM"]:
+             rpm = rpm.strip()
+             if not rpm.endswith('.rpm'):
+                 wrong_files += [rpm]
+
+    if ("Trustpoint" in dictionary):
+        for ca in dictionary["Trustpoint"].keys():
+            for cert, crypto_pass in dictionary["Trustpoint"][ca].items():
+                cert = cert.strip()
+                if not (cert.endswith('.pfx') or cert.endswith('.p12')):
+                    wrong_files += [cert]
+
+    if len(wrong_files) > 0:
+        poap_log("Expected extensions are .lic for licenses, .rpm for RPM files and .pfx or .p12 for Trustpoint based certificates.")
+        poap_log("The below files have wrong extension. Please rename in rpm source location and update YAML file accordingly.")
+        for file in wrong_files:
+            poap_log(file)
+        abort()
+
+        
+def copy_poap_files():
+    """
+    Copies all the files as per the yaml file and places them in poap_files
+    """
+    stream = open("/bootflash/poap_device_recipe.yaml", 'r')
+    dictionary = yaml.load(stream)
+    os.system("mkdir -p /bootflash/poap_files")
+    timeout = options["timeout_copy_system"]
+
+    if ("License" in dictionary):
+        for lic in dictionary["License"]:
+            serial_path = os.path.join(options["install_path"], lic.strip())
+
+            dst = "poap_files/" + lic.split('/')[-1]
+
+            do_copy(serial_path, dst, timeout, dst, False)
+
+    if ("RPM" in dictionary):
+        rpm_error = False
+        for rpm in dictionary["RPM"]:
+            rpm = rpm.strip()
+            serial_path = os.path.join(options["install_path"], rpm)
+
+            dst = "poap_files/" + rpm.split('/')[-1]
+
+            do_copy(serial_path, dst, timeout, dst, False)
+        for rpm in dictionary["RPM"]:
+            rpm = rpm.strip()
+            name_str = "rpm -qp --qf '%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}.rpm' /bootflash/poap_files/"+ rpm.split('/')[-1]
+            orig_name = subprocess.check_output(name_str, shell=True)
+            orig_name = byte2str(orig_name)
+            if (orig_name != rpm.split('/')[-1]):
+                poap_log ("ERROR : RPM file %s does not match RPM package naming convention. Expected name: %s" %(rpm.split('/')[-1],orig_name))
+                rpm_error = True
+        if rpm_error:
+            abort("Please correct the above rpm files in rpm source location and update YAML file accordingly.")
+  
+    if ("Certificate" in dictionary):
+        for cert in dictionary["Certificate"]:
+            cert  = cert.strip()
+            serial_path = os.path.join(options["install_path"], cert)
+
+            dst = "poap_files/" + cert.split('/')[-1]
+
+            do_copy(serial_path, dst, timeout, dst, False)
+    if ("Trustpoint" in dictionary):
+        for ca in dictionary["Trustpoint"].keys():
+            tmp_cmd = "mkdir -p /bootflash/poap_files/" + ca
+            os.system(tmp_cmd)
+            dst = "poap_files/" + ca + "/"
+            for tp_cert, crypto_pass in dictionary["Trustpoint"][ca].items():
+                tp_cert = tp_cert.strip()
+                dst = dst + tp_cert.split('/')[-1]
+                serial_path = os.path.join(options["install_path"], tp_cert)
+                do_copy(serial_path, dst, timeout, dst, False)
+
+   
+def install_license():
+    """
+    Installs the license files.
+    """
+
+    conf_file_second = os.path.join("/bootflash", options["split_config_second"])
+    tmp_file_second = conf_file_second + ".tmp"
+    tmp_file_write = open(tmp_file_second, 'w')
+    for file in os.listdir("/bootflash/poap_files"):
+        if file.endswith(".lic"):
+            poap_log("Installing license file: %s" % file)
+            conf_file_second = os.path.join("/bootflash", options["split_config_second"])
+            tmp_file_second = conf_file_second + ".tmp"
+
+            tmp_file_write.write("install license bootflash:poap_files/%s\n" % file)
+            poap_log("Installed license succesfully.")
+    tmp_file_write.close()
+    with open(conf_file_second, 'r') as read_file, open (tmp_file_second, 'a+') as write_file:
+        write_file.write(read_file.read())
+    os.rename(tmp_file_second, conf_file_second)
+
+    poap_log("Installed all licenses succesfully.")
+
+            
+def check_if_rpm_in_file(file_name, rpm):
+    """
+    Check if any line in the file contains given rpm
+    """
+    if(not(os.path.exists(file_name))):
+        return True
+    with open(file_name, 'r') as read_obj:
+        for line in read_obj:
+            if rpm in line:
+                return True
+    return False
+
+
+def install_rpm():
+    """
+    Installs the rpms for next reload
+    """
+    
+    patch_count = 0
+    activate_list = "committed_list = "
+    for file in os.listdir("/bootflash/poap_files"):
+        if file.endswith(".rpm"):
+            poap_log("Installing rpm file: %s" % file)
+            os.system('echo "' + file + '" >> /bootflash/poap_files/success_install_list')
+            group_string = "/usr/bin/rpm -qp --qf %{GROUP} /bootflash/poap_files/" + file
+            rpm_string = "/usr/bin/rpm -qp --queryformat %{NXOSRPMTYPE} /bootflash/poap_files/" + file
+            rpmgrp = subprocess.check_output(group_string, shell=True)
+            rpmtype = subprocess.check_output(rpm_string, shell=True)
+            if (len(rpmgrp) != 0 and 'Patch-RPM' in str(rpmgrp)):
+                patch_rpm_name = file.replace(".rpm", "")
+                if(not check_if_rpm_in_file("/bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf", patch_rpm_name)):
+                    poap_log("RPM is a patch RPM. executing clis for the same.")
+                    os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
+                    os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/patchrepo/" % file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                    patch_count = patch_count + 1
+                    activate_list  = activate_list + file.replace(".rpm", " ")
+            else:
+                if (len(rpmtype) != 0 and 'feature' in str(rpmtype)):
+                    poap_log("RPM is a nxos RPM. executing clis for the same.")
+                    os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/localrepo/" % file)
+                    os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/localrepo/" % file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/patching/localrepo/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                else:
+                    poap_log("RPM is a third-party RPM. Executing clis for the same")
+                    os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/thirdparty/")
+                    os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/thirdparty/" % file)
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/thirdparty/")
+                rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
+                rpm_name = byte2str(rpm_name)
+                if not check_if_rpm_in_file("/bootflash/.rpmstore/nxos_rpms_persisted", rpm_name):
+                    rpm_append_str = "/usr/bin/rpm -qp --qf %{NAME} /bootflash/poap_files/" + file + " >> /bootflash/.rpmstore/nxos_rpms_persisted"
+                    os.system(rpm_append_str)
+                    os.system('echo "" >> /bootflash/.rpmstore/nxos_rpms_persisted')
+                    standby_append_str = "/usr/bin/rpm -qp --qf %{NAME} /bootflash/poap_files/" + file + " >> /bootflash_sup-remote/.rpmstore/nxos_rpms_persisted"
+                    os.system(standby_append_str)
+                    os.system('echo "" >> /bootflash_sup-remote/.rpmstore/nxos_rpms_persisted')
+            poap_log("RPM %s scheduled to be installed on next reload. " % file)
+    if (patch_count > 0):
+        if((os.path.exists("/bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf"))):
+            fp = open("/bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf", 'r')
+            patching_meta = fp.readlines()
+            patching_meta = ''.join(patching_meta)
+            if("committed_list" in patching_meta):
+                activate_list = activate_list.replace("committed_list = ", "")
+                patch_append_str = 'sed -i "/committed_list/ s/$/ {0}/" /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'.format(activate_list)
+                standby_append_str = 'sed -i "/committed_list/ s/$/ {0}/" /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf'.format(activate_list)
+                os.system(patch_append_str)
+                os.system(standby_append_str)
+            elif("[patching]" in patching_meta):
+                patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+                standby_append_str = 'echo "' + activate_list + '" >> /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+                os.system(patch_append_str)
+                os.system(standby_append_str)
+            else:
+                os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+                os.system('echo "[patching]" >> /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+                patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+                standby_append_str = 'echo "' + activate_list + '" >> /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+                os.system(patch_append_str)
+                os.system(standby_append_str)
+        else:
+            os.system('echo "[patching]" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+            os.system('echo "[patching]" >> /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf')
+            patch_append_str = 'echo "' + activate_list + '" >> /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+            standby_append_str = 'echo "' + activate_list + '" >> /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf'
+            os.system(patch_append_str)
+            os.system(standby_append_str)
+        
+def install_certificate():
+    """
+    Installs the certificate files.
+    """
+    stream = open("/bootflash/poap_device_recipe.yaml", 'r')
+    dictionary = yaml.load(stream)
+    config_file_second = open(os.path.join("/bootflash", options["split_config_second"]), "a+")
+    
+    if ("Trustpoint" in dictionary):
+        for ca in dictionary["Trustpoint"].keys():
+            ca_apply = 0
+            for tp_cert, crypto_pass in dictionary["Trustpoint"][ca].items():
+                tp_cert = tp_cert.strip()
+                file = tp_cert.split('/')[-1]
+                if (file.endswith(".p12") or file.endswith(".pfx")):
+                    poap_log("Installing certificate file. %s" % file)
+                    if (ca_apply == 0):
+                        config_file_second.write("crypto ca trustpoint %s\n" % ca)
+                        ca_apply = 1
+                    config_file_second.write("crypto ca import %s pkcs12 bootflash:poap_files/%s/%s %s\n" % (ca, ca, file, crypto_pass))
+                    poap_log("Installed certificate %s succesfully" % file)
+            
+            
+def copy_standby_files():
+    """
+    Checks if the standby module is present and copies the
+    poap_files folder to standby bootflash.
+    """
+    standby = cli("show module | grep ha-standby")
+    if(len(standby) > 0):
+        os.system("cp -rf /bootflash/poap_files /bootflash_sup-remote/")
+
+                
 def verify_freespace():
     """
     Checks if the available space in bootflash is sufficient enough to
@@ -1325,7 +1833,7 @@ def verify_freespace():
     freespace = (s.f_bavail * s.f_frsize) / 1024
     poap_log("Free bootflash space is %s" % freespace)
 
-    if options["required_space"] > freespace:
+    if int(options["required_space"]) > freespace:
         abort("*** Not enough bootflash space to continue POAP ***")
 
 
@@ -1339,6 +1847,7 @@ def set_cfg_file_serial():
     if 'POAP_SERIAL' in os.environ:
         poap_log("serial number %s" % os.environ['POAP_SERIAL'])
         options["source_config_file"] = "conf.%s" % os.environ['POAP_SERIAL']
+        options["serial_number"] = os.environ['POAP_SERIAL']
     poap_log("Selected conf file name : %s" % options["source_config_file"])
 
 
@@ -1353,12 +1862,14 @@ def set_cfg_file_mac():
             poap_log("usb slot is 2")
 
         config_file = "conf_%s.cfg" % os.environ['POAP_RMAC']
+        options["serial_number"] = os.environ['POAP_RMAC']
         poap_log("Router MAC conf file name : %s" % config_file)
         if os.path.exists("/usbslot%d/%s" % (usbslot, config_file)):
             options["source_config_file"] = config_file
             poap_log("Selected conf file name : %s" % options["source_config_file"])
             return
         config_file = "conf_%s.cfg" % os.environ['POAP_MGMT_MAC']
+        options["serial_number"] = os.environ['POAP_MGMT_MAC']
         poap_log("MGMT MAC conf file name : %s" % config_file)
         if os.path.exists("/usbslot%d/%s" % (options["usb_slot"], config_file)):
             options["source_config_file"] = config_file
@@ -1368,6 +1879,7 @@ def set_cfg_file_mac():
         if 'POAP_MAC' in os.environ:
             poap_log("Interface MAC %s" % os.environ['POAP_MAC'])
             options["source_config_file"] = "conf_%s.cfg" % os.environ['POAP_MAC']
+            options["serial_number"] = os.environ['POAP_MAC']
             poap_log("Selected conf file name : %s" % options["source_config_file"])
 
 
@@ -1561,7 +2073,7 @@ def find_upgrade_index_from_match(image_info):
     minor = image_info.group(2)
     revision = image_info.group(3)
     #Ignore the branch and release details for 9.2 or higher versions
-    if major < 9:
+    if int(major) < 9:
        branch = image_info.group(4)
        release = image_info.group(5)
     else:
@@ -1771,10 +2283,10 @@ def get_system_image_from_tarball():
         # Legacy personality support
         match = re.search("IMAGEFILE_(.+)", file_name)
         if match:
-            options["target_system_image"] = match.group(1)
+            options["target_system_image"] = byte2str(match.group(1))
         # File container way
         elif os.path.basename(file_name) == "IMAGEFILE":
-            options["target_system_image"] = tar.extractfile(file_name).read().strip()
+            options["target_system_image"] = byte2str(tar.extractfile(file_name).read().strip())
 
     if options.get("target_system_image") is None:
         abort("Failed to find system image filename from tarball")
@@ -1790,8 +2302,7 @@ def override_options_for_personality():
 
     options["target_image_path"] = options["personality_path"]
     poap_log("target_image_path option set to personality_path (%s)" % options["personality_path"])
-    if options["destination_system_image"]:
-        options["destination_system_image"] = options["target_system_image"]
+    options["destination_system_image"] = options["target_system_image"]
 
 
 def initialize_personality():
@@ -1811,16 +2322,19 @@ def setup_mode():
                        "personality", "raw"]
     if options["mode"] == "location":
         set_cfg_file_location()
+        options["serial_number"] = os.environ['POAP_SERIAL']
     elif options["mode"] == "serial_number":
         set_cfg_file_serial()
     elif options["mode"] == "mac":
         set_cfg_file_mac()
     elif options["mode"] == "hostname":
         set_cfg_file_host()
+        options["serial_number"] = os.environ['POAP_SERIAL']
     elif options["mode"] == "personality":
         initialize_personality()
     elif options["mode"] == "raw":
         # Don't need to change the name of the config file
+        options["serial_number"] = os.environ['POAP_SERIAL']
         pass
     else:
         poap_log("Invalid mode selected: %s" % options["mode"])
@@ -1856,6 +2370,11 @@ def check_multilevel_install():
     """
     global options, single_image
     
+    # User wants to override multi level install
+    if options["skip_multi_level"] == True:
+        single_image = True
+        return
+
     # User wants to override multi level install
     if options["skip_multi_level"] == True:
         single_image = True
@@ -1929,6 +2448,8 @@ def main():
     # the directory structure needed, if any
     create_destination_directories()
 
+    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+        parse_poap_yaml()
     check_multilevel_install()
     # In two step install we just copy the midway image and reboot.
     # Config copy and script download happens in the second step.
@@ -1939,6 +2460,17 @@ def main():
         download_scripts_and_agents()
         # End of multi_step_install is False block
 
+    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+        validate_yaml_file()
+        copy_poap_files()
+        time.sleep(2)
+        install_license()
+        install_rpm()
+        time.sleep(2)
+        install_certificate()
+        time.sleep(2)
+        copy_standby_files()
+        
     copy_system()
 
     if single_image is False:
@@ -1948,7 +2480,9 @@ def main():
     # install images
     if single_image is False:
         install_images()
-    else:
+    elif global_upgrade_bios:
+        install_issu()
+    elif options["use_nxos_boot"]:
         install_images_7_x()
 
     # Cleanup midway images if any
@@ -1967,6 +2501,9 @@ def main():
     cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
     poap_log("Done copying the second scheduled cfg")
     remove_file(os.path.join("/bootflash", options["split_config_second"]))
+    if (options["use_nxos_boot"] is False):
+        install_nxos_issu()
+
     log_hdl.close()
     exit(0)
 
@@ -1983,3 +2520,4 @@ if __name__ == "__main__":
                      .format(fname, exc_tb.tb_lineno))
             exc_tb = exc_tb.tb_next
         abort()
+
