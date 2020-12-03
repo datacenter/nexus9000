@@ -1993,8 +1993,28 @@ def get_version():
             return result.group(1)
     else:
         result = re.search(r'NXOS.*version\s*(.*)\n', cli_output)
+        #Line is of type NXOS: version <version>
         if result is not None:
-            return result.group(1)
+           #This checks if the image if of intermediate type of CCO
+           #If 'build' is present, then it is of intermediate type
+            interim_result = result.group()
+            if 'build' in interim_result:
+                # We are extracting our answer from the interim_result extracted so far
+                # Whatever we were extracting till now isn't enough
+                # This is an intermediate image, so our interim result is of form: nxos.9.4.1. [build 10.1.0.60.].bin
+                final_version = re.search(r'build.*', interim_result)
+                final_version = final_version.group()
+                final_version = final_version.replace('(', '.').replace(')', '.').replace(']', '').split()[1]
+                
+                # Now, the form obtained if of the form 10.1.0.60, and it is a string. 
+                return final_version        
+            else:
+                #This fetches the CCO image version
+                # interim_result is of form major.minor (patch version)
+                final_version = interim_result.replace('(', '.').replace(')', '')
+                final_version = final_version.split()[2]
+                return final_version
+
     poap_log("Unable to get switch version")
 
 
