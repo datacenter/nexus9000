@@ -443,7 +443,7 @@ def rollback_rpm_license_certificates():
                 standby_removal_string = "sed -i 's/ {0}//g' /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
                 os.system(entry_removal_string)               
                 os.system(standby_removal_string)
-                if(image_parts[0] >= 10):
+                if(int(image_parts[0]) >= 10):
                     os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
                     os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
                 else:                
@@ -454,7 +454,7 @@ def rollback_rpm_license_certificates():
                     poap_log("Rolling back NXOS RPM %s" %(file))
                     os.system("rm -rf /bootflash/.rpmstore/patching/localrepo/%s" %file)
                     os.system("rm -rf /bootflash_sup-remote/.rpmstore/patching/localrepo/%s" %file)
-                    if(image_parts[0] >= 10):
+                    if(int(image_parts[0]) >= 10):
                         os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
                         os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
                     else:                       
@@ -464,7 +464,7 @@ def rollback_rpm_license_certificates():
                     poap_log("Rolling back thirdparty RPM %s" %(file))
                     os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)      
                     os.system("rm -rf /bootflash_sup-remote/.rpmstore/thirdparty/%s" %file)            
-                    if(image_parts[0] >= 10):
+                    if(int(image_parts[0]) >= 10):
                         os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
                         os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")
                     else:                     
@@ -1748,7 +1748,7 @@ def install_rpm():
                     poap_log("RPM is a patch RPM. executing clis for the same.")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/patchrepo/" % file)
-                    if(image_parts[0] >= 10):
+                    if(int(image_parts[0]) >= 10):
                         os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
                         os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
                     else:
@@ -1761,7 +1761,7 @@ def install_rpm():
                     poap_log("RPM is a nxos RPM. executing clis for the same.")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/localrepo/" % file)
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/localrepo/" % file)
-                    if(image_parts[0] >= 10):
+                    if(int(image_parts[0]) >= 10):
                         os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
                         os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
                     else:                
@@ -1771,7 +1771,7 @@ def install_rpm():
                     poap_log("RPM is a third-party RPM. Executing clis for the same")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)      
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/thirdparty/" % file)
-                    if(image_parts[0] >= 10):
+                    if(int(image_parts[0]) >= 10):
                         os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
                         os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")      
                     else:
