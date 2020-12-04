@@ -692,7 +692,7 @@ def sigterm_handler(signum, stack):
     exit(1)
 
 
-def split_config_not_needed():install
+def split_config_not_needed():
     """Checks if splitting the config into two config files is needed. This is needed on older
     images that require a reload to apply certain configs (e.g. TCAM changes). If we're on an
     image newer than or equal to 7.0(3)I4(1), we don't need reloads to apply configs
