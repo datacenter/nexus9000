@@ -444,8 +444,8 @@ def rollback_rpm_license_certificates():
                 os.system(entry_removal_string)               
                 os.system(standby_removal_string)
                 if(int(image_parts[0]) >= 10):
-                    os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
-                    os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                    os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
+                    os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
                 else:                
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
                     os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
@@ -455,8 +455,8 @@ def rollback_rpm_license_certificates():
                     os.system("rm -rf /bootflash/.rpmstore/patching/localrepo/%s" %file)
                     os.system("rm -rf /bootflash_sup-remote/.rpmstore/patching/localrepo/%s" %file)
                     if(int(image_parts[0]) >= 10):
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
                     else:                       
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/localrepo/")          
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
@@ -465,8 +465,8 @@ def rollback_rpm_license_certificates():
                     os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)      
                     os.system("rm -rf /bootflash_sup-remote/.rpmstore/thirdparty/%s" %file)            
                     if(int(image_parts[0]) >= 10):
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")
                     else:                     
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/thirdparty/")
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/thirdparty/")
@@ -1749,8 +1749,8 @@ def install_rpm():
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/patchrepo/" % file)
                     if(int(image_parts[0]) >= 10):
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
                     else:
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
@@ -1762,8 +1762,8 @@ def install_rpm():
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/localrepo/" % file)
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/localrepo/" % file)
                     if(int(image_parts[0]) >= 10):
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
                     else:                
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/patching/localrepo/")
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/patching/localrepo/")
@@ -1772,8 +1772,8 @@ def install_rpm():
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)      
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/thirdparty/" % file)
                     if(int(image_parts[0]) >= 10):
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
-                        os.system("sudo /usr/share/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")      
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")      
                     else:
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/thirdparty/")
                         os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/thirdparty/")
