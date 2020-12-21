@@ -1272,7 +1272,7 @@ def target_system_image_is_currently_running():
     Checks if the system image that we would try to download is the one that's
     currently running. Not used if MD5 checks are enabled.
     """
-    version = get_version()
+    version = get_version(1)
     if legacy is False:
         image_parts = [part for part in re.split("[\.()]", version) if part]
         image_parts.insert(0, "nxos")
@@ -1981,7 +1981,7 @@ def set_cfg_file_location():
     poap_log("Selected conf file name : %s" % options["source_config_file"])
 
 
-def get_version():
+def get_version(option=0):
     """
     Gets the image version of the switch from CLI.
     Output is handled differently for 6.x and 7.x or higher version.
@@ -1994,7 +1994,9 @@ def get_version():
     else:
         result = re.search(r'NXOS.*version\s*(.*)\n', cli_output)
         #Line is of type NXOS: version <version>
-        if result is not None:
+        if result is not None and option != 1:
+           return result.group(1)
+        elif result is not None:   
            #This checks if the image if of intermediate type of CCO
            #If 'build' is present, then it is of intermediate type
             interim_result = result.group()
