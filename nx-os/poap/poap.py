@@ -2041,6 +2041,13 @@ def is_bios_upgrade_needed():
         except:
             poap_log("Could not find chassis family.")
         
+        try:
+            chassis_out = cli("show version")
+            if "C93180YC-FX3S" in chassis_out:
+                last_upgrade_bios = 1
+        except:
+            poap_log("Could not find chassis family.")
+
         poap_log("Comparing present BIOS version %d with base version %d" % (bios_number, last_upgrade_bios))
         if bios_number < last_upgrade_bios:
             poap_log("Bios needs to be upgraded as switch is "
