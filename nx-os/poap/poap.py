@@ -2434,16 +2434,14 @@ def check_multilevel_install():
     if options["midway_system_image"] != "":
         set_next_upgrade_from_user()
     else:
-        set_next_upgrade_from_upgrade_path()
-
-    if re.match("nxos.", options["target_system_image"]) \
-       or re.match("n9000", options["target_system_image"]):
-        poap_log("Single image is set")
-        single_image = True
-    else:
-        poap_log("Single image is not set")
-        single_image = False
-
+        if re.match("nxos.", options["target_system_image"]) \
+            or re.match("n9000", options["target_system_image"]):
+            poap_log("Single image is set")
+            single_image = True
+        else:
+            poap_log("Single image is not set")
+            single_image = False
+            set_next_upgrade_from_upgrade_path()
 
 def invoke_personality_restore():
     """
