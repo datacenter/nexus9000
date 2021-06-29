@@ -422,6 +422,8 @@ def rollback_rpm_license_certificates():
         fpx = open("/bootflash/poap_files/success_install_list")
     except:
         return
+    version = get_version()
+    image_parts = [part for part in re.split("[\.()]", version) if part]
     rollback_files = fpx.readlines()
     for file in rollback_files:
         file = file.strip('\n')
@@ -439,23 +441,35 @@ def rollback_rpm_license_certificates():
                 removal_entry = file.replace(".rpm", "")
                 entry_removal_string = "sed -i 's/ {0}//g' /bootflash/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
                 standby_removal_string = "sed -i 's/ {0}//g' /bootflash_sup-remote/.rpmstore/patching/patchrepo/meta/patching_meta.inf".format(removal_entry)
-                os.system(entry_removal_string)
-                os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
+                os.system(entry_removal_string)               
                 os.system(standby_removal_string)
-                os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                if(int(image_parts[0]) >= 10):
+                    os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
+                    os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                else:                
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
+                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
             else:
                 if (len(rpmtype) != 0 and 'feature' in rpmtype):
                     poap_log("Rolling back NXOS RPM %s" %(file))
                     os.system("rm -rf /bootflash/.rpmstore/patching/localrepo/%s" %file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/localrepo/")
                     os.system("rm -rf /bootflash_sup-remote/.rpmstore/patching/localrepo/%s" %file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                    if(int(image_parts[0]) >= 10):
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                    else:                       
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/localrepo/")          
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
                 else:
                     poap_log("Rolling back thirdparty RPM %s" %(file))
-                    os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/thirdparty/")
-                    os.system("rm -rf /bootflash_sup-remote/.rpmstore/thirdparty/%s" %file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/thirdparty/")
+                    os.system("rm -rf /bootflash/.rpmstore/thirdparty/%s" %file)      
+                    os.system("rm -rf /bootflash_sup-remote/.rpmstore/thirdparty/%s" %file)            
+                    if(int(image_parts[0]) >= 10):
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")
+                    else:                     
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/thirdparty/")
             poap_log("Removal of RPM names from nxos_rpms_persisted list")
             rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
             rpm_name = byte2str(rpm_name)
@@ -1258,7 +1272,7 @@ def target_system_image_is_currently_running():
     Checks if the system image that we would try to download is the one that's
     currently running. Not used if MD5 checks are enabled.
     """
-    version = get_version()
+    version = get_version(1)
     if legacy is False:
         image_parts = [part for part in re.split("[\.()]", version) if part]
         image_parts.insert(0, "nxos")
@@ -1718,6 +1732,8 @@ def install_rpm():
     
     patch_count = 0
     activate_list = "committed_list = "
+    version = get_version()
+    image_parts = [part for part in re.split("[\.()]", version) if part]
     for file in os.listdir("/bootflash/poap_files"):
         if file.endswith(".rpm"):
             poap_log("Installing rpm file: %s" % file)
@@ -1732,8 +1748,12 @@ def install_rpm():
                     poap_log("RPM is a patch RPM. executing clis for the same.")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/patchrepo/" % file)
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/patchrepo/" % file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                    if(int(image_parts[0]) >= 10):
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/patchrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
+                    else:
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash/.rpmstore/patching/patchrepo/")
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py --update /bootflash_sup-remote/.rpmstore/patching/patchrepo/")
                     patch_count = patch_count + 1
                     activate_list  = activate_list + file.replace(".rpm", " ")
             else:
@@ -1741,14 +1761,22 @@ def install_rpm():
                     poap_log("RPM is a nxos RPM. executing clis for the same.")
                     os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/patching/localrepo/" % file)
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/patching/localrepo/" % file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/patching/localrepo/")
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                    if(int(image_parts[0]) >= 10):
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/patching/localrepo/")
+                    else:                
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/patching/localrepo/")
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/patching/localrepo/")
                 else:
                     poap_log("RPM is a third-party RPM. Executing clis for the same")
-                    os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/thirdparty/")
+                    os.system("cp /bootflash/poap_files/%s /bootflash/.rpmstore/thirdparty/" % file)      
                     os.system("cp /bootflash/poap_files/%s /bootflash_sup-remote/.rpmstore/thirdparty/" % file)
-                    os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/thirdparty/")
+                    if(int(image_parts[0]) >= 10):
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/createrepo_c --update /bootflash_sup-remote/.rpmstore/thirdparty/")      
+                    else:
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash/.rpmstore/thirdparty/")
+                        os.system("sudo /usr/bin/python /usr/share/createrepo/genpkgmetadata.py /bootflash_sup-remote/.rpmstore/thirdparty/")
                 rpm_name = subprocess.check_output("/usr/bin/rpm -qp --qf %%{NAME} /bootflash/poap_files/%s" %file, shell=True)
                 rpm_name = byte2str(rpm_name)
                 if not check_if_rpm_in_file("/bootflash/.rpmstore/nxos_rpms_persisted", rpm_name):
@@ -1953,7 +1981,7 @@ def set_cfg_file_location():
     poap_log("Selected conf file name : %s" % options["source_config_file"])
 
 
-def get_version():
+def get_version(option=0):
     """
     Gets the image version of the switch from CLI.
     Output is handled differently for 6.x and 7.x or higher version.
@@ -1965,8 +1993,30 @@ def get_version():
             return result.group(1)
     else:
         result = re.search(r'NXOS.*version\s*(.*)\n', cli_output)
-        if result is not None:
-            return result.group(1)
+        #Line is of type NXOS: version <version>
+        if result is not None and option != 1:
+           return result.group(1)
+        elif result is not None:   
+           #This checks if the image if of intermediate type of CCO
+           #If 'build' is present, then it is of intermediate type
+            interim_result = result.group()
+            if 'build' in interim_result:
+                # We are extracting our answer from the interim_result extracted so far
+                # Whatever we were extracting till now isn't enough
+                # This is an intermediate image, so our interim result is of form: nxos.9.4.1. [build 10.1.0.60.].bin
+                final_version = re.search(r'build.*', interim_result)
+                final_version = final_version.group()
+                final_version = final_version.replace('(', '.').replace(')', '.').replace(']', '').split()[1]
+                
+                # Now, the form obtained if of the form 10.1.0.60, and it is a string. 
+                return final_version        
+            else:
+                #This fetches the CCO image version
+                # interim_result is of form major.minor (patch version)
+                final_version = interim_result.replace('(', '.').replace(')', '')
+                final_version = final_version.split()[2]
+                return final_version
+
     poap_log("Unable to get switch version")
 
 
@@ -2384,16 +2434,14 @@ def check_multilevel_install():
     if options["midway_system_image"] != "":
         set_next_upgrade_from_user()
     else:
-        set_next_upgrade_from_upgrade_path()
-
-    if re.match("nxos.", options["target_system_image"]) \
-       or re.match("n9000", options["target_system_image"]):
-        poap_log("Single image is set")
-        single_image = True
-    else:
-        poap_log("Single image is not set")
-        single_image = False
-
+        if re.match("nxos.", options["target_system_image"]) \
+            or re.match("n9000", options["target_system_image"]):
+            poap_log("Single image is set")
+            single_image = True
+        else:
+            poap_log("Single image is not set")
+            single_image = False
+            set_next_upgrade_from_upgrade_path()
 
 def invoke_personality_restore():
     """
