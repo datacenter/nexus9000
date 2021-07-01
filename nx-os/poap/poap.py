@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="f6e5265173c6ce5865c586c8b3aa1112"
+#md5sum="74443b77d981a78d3785fcd6dabd7099"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -1277,16 +1277,25 @@ def target_system_image_is_currently_running():
         image_parts = [part for part in re.split("[\.()]", version) if part]
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
+        
+        image_parts64 = [part for part in re.split("[\.()]", version) if part]
+        image_parts64.insert(0, "nxos64")
+        image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
-
-        poap_log("Running: '%s'" % running_image)
-        poap_log("Target:  '%s'" % options["target_system_image"])
-
-        return running_image == options["target_system_image"]
-
-    return False
-
+        running_image64 = ".".join(image_parts64)
+        
+        if running_image == options["target_system_image"]:
+            poap_log("Running: '%s'" % running_image)
+            poap_log("Target:  '%s'" % options["target_system_image"])
+            return True
+        elif running_image64 == options["target_system_image"]:
+            poap_log("Running: '%s'" % running_image64)
+            poap_log("Target: '%s'"  % options["target_system_image"])
+            return True
+        else:
+            poap_log("Running image and target image are different. Need to copy target image to box.")
+            return False
 
 def copy_system():
     """
