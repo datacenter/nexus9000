@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="f5acecce0db2157e538a8e599f189e6a"
+#md5sum="1ee654b714375962d57eaa872b276c06"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -1273,7 +1273,7 @@ def target_system_image_is_currently_running():
     currently running. Not used if MD5 checks are enabled.
     
     We need to check for both 64-bit as well as 32-bit, since from Jacksonville onwards, 
-    both type of iamges are present. We have to check using this method, since we don't have
+    both type of images are present. We have to check using this method, since we don't have
     a CLI to check whether the running image is a 64-bit image or a 32-bit image. 
     Image applicable from:  applicable from: 10.1(1) [Jacksonville] 
     """
