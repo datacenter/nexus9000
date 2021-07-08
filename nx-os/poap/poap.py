@@ -1271,6 +1271,11 @@ def target_system_image_is_currently_running():
     """
     Checks if the system image that we would try to download is the one that's
     currently running. Not used if MD5 checks are enabled.
+    
+    We need to check for both 64-bit as well as 32-bit, since from Jacksonville onwards, 
+    both type of iamges are present. We have to check using this method, since we don't have
+    a CLI to check whether the running image is a 64-bit image or a 32-bit image. 
+    Nexus version applicable from: 10.1(1) [Jacksonville] 
     """
     version = get_version(1)
     if legacy is False:
