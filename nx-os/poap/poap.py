@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="bfa51a9050f7c7852f119ec5d561a2ae"
+#md5sum="f5acecce0db2157e538a8e599f189e6a"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -1275,7 +1275,7 @@ def target_system_image_is_currently_running():
     We need to check for both 64-bit as well as 32-bit, since from Jacksonville onwards, 
     both type of iamges are present. We have to check using this method, since we don't have
     a CLI to check whether the running image is a 64-bit image or a 32-bit image. 
-    Nexus version applicable from: 10.1(1) [Jacksonville] 
+    Image applicable from:  applicable from: 10.1(1) [Jacksonville] 
     """
     version = get_version(1)
     if legacy is False:
