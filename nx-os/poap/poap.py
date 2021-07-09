@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="f6e5265173c6ce5865c586c8b3aa1112"
+#md5sum="1ee654b714375962d57eaa872b276c06"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -1271,22 +1271,36 @@ def target_system_image_is_currently_running():
     """
     Checks if the system image that we would try to download is the one that's
     currently running. Not used if MD5 checks are enabled.
+    
+    We need to check for both 64-bit as well as 32-bit, since from Jacksonville onwards, 
+    both type of images are present. We have to check using this method, since we don't have
+    a CLI to check whether the running image is a 64-bit image or a 32-bit image. 
+    Image applicable from:  applicable from: 10.1(1) [Jacksonville] 
     """
     version = get_version(1)
     if legacy is False:
         image_parts = [part for part in re.split("[\.()]", version) if part]
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
+        
+        image_parts64 = [part for part in re.split("[\.()]", version) if part]
+        image_parts64.insert(0, "nxos64")
+        image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
-
-        poap_log("Running: '%s'" % running_image)
-        poap_log("Target:  '%s'" % options["target_system_image"])
-
-        return running_image == options["target_system_image"]
-
-    return False
-
+        running_image64 = ".".join(image_parts64)
+        
+        if running_image == options["target_system_image"]:
+            poap_log("Running: '%s'" % running_image)
+            poap_log("Target:  '%s'" % options["target_system_image"])
+            return True
+        elif running_image64 == options["target_system_image"]:
+            poap_log("Running: '%s'" % running_image64)
+            poap_log("Target: '%s'"  % options["target_system_image"])
+            return True
+        else:
+            poap_log("Running image and target image are different. Need to copy target image to box.")
+            return False
 
 def copy_system():
     """
