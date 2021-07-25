@@ -1303,27 +1303,13 @@ def target_system_image_is_currently_running():
             poap_log("Target: '%s'"  % options["target_system_image"])
             return True
         else:
-            if sp is None:
-                try:
-                    os.system("file /isan/bin/pfm > /bootflash/check_32-bit")
-                    cli_output = cli("show file check_32-bit")
-                    parts = cli_output.strip().split()
-                    is_32_bit = parts[2]
-                    os.system("rm /bootflash/check_32-bit")
-                    if (is_32_bit == "64-bit"):
-                        poap_log("Running 64-bit '%s' image" % running_image64)
-                        poap_log("Target: '%s'" % options["target_system_image"])
-                    else:
-                        poap_log("Running 32-bit '%s' image" % running_image)
-                        poap_log("Target: '%s'" % options["Target_system_image"])
-                except Exeption as e:
-                    poap_log("Failed to find whether image is 32 bit or 64-bit.")
-            else:
+            if sp is not None:
                 try: 
                     out = sp.check_output("file /isan/bin/pfm", stderr=sp.STDOUT, shell=True)
                     parts = out.strip().split()
                     is_32_bit = parts[2]
-                    is_32_bit = is_32_bit.decode('utf-8')
+                    if (sys.version_info[0] >=3):
+                        is_32_bit = is_32_bit.decode('utf-8')
                     if (is_32_bit == "64-bit"):
                          poap_log("Running 64-bit '%s' image" % running_image64)
                          poap_log("Target:  '%s'" % options["target_system_image"])
@@ -1332,6 +1318,8 @@ def target_system_image_is_currently_running():
                          poap_log("Target:  '%s'" % options["target_system_image"])
                 except Exception as e: 
                      poap_log("Failed to find whether image is 32-bit or 64-bit.") 
+            else:
+                poap_log("As subprocess module is not present, unable to find if image is 32-bit or 64-bit.") 
             poap_log("Running image and target image are different. Need to copy target image to box.")
             return False
 
