@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="1ee654b714375962d57eaa872b276c06"
+#md5sum="eb08329071ac99ccc2739640439152a3"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -1275,7 +1275,11 @@ def target_system_image_is_currently_running():
     We need to check for both 64-bit as well as 32-bit, since from Jacksonville onwards, 
     both type of images are present. We have to check using this method, since we don't have
     a CLI to check whether the running image is a 64-bit image or a 32-bit image. 
-    Image applicable from:  applicable from: 10.1(1) [Jacksonville] 
+    Image applicable from:  10.1(1) [Jacksonville]
+
+    In case of mismatch between the currently running and target image, we check for the output from
+    /isan/bin/pfm file, however exception may occur there (since this is an internal file, 
+    subject to change)  so no need to check using it when doing comparison.  
     """
     version = get_version(1)
     if legacy is False:
@@ -1299,6 +1303,23 @@ def target_system_image_is_currently_running():
             poap_log("Target: '%s'"  % options["target_system_image"])
             return True
         else:
+            if sp is not None:
+                try: 
+                    out = sp.check_output("file /isan/bin/pfm", stderr=sp.STDOUT, shell=True)
+                    parts = out.strip().split()
+                    is_32_bit = parts[2]
+                    if (sys.version_info[0] >=3):
+                        is_32_bit = is_32_bit.decode('utf-8')
+                    if (is_32_bit == "64-bit"):
+                         poap_log("Running 64-bit '%s' image" % running_image64)
+                         poap_log("Target:  '%s'" % options["target_system_image"])
+                    else:
+                         poap_log("Running 32-bit '%s' image" % running_image)
+                         poap_log("Target:  '%s'" % options["target_system_image"])
+                except Exception as e: 
+                     poap_log("Failed to find whether image is 32-bit or 64-bit.") 
+            else:
+                poap_log("As subprocess module is not present, unable to find if image is 32-bit or 64-bit.") 
             poap_log("Running image and target image are different. Need to copy target image to box.")
             return False
 
