@@ -92,7 +92,7 @@ options = {
    "hostname": "2.1.1.1",
    "transfer_protocol": "scp",
    "mode": "serial_number",
-   "target_system_image": "nxos.7.0.3.I4.4.bin",
+   "target_system_image": "nxos.9.3.1.bin",
 }
 
 """
@@ -103,6 +103,7 @@ to latest BIOS available with the new image.
 """
 global_use_kstack = False
 global_upgrade_bios = False
+global_copy_image = True
 
 def download_scripts_and_agents():
     """
@@ -1294,13 +1295,16 @@ def target_system_image_is_currently_running():
         running_image = ".".join(image_parts)
         running_image64 = ".".join(image_parts64)
         
+        global global_copy_image 
         if running_image == options["target_system_image"]:
             poap_log("Running: '%s'" % running_image)
             poap_log("Target:  '%s'" % options["target_system_image"])
+            global_copy_image = False  
             return True
         elif running_image64 == options["target_system_image"]:
             poap_log("Running: '%s'" % running_image64)
             poap_log("Target: '%s'"  % options["target_system_image"])
+            global_copy_image = False 
             return True
         else:
             if sp is not None:
@@ -1476,11 +1480,21 @@ def install_images_7_x():
     poap_log("INFO: Configuration successful")
 
 def install_nxos_issu():
-
-    system_image_path = os.path.join(options["destination_path"],
+    ''' 
+       global_copy_image is false implies that currently running and target_iamge
+       have the same version. So, we do install all with the curretly booted image
+       instead of doing it with the name specified in target_image, because actual
+       copying of image may not have happened, leading to failure in ISSU if name of
+       the target image is different from the image that the switch is currently booted
+       up with. 
+    ''' 
+    if global_copy_image:
+        system_image_path = os.path.join(options["destination_path"],
                                      options["destination_system_image"])
-    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
-
+        system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    else:
+        system_image_path = os.path.join("bootflash:",get_currently_booted_image_filename())
+    
     try:
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
@@ -1544,10 +1558,21 @@ def install_images():
 
 #Procedure to intall using ISSU install command
 def install_issu():
-    system_image_path = os.path.join(options["destination_path"],
-                                     options["destination_system_image"])
-    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
-    
+    ''' 
+       global_copy_image is false implies that currently running and target_iamge
+       have the same version. So, we do install all with the curretly booted image
+       instead of doing it with the name specified in target_image, because actual
+       copying of image may not have happened, leading to failure in ISSU if name of
+       the target image is different from the image that the switch is currently booted
+       up with. 
+    '''
+    if global_copy_image:
+        system_image_path = os.path.join(options["destination_path"],
+                                        options["destination_system_image"])
+        system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    else:
+        system_image_path = os.path.join("bootflash:",get_currently_booted_image_filename())
+ 
     img_upgrade_cmd = "config terminal ; terminal dont-ask"
     img_upgrade_cmd += " ; install all nxos %s non-interruptive override" % system_image_path
     try:
