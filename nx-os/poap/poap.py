@@ -696,7 +696,7 @@ def sigterm_handler(signum, stack):
 def split_config_not_needed():
     """Checks if splitting the config into two config files is needed. This is needed on older
     images that require a reload to apply certain configs (e.g. TCAM changes). If we're on an
-    image newer than or equal to 7.0(3)I4(1), we don't need reloads to apply configs
+    image newer than or equal to 7.0(3)I4(1), we don't need reloads to apply configs.
     """
     global options
 
@@ -704,6 +704,7 @@ def split_config_not_needed():
     Device running in n3k mode still requires splitting of config.
     """
     if not 'START' in open('/tmp/first_setup.log').readline():
+        poap_log("Split config is required, because box is not in N9K mode.")
         return False
 
     nxos_major = 0
@@ -715,7 +716,8 @@ def split_config_not_needed():
     parts = options['target_system_image'].split(".")
     
     # for latest images, it is (nxos, 9, minor, mr, bin)
-    if int(parts[1]) == 9:
+    if int(parts[1]) >= 9:
+        poap_log("Target image supports bootstrap replay. Split config is not required.")
         return True
     
     # number of parts should above 7 as above for us to check if its supported if not 9.x
