@@ -1,5 +1,5 @@
 #!/bin/env python3
-#md5sum="f6e5265173c6ce5865c586c8b3aa1112"
+#md5sum="eb08329071ac99ccc2739640439152a3"
 """
 If any changes are made to this script, please run the below command
 in bash shell to update the above md5sum. This is used for integrity check.
@@ -92,7 +92,7 @@ options = {
    "hostname": "2.1.1.1",
    "transfer_protocol": "scp",
    "mode": "serial_number",
-   "target_system_image": "nxos.7.0.3.I4.4.bin",
+   "target_system_image": "nxos.9.3.1.bin",
 }
 
 """
@@ -103,6 +103,7 @@ to latest BIOS available with the new image.
 """
 global_use_kstack = False
 global_upgrade_bios = False
+global_copy_image = True
 
 def download_scripts_and_agents():
     """
@@ -695,7 +696,7 @@ def sigterm_handler(signum, stack):
 def split_config_not_needed():
     """Checks if splitting the config into two config files is needed. This is needed on older
     images that require a reload to apply certain configs (e.g. TCAM changes). If we're on an
-    image newer than or equal to 7.0(3)I4(1), we don't need reloads to apply configs
+    image newer than or equal to 7.0(3)I4(1), we don't need reloads to apply configs.
     """
     global options
 
@@ -703,6 +704,7 @@ def split_config_not_needed():
     Device running in n3k mode still requires splitting of config.
     """
     if not 'START' in open('/tmp/first_setup.log').readline():
+        poap_log("Split config is required, because box is not in N9K mode.")
         return False
 
     nxos_major = 0
@@ -714,7 +716,8 @@ def split_config_not_needed():
     parts = options['target_system_image'].split(".")
     
     # for latest images, it is (nxos, 9, minor, mr, bin)
-    if int(parts[1]) == 9:
+    if int(parts[1]) >= 9:
+        poap_log("Target image supports bootstrap replay. Split config is not required.")
         return True
     
     # number of parts should above 7 as above for us to check if its supported if not 9.x
@@ -1271,22 +1274,60 @@ def target_system_image_is_currently_running():
     """
     Checks if the system image that we would try to download is the one that's
     currently running. Not used if MD5 checks are enabled.
+    
+    We need to check for both 64-bit as well as 32-bit, since from Jacksonville onwards, 
+    both type of images are present. We have to check using this method, since we don't have
+    a CLI to check whether the running image is a 64-bit image or a 32-bit image. 
+    Image applicable from:  10.1(1) [Jacksonville]
+
+    In case of mismatch between the currently running and target image, we check for the output from
+    /isan/bin/pfm file, however exception may occur there (since this is an internal file, 
+    subject to change)  so no need to check using it when doing comparison.  
     """
     version = get_version(1)
     if legacy is False:
         image_parts = [part for part in re.split("[\.()]", version) if part]
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
+        
+        image_parts64 = [part for part in re.split("[\.()]", version) if part]
+        image_parts64.insert(0, "nxos64")
+        image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
-
-        poap_log("Running: '%s'" % running_image)
-        poap_log("Target:  '%s'" % options["target_system_image"])
-
-        return running_image == options["target_system_image"]
-
-    return False
-
+        running_image64 = ".".join(image_parts64)
+        
+        global global_copy_image 
+        if running_image == options["target_system_image"]:
+            poap_log("Running: '%s'" % running_image)
+            poap_log("Target:  '%s'" % options["target_system_image"])
+            global_copy_image = False  
+            return True
+        elif running_image64 == options["target_system_image"]:
+            poap_log("Running: '%s'" % running_image64)
+            poap_log("Target: '%s'"  % options["target_system_image"])
+            global_copy_image = False 
+            return True
+        else:
+            if sp is not None:
+                try: 
+                    out = sp.check_output("file /isan/bin/pfm", stderr=sp.STDOUT, shell=True)
+                    parts = out.strip().split()
+                    is_32_bit = parts[2]
+                    if (sys.version_info[0] >=3):
+                        is_32_bit = is_32_bit.decode('utf-8')
+                    if (is_32_bit == "64-bit"):
+                         poap_log("Running 64-bit '%s' image" % running_image64)
+                         poap_log("Target:  '%s'" % options["target_system_image"])
+                    else:
+                         poap_log("Running 32-bit '%s' image" % running_image)
+                         poap_log("Target:  '%s'" % options["target_system_image"])
+                except Exception as e: 
+                     poap_log("Failed to find whether image is 32-bit or 64-bit.") 
+            else:
+                poap_log("As subprocess module is not present, unable to find if image is 32-bit or 64-bit.") 
+            poap_log("Running image and target image are different. Need to copy target image to box.")
+            return False
 
 def copy_system():
     """
@@ -1441,11 +1482,21 @@ def install_images_7_x():
     poap_log("INFO: Configuration successful")
 
 def install_nxos_issu():
-
-    system_image_path = os.path.join(options["destination_path"],
+    ''' 
+       global_copy_image is false implies that currently running and target_iamge
+       have the same version. So, we do install all with the curretly booted image
+       instead of doing it with the name specified in target_image, because actual
+       copying of image may not have happened, leading to failure in ISSU if name of
+       the target image is different from the image that the switch is currently booted
+       up with. 
+    ''' 
+    if global_copy_image:
+        system_image_path = os.path.join(options["destination_path"],
                                      options["destination_system_image"])
-    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
-
+        system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    else:
+        system_image_path = os.path.join("bootflash:",get_currently_booted_image_filename())
+    
     try:
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
@@ -1509,10 +1560,21 @@ def install_images():
 
 #Procedure to intall using ISSU install command
 def install_issu():
-    system_image_path = os.path.join(options["destination_path"],
-                                     options["destination_system_image"])
-    system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
-    
+    ''' 
+       global_copy_image is false implies that currently running and target_iamge
+       have the same version. So, we do install all with the curretly booted image
+       instead of doing it with the name specified in target_image, because actual
+       copying of image may not have happened, leading to failure in ISSU if name of
+       the target image is different from the image that the switch is currently booted
+       up with. 
+    '''
+    if global_copy_image:
+        system_image_path = os.path.join(options["destination_path"],
+                                        options["destination_system_image"])
+        system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
+    else:
+        system_image_path = os.path.join("bootflash:",get_currently_booted_image_filename())
+ 
     img_upgrade_cmd = "config terminal ; terminal dont-ask"
     img_upgrade_cmd += " ; install all nxos %s non-interruptive override" % system_image_path
     try:
