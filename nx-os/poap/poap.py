@@ -1269,7 +1269,16 @@ def copy_remote_config():
     poap_log("INFO: Completed copy of config file to %s" %
              os.path.join(options["destination_path"], org_file))
 
+def is_image_cs_or_msll():
+    
+    if (os.path.exists("/isan/etc/cs.txt"):
+        return 2
+    
+    if (os.path.exists("/isan/etc/noncs.txt"):
+        return 1
 
+    return 0
+    
 def target_system_image_is_currently_running():
     """
     Checks if the system image that we would try to download is the one that's
@@ -1290,8 +1299,16 @@ def target_system_image_is_currently_running():
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
         
+        is_cs = is_image_cs_or_msll()
         image_parts64 = [part for part in re.split("[\.()]", version) if part]
-        image_parts64.insert(0, "nxos64")
+       
+        if is_cs == 2:
+            image_parts64.insert(0, "nxos64-cs")
+        elif is_cs == 1:
+            image_parts64.insert(0, "nxos64-msll")
+        else: 
+            image_parts64.insert(0, "nxos64")
+        
         image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
@@ -2048,6 +2065,9 @@ def get_version(option=0):
     Gets the image version of the switch from CLI.
     Output is handled differently for 6.x and 7.x or higher version.
     """
+    is_Feature_Release = False 
+    final_version = ""
+
     cli_output = cli("show version")
     if legacy:
         result = re.search(r'system.*version\s*(.*)\n', cli_output[1])
@@ -2062,6 +2082,9 @@ def get_version(option=0):
            #This checks if the image if of intermediate type of CCO
            #If 'build' is present, then it is of intermediate type
             interim_result = result.group()
+            if 'Feature Release' in interim_result:
+                is_Feature_Release = True 
+          
             if 'build' in interim_result:
                 # We are extracting our answer from the interim_result extracted so far
                 # Whatever we were extracting till now isn't enough
@@ -2069,18 +2092,22 @@ def get_version(option=0):
                 final_version = re.search(r'build.*', interim_result)
                 final_version = final_version.group()
                 final_version = final_version.replace('(', '.').replace(')', '.').replace(']', '').split()[1]
-                
+                 
                 # Now, the form obtained if of the form 10.1.0.60, and it is a string. 
-                return final_version        
+                #return final_version        
             else:
                 #This fetches the CCO image version
                 # interim_result is of form major.minor (patch version)
                 final_version = interim_result.replace('(', '.').replace(')', '')
                 final_version = final_version.split()[2]
-                return final_version
-
-    poap_log("Unable to get switch version")
-
+                #return final_version
+    
+    if final_version == "":
+        poap_log("Unable to get switch version")
+    if is_Feature_Release:
+        final_version  = final_version + ".F"
+    
+    return final_version 
 
 def get_bios_version():
     """
