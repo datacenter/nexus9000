@@ -1271,10 +1271,10 @@ def copy_remote_config():
 
 def is_image_cs_or_msll():
     
-    if (os.path.exists("/isan/etc/cs.txt"):
+    if (os.path.exists("/isan/etc/cs.txt")):
         return 2
     
-    if (os.path.exists("/isan/etc/noncs.txt"):
+    if (os.path.exists("/isan/etc/noncs.txt")):
         return 1
 
     return 0
