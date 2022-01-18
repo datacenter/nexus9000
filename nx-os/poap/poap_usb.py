@@ -321,7 +321,7 @@ def install_certificates():
     for file in os.listdir(os.path.join("/bootflash", options['destination_path'])):
         if file.endswith(".pem"):
             certificate = os.path.join(options["destination_path"], file)
-            poap_log("Cetificate is %s" %(certificate))
+            poap_log("Certificate is %s" %(certificate))
             add_trustpoint_op = cli("configure terminal ; crypto ca trustpoint __securePOAP_trustpoint ; exit")
             poap_log("Add output %s" % (add_trustpoint_op))
             install_op = cli("configure terminal ; crypto ca authenticate __securePOAP_trustpoint pemfile bootflash:%s" % (certificate))
