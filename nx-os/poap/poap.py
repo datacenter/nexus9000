@@ -2064,8 +2064,11 @@ def get_version(option=0):
     """
     Gets the image version of the switch from CLI.
     Output is handled differently for 6.x and 7.x or higher version.
+    From Kerry onwards, releases are of 2 types: Feature and Maintenance. 
+    This changes the naming convention of the image. Release_type takes
+    care of this change.     
     """
-    is_Feature_Release = False 
+    release_type = "" 
     final_version = ""
 
     cli_output = cli("show version")
@@ -2083,8 +2086,12 @@ def get_version(option=0):
            #If 'build' is present, then it is of intermediate type
             interim_result = result.group()
             if 'Feature Release' in interim_result:
-                is_Feature_Release = True 
-          
+                release_type = ".F"
+            elif 'Maintenance Release' in interim_result:
+                release_type = ".M" 
+            else:
+                release_type = ""
+ 
             if 'build' in interim_result:
                 # We are extracting our answer from the interim_result extracted so far
                 # Whatever we were extracting till now isn't enough
@@ -2104,8 +2111,8 @@ def get_version(option=0):
     
     if final_version == "":
         poap_log("Unable to get switch version")
-    if is_Feature_Release:
-        final_version  = final_version + ".F"
+    else:
+        final_version  = final_version + release_type    
     
     return final_version 
 
