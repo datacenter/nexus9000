@@ -200,6 +200,29 @@ def setup_logging():
 
     poap_cleanup_script_logs()
 
+def get_version():
+    """
+    Gets the image version of the switch from CLI.
+    """
+    final_version = ""
+
+    cli_output = cli("show version")
+    result = re.search(r'NXOS.*version\s*(.*)\n', cli_output)
+    #Line is of type NXOS: version <version>
+    if result is not None:
+        interim_result = result.group()
+        final_version = interim_result.replace('(', '.').replace(')', '.').replace(']', '').split()[2]
+
+    if final_version == "":
+        print("Unable to get switch version")
+        return (-1,-1)
+
+    major = final_version.split('.')[0]
+    minor = final_version.split('.')[1]
+    return (major,minor)
+
+
+    
 def trustpoint_already_present():
     cmd = "configure terminal ; show crypto ca trustpoints"
     poap_log("Executing %s" % (cmd))
@@ -319,12 +342,24 @@ def install_certificates():
     Will install the certificates on the box
     """
     for file in os.listdir(os.path.join("/bootflash", options['destination_path'])):
-        if file.endswith(".pem"):
+        if file.endswith(".pem"): 
             certificate = os.path.join(options["destination_path"], file)
             poap_log("Certificate is %s" %(certificate))
-            add_trustpoint_op = cli("configure terminal ; crypto ca trustpoint __securePOAP_trustpoint ; exit")
-            poap_log("Add output %s" % (add_trustpoint_op))
-            install_op = cli("configure terminal ; crypto ca authenticate __securePOAP_trustpoint pemfile bootflash:%s" % (certificate))
+            cmd = ("configure terminal ; crypto ca trustpoint __securePOAP_trustpoint ; exit")
+            poap_log("Trying: %s " % (cmd))
+            add_trustpoint_op = cli(cmd)
+            major, minor = get_version()
+            
+            if ((int(major) >= 10) and (int(minor) >= 4)):
+                cmd = ("configure terminal ; crypto ca import __securePOAP_trustpoint pkcs7 bootflash:%s force ; exit " % (certificate))
+                poap_log("Trying %s" %(cmd))
+                install_op = cli(cmd)
+            else:
+                # Includes the case where major == -1 and minor == -1, default to the CLI which works.
+                cmd = ("configure terminal ; crypto ca authenticate __securePOAP_trustpoint pemfile bootflash:%s ; exit" % (certificate))
+                poap_log("Trying %s" %(cmd))
+                install_op = cli(cmd)
+           
             poap_log("Install output: %s" %(install_op)) 
     
 def main():
