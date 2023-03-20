@@ -189,12 +189,12 @@ def download_user_app(source_path, source_file, dest_path="/bootflash", dest_fil
 
     do_copy(src, dst, options["timeout_copy_user"], tmp_file)
 
-    if unpack is True:
+    if unpack == True:
         poap_log("Unpacking %s to /bootflash" % dst)
 
         unpack_success = False
         # Before Python 2.7 (no subprocess module at all)
-        if sp is None:
+        if sp == None:
             try:
                 os.system("tar -xf %s -C /bootflash" % dst)
                 unpack_success = True
@@ -217,7 +217,7 @@ def download_user_app(source_path, source_file, dest_path="/bootflash", dest_fil
                 poap_log("Failed to unpack %s: %s (%s)" % (dst, str(e), e.output))
 
         # Now that we know we extracted the contents, cleanup the tarball
-        if unpack_success is True and delete_after_unpack is True:
+        if unpack_success == True and delete_after_unpack == True:
             remove_file(dst)
 
 
@@ -489,7 +489,7 @@ def abort(msg=None):
     """
     global log_hdl
 
-    if msg is not None:
+    if msg != None:
         poap_log(msg)
     
     rollback_rpm_license_certificates()
@@ -502,7 +502,7 @@ def close_log_handle():
     """
     Closes the log handle if it exists
     """
-    if "log_hdl" in globals() and log_hdl is not None:
+    if "log_hdl" in globals() and log_hdl != None:
         log_hdl.close()
 
 
@@ -612,7 +612,7 @@ def poap_log(info):
         info = " - %s" % info
 
     syslog.syslog(9, info)
-    if "log_hdl" in globals() and log_hdl is not None:
+    if "log_hdl" in globals() and log_hdl != None:
         log_hdl.write("\n")
         log_hdl.write(info)
         log_hdl.flush()
@@ -637,7 +637,7 @@ def cleanup_file_from_option(option, bootflash_root=False):
     We handle the cases where the variable is unused (defaults to None) or
     where the variable is not set yet (invoking this cleanup before we init)
     """
-    if options.get(option) is not None:
+    if options.get(option) != None:
         if bootflash_root:
             path = "/bootflash"
         else:
@@ -662,10 +662,10 @@ def cleanup_files():
     cleanup_file_from_option("split_config_first", True)
     cleanup_file_from_option("split_config_second", True)
     # Destination system or NXOS image
-    if del_system_image is True:
+    if del_system_image == True:
         cleanup_file_from_option("destination_system_image")
     # Destination kickstart image
-    if del_kickstart_image is True:
+    if del_kickstart_image == True:
         cleanup_file_from_option("destination_kickstart_image")
     # Destination config
     cleanup_file_from_option("destination_config")
@@ -685,7 +685,7 @@ def sigterm_handler(signum, stack):
     A signal handler for the SIGTERM signal. Cleans up and exits
     """
     poap_log("INFO: SIGTERM Handler")
-    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
         abort("Cleaning up rpms")
     else:
         cleanup_files()
@@ -918,7 +918,7 @@ def split_config_file():
                 or line.startswith("udf") \
                 or line.startswith("hardware profile unicast enable-host-ecmp"):
             config_file_first.write(line)
-            if empty_first_file is 1:
+            if empty_first_file == 1:
                 poap_log("setting empty file to 0 for line %s" % line)
                 empty_first_file = 0
         elif res_flag_dontprint == 0:
@@ -928,11 +928,11 @@ def split_config_file():
 
     # for poap across images set boot varible in the first config file
     poap_log("value of empty file is %d " % empty_first_file)
-    if single_image is True:
+    if single_image == True:
         single_image_path = os.path.join(options["destination_path"],
                                          options["destination_system_image"])
         single_image_path = single_image_path.replace("/bootflash", "bootflash:", 1)
-        if empty_first_file is 0:
+        if empty_first_file == 0:
             cmd = "boot nxos %s" % single_image_path
             poap_log("writing boot command: %s to first config file" % cmd)
             config_file_first.write("%s\n" % cmd)
@@ -944,7 +944,7 @@ def split_config_file():
     config_file.close()
     remove_file(os.path.join(options["destination_path"], options["destination_config"]))
     config_file_first.close()
-    if empty_first_file is 1:
+    if empty_first_file == 1:
         remove_file(os.path.join(options["destination_path"], options["split_config_first"]))
     config_file_second.close()
 
@@ -969,7 +969,7 @@ def md5sum(filename):
             md5_sum = result[len(result) - 1]
     else:
         result = re.search(r'([a-fA-F\d]{32})', md5_output)
-        if result is not None:
+        if result != None:
             md5_sum = result.group(1)
 
     poap_log("INFO: md5sum %s (recalculated)" % md5_sum)
@@ -1018,7 +1018,7 @@ def get_md5(filename, skip_abort = False):
     md5_filename = "%s.md5" % filename
 
     if not os.path.exists(os.path.join(options["destination_path"], md5_filename)):
-        if (skip_abort is False):
+        if (skip_abort == False):
             abort("MD5 file is missing (%s does not exist!)"
               % os.path.join(options["destination_path"], filename))
         else:
@@ -1049,11 +1049,11 @@ def get_bootflash_size():
     cli_output = cli("show version")
     if legacy:
         result = re.search(r'bootflash:\s+(\d+)', cli_output[1])
-        if result is not None:
+        if result == None:
             return int(result.group(1))
     else:
         result = re.search(r'bootflash:\s+(\d+)', cli_output)
-        if result is not None:
+        if result == None:
             return int(result.group(1))
     poap_log("Unable to get bootflash size")
 
@@ -1111,22 +1111,22 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
         else:
             # Add the destination path
             copy_cmd = "terminal dont-ask ; terminal password %s ; " % password
-            if compact is True:
-                if global_use_kstack is True:
+            if compact == True:
+                if global_use_kstack == True:
                     copy_cmd += "copy %s://%s@%s%s %s compact vrf %s use-kstack" % (
                         protocol, user, host, source, copy_tmp, vrf)
                 else:
                     copy_cmd += "copy %s://%s@%s%s %s compact vrf %s" % (
                         protocol, user, host, source, copy_tmp, vrf)
-            elif (protocol is "https" and options["https_ignore_certificate"] is True):
-                if global_use_kstack is True:
+            elif (protocol == "https" and options["https_ignore_certificate"] == True):
+                if global_use_kstack == True:
                     copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s use-kstack" % (
                         protocol, user, host, source, copy_tmp, vrf)
                 else:
                     copy_cmd += "copy %s://%s@%s%s %s ignore-certificate vrf %s" % (
                         protocol, user, host, source, copy_tmp, vrf)              
             else:
-                if global_use_kstack is True:
+                if global_use_kstack == True:
                     copy_cmd += "copy %s://%s@%s%s %s vrf %s use-kstack" % (
                         protocol, user, host, source, copy_tmp, vrf)
                 else:
@@ -1138,7 +1138,7 @@ def do_copy(source="", dest="", login_timeout=10, dest_tmp="", compact=False, do
             except Exception as e:
                 # scp compact can fail due to reasons of current image version or
                 # platform do not support it; Try normal scp in such cases
-                if compact is True and ("Syntax error while parsing" in str(e) or \
+                if compact == True and ("Syntax error while parsing" in str(e) or \
                      "Compaction is not supported on this platform" in str(e)):
                     return False
                 # Remove extra junk in the message
@@ -1239,7 +1239,7 @@ def copy_remote_config():
     poap_log("Copying config file")
     global empty_first_file
     org_file = options["destination_config"]
-    if options["disable_md5"] is False:
+    if options["disable_md5"] == False:
         copy_md5_info(options["config_path"], options["source_config_file"])
         md5_sum_given = get_md5(options["source_config_file"])
         remove_file(os.path.join(options["destination_path"], "%s.md5" %
@@ -1260,7 +1260,7 @@ def copy_remote_config():
 
     do_copy(src, org_file, timeout, tmp_file)
 
-    if options["disable_md5"] is False:
+    if options["disable_md5"] == False:
         if md5_sum_given and not verify_md5(md5_sum_given,
                                             os.path.join(options["destination_path"], org_file)):
             abort("#### config file %s MD5 verification failed #####\n" % os.path.join(
@@ -1294,7 +1294,7 @@ def target_system_image_is_currently_running():
     subject to change)  so no need to check using it when doing comparison.  
     """
     version = get_version(1)
-    if legacy is False:
+    if legacy == False:
         image_parts = [part for part in re.split("[\.()]", version) if part]
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
@@ -1326,7 +1326,7 @@ def target_system_image_is_currently_running():
             global_copy_image = False 
             return True
         else:
-            if sp is not None:
+            if sp != None:
                 try: 
                     out = sp.check_output("file /isan/bin/pfm", stderr=sp.STDOUT, shell=True)
                     parts = out.strip().split()
@@ -1355,19 +1355,19 @@ def copy_system():
     md5_sum_given = None
   
             
-    if options["disable_md5"] is True and target_system_image_is_currently_running():
+    if options["disable_md5"] == True and target_system_image_is_currently_running():
         poap_log("Currently running image is target image. Skipping system image download")
         return
 
     # do compact scp of system image if bootflash size is <= 2GB and "compact_image" option is enabled
-    if options["compact_image"] is True and options["transfer_protocol"] is "scp":
+    if options["compact_image"] == True and options["transfer_protocol"] == "scp":
         poap_log("INFO: Try image copy with compact option...")
         do_compact = True
     else:
         do_compact = False
 
     org_file = options["destination_system_image"]
-    if options["disable_md5"] is False:
+    if options["disable_md5"] == False:
         copy_md5_info(options["target_image_path"], options["target_system_image"])
         md5_sum_given = get_md5(options["target_system_image"])
         remove_file(os.path.join(options["destination_path"], "%s.md5" %
@@ -1399,12 +1399,12 @@ def copy_system():
     poap_log("INFO: Starting Copy of System Image")
 
     ret = do_copy(src, org_file, timeout, tmp_file, do_compact)
-    if do_compact is True and ret is False:
+    if do_compact == True and ret == False:
         poap_log("INFO: compact copy failed; Try normal copy...")
         do_compact = False
         do_copy(src, org_file, timeout, tmp_file)
 
-    if options["disable_md5"] is False and md5_sum_given and do_compact is False:
+    if options["disable_md5"] == False and md5_sum_given and do_compact == False:
         if not verify_md5(md5_sum_given,
                           os.path.join(options["destination_path"], org_file)):
             abort("#### System file %s MD5 verification failed #####\n" % os.path.join(
@@ -1422,7 +1422,7 @@ def copy_kickstart():
     global del_kickstart_image
     poap_log("Copying kickstart image")
     org_file = options["destination_kickstart_image"]
-    if options["disable_md5"] is False:
+    if options["disable_md5"] == False:
         copy_md5_info(options["target_image_path"], options["target_kickstart_image"])
         md5_sum_given = get_md5(options["target_kickstart_image"])
         remove_file(os.path.join(options["destination_path"], "%s.md5" %
@@ -1445,7 +1445,7 @@ def copy_kickstart():
     src = os.path.join(options["target_image_path"], options["target_kickstart_image"])
     do_copy(src, org_file, timeout, tmp_file)
 
-    if options["disable_md5"] is False and md5_sum_given:
+    if options["disable_md5"] == False and md5_sum_given:
         if not verify_md5(md5_sum_given,
                           os.path.join(options["destination_path"], org_file)):
             abort("#### Kickstart file %s%s MD5 verification failed #####\n" % (
@@ -1568,7 +1568,7 @@ def install_images():
 
     poap_log("INFO: Configuration successful")
 
-    if multi_step_install is True:
+    if multi_step_install == True:
         cli("config terminal ; terminal dont-ask ; write erase")
         poap_log("Midway image copy/setting done")
         exit(0)
@@ -1619,7 +1619,7 @@ def parse_poap_yaml():
     md5_verification = True
     
     try:
-        if options["disable_md5"] is False:
+        if options["disable_md5"] == False:
             copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yaml")
             md5_sum_given = get_md5(options["serial_number"] + ".yaml")
             md5_verification = False
@@ -1627,7 +1627,7 @@ def parse_poap_yaml():
         else:
             do_copy(copy_path, dst, timeout, dst, False, True)
         # True is passed as last parameter so that script does not abort on copy failure.
-        if options["disable_md5"] is False and md5_sum_given:
+        if options["disable_md5"] == False and md5_sum_given:
             md5_verification = verify_md5(md5_sum_given,
                       "/bootflash/poap_device_recipe.yaml")
             if not md5_verification:
@@ -1637,14 +1637,14 @@ def parse_poap_yaml():
         try:
             if not md5_verification:
                 exit(1)
-            if options["disable_md5"] is False:
+            if options["disable_md5"] == False:
                 copy_md5_info(os.path.join(options["install_path"], options["serial_number"]), options["serial_number"] + ".yml")
                 md5_sum_given = get_md5(options["serial_number"] + ".yml")
                 md5_verification = False
                 do_copy(alt_path, dst, timeout, dst)
             else:
                 do_copy(alt_path, dst, timeout, dst, False, True)
-            if options["disable_md5"] is False and md5_sum_given:
+            if options["disable_md5"] == False and md5_sum_given:
                 md5_verification = verify_md5(md5_sum_given,
                           "/bootflash/poap_device_recipe.yaml")
             if not md5_verification:
@@ -1661,14 +1661,14 @@ def parse_poap_yaml():
     dictionary = yaml.load(stream)
     none_value_found = False
     for k in dictionary.keys():
-        if dictionary[k] is None:
+        if dictionary[k] == None:
             none_value_found = True
             poap_log("Key {} has value None".format(k))
     if none_value_found:
         abort("Yaml has got keys with value None. Remove unwanted keys from yaml file.")
     if ("Version" not in dictionary):
         abort("Version keyword not found in yaml. Cannot proceed with installation.")
-    elif ("Version" in dictionary and dictionary["Version"] is not 1):
+    elif ("Version" in dictionary and dictionary["Version"] != 1):
         abort("Version given is not 1. Cannot be parsed for installation.")
     if ("Target_image" in dictionary):
         options["target_system_image"] = dictionary["Target_image"]
@@ -1965,7 +1965,7 @@ def set_cfg_file_mac():
     """
     poap_log("Setting source cfg filename based on the interface MAC")
     if os.environ.get("POAP_PHASE", None) == "USB":
-        if options["usb_slot"] is 2:
+        if options["usb_slot"] == 2:
             poap_log("usb slot is 2")
 
         config_file = "conf_%s.cfg" % os.environ['POAP_RMAC']
@@ -2074,14 +2074,14 @@ def get_version(option=0):
     cli_output = cli("show version")
     if legacy:
         result = re.search(r'system.*version\s*(.*)\n', cli_output[1])
-        if result is not None:
+        if result != None:
             return result.group(1)
     else:
         result = re.search(r'NXOS.*version\s*(.*)\n', cli_output)
         #Line is of type NXOS: version <version>
-        if result is not None and option != 1:
+        if result != None and option != 1:
            return result.group(1)
-        elif result is not None:   
+        elif result != None:   
            #This checks if the image if of intermediate type of CCO
            #If 'build' is present, then it is of intermediate type
             interim_result = result.group()
@@ -2124,11 +2124,11 @@ def get_bios_version():
     cli_output = cli("show version")
     if legacy:
         result = re.search(r'BIOS.*version\s*(.*)\n', cli_output[1])
-        if result is not None:
+        if result != None:
             return result.group(1)
     else:
         result = re.search(r'BIOS.*version\s*(.*)\n', cli_output)
-        if result is not None:
+        if result != None:
             return result.group(1)
     poap_log("Unable to get switch Bios version")
 
@@ -2333,10 +2333,10 @@ def set_next_upgrade_from_upgrade_path():
     version = get_version()
 
     image_info = re.match("(\d+)\.(\d+)\((\d+)\)[A-Z]+(\d+)\((\w+)\)", version)
-    if image_info is None:
+    if image_info == None:
         #try the regex match for 9.2(1) or higher version scheme
         image_info = re.match("(\d+)\.(\d+)\((\d+)[a-z]?\)", version)
-        if image_info is None:
+        if image_info == None:
             abort("Failed to extract image information from %s" % version)
 
     current_idx = find_upgrade_index_from_match(image_info)
@@ -2345,10 +2345,10 @@ def set_next_upgrade_from_upgrade_path():
     image_info = re.search("[\w-]+\.(\d+)\.(\d+)\.(\d+)\.[A-Z]+(\d+)\.(\w+)",
                            options["target_system_image"])
 
-    if image_info is None:
+    if image_info == None:
         #try the regex match for 9.2 or higher version scheme
         image_info = re.search("[\w-]+\.(\d+)\.(\d+)\.(\d+)", options["target_system_image"])
-        if image_info is None:
+        if image_info == None:
             poap_log("Failed to match target image: %s" % options["target_system_image"])
             exit(1)
 
@@ -2378,7 +2378,7 @@ def download_personality_tarball():
     matches with the value .md5 file downloaded.
     """
     md5_sum_given = None
-    if options["disable_md5"] is False:
+    if options["disable_md5"] == False:
         copy_md5_info(options["personality_path"], options["destination_tarball"])
         md5_sum_given = get_md5(options["destination_tarball"])
         remove_file(os.path.join(options["destination_path"], "%s.md5" %
@@ -2403,7 +2403,7 @@ def download_personality_tarball():
     do_copy(tarball_path, options["destination_tarball"],
             options["timeout_copy_personality"], tmp_file)
 
-    if options["disable_md5"] is False and md5_sum_given:
+    if options["disable_md5"] == False and md5_sum_given:
         if not verify_md5(md5_sum_given, os.path.join(options["destination_path"],
                                                       options["destination_tarball"])):
             abort("#### Tar file %s MD5 verification failed #####\n" %
@@ -2434,7 +2434,7 @@ def get_system_image_from_tarball():
         elif os.path.basename(file_name) == "IMAGEFILE":
             options["target_system_image"] = byte2str(tar.extractfile(file_name).read().strip())
 
-    if options.get("target_system_image") is None:
+    if options.get("target_system_image") == None:
         abort("Failed to find system image filename from tarball")
 
     poap_log("Using %s as the system image" % options["target_system_image"])
@@ -2592,19 +2592,19 @@ def main():
     # the directory structure needed, if any
     create_destination_directories()
 
-    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
         parse_poap_yaml()
     check_multilevel_install()
     # In two step install we just copy the midway image and reboot.
     # Config copy and script download happens in the second step.
-    if multi_step_install is False:
+    if multi_step_install == False:
         copy_config()
 
         # Download user scripts and agents
         download_scripts_and_agents()
         # End of multi_step_install is False block
 
-    if (len(options["install_path"]) != 0 and options["mode"] is not "personality"):
+    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
         validate_yaml_file()
         copy_poap_files()
         time.sleep(2)
@@ -2617,12 +2617,12 @@ def main():
         
     copy_system()
 
-    if single_image is False:
+    if single_image == False:
         copy_kickstart()
 
     signal.signal(signal.SIGTERM, sig_handler_no_exit)
     # install images
-    if single_image is False:
+    if single_image == False:
         install_images()
     elif global_upgrade_bios:
         install_issu()
@@ -2637,7 +2637,7 @@ def main():
         invoke_personality_restore()
         exit(0)
 
-    if empty_first_file is 0:
+    if empty_first_file == 0:
         cli('copy bootflash:%s scheduled-config' % options["split_config_first"])
         poap_log("Done copying the first scheduled cfg")
         remove_file("/bootflash/%s" % options["split_config_first"])
@@ -2645,7 +2645,7 @@ def main():
     cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
     poap_log("Done copying the second scheduled cfg")
     remove_file(os.path.join("/bootflash", options["split_config_second"]))
-    if (options["use_nxos_boot"] is False):
+    if (options["use_nxos_boot"] == False):
         install_nxos_issu()
 
     log_hdl.close()
@@ -2658,7 +2658,7 @@ if __name__ == "__main__":
     except Exception:
         exc_type, exc_value, exc_tb = sys.exc_info()
         poap_log("Exception: {0} {1}".format(exc_type, exc_value))
-        while exc_tb is not None:
+        while exc_tb != None:
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             poap_log("Stack - File: {0} Line: {1}"
                      .format(fname, exc_tb.tb_lineno))
