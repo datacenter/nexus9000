@@ -56,7 +56,7 @@ def close_log_handle():
     """
     Closes the log handle if it exists
     """
-    if "log_hdl" in globals() and log_hdl is not None:
+    if "log_hdl" in globals() and log_hdl != None:
         log_hdl.close()
 
 
@@ -66,7 +66,7 @@ def abort(msg=None):
     """
     global log_hdl
 
-    if msg is not None:
+    if msg != None:
         poap_log(msg)
     cleanup_files()
     close_log_handle()
@@ -100,7 +100,7 @@ def poap_log(info):
         info = " - %s" % info
 
     syslog.syslog(9, info)
-    if "log_hdl" in globals() and log_hdl is not None:
+    if "log_hdl" in globals() and log_hdl != None:
         log_hdl.write("\n")
         log_hdl.write(info)
         log_hdl.flush()
@@ -124,7 +124,7 @@ def cleanup_file_from_option(option, bootflash_root=False):
     We handle the cases where the variable is unused (defaults to None) or
     where the variable is not set yet (invoking this cleanup before we init)
     """
-    if options.get(option) is not None:
+    if options.get(option) != None:
         if bootflash_root:
             path = "/bootflash"
         else:
@@ -209,7 +209,7 @@ def get_version():
     cli_output = cli("show version")
     result = re.search(r'NXOS.*version\s*(.*)\n', cli_output)
     #Line is of type NXOS: version <version>
-    if result is not None:
+    if result != None:
         interim_result = result.group()
         final_version = interim_result.replace('(', '.').replace(')', '.').replace(']', '').split()[2]
 
@@ -359,8 +359,8 @@ def install_certificates():
                 cmd = ("configure terminal ; crypto ca authenticate __securePOAP_trustpoint pemfile bootflash:%s ; exit" % (certificate))
                 poap_log("Trying %s" %(cmd))
                 install_op = cli(cmd)
-           
-            poap_log("Install output: %s" %(install_op)) 
+ 
+            poap_log("Install output: %s" %(install_op))
     
 def main():
     signal.signal(signal.SIGTERM, sigterm_handler)
@@ -397,14 +397,13 @@ def main():
     abort("Now aborting, process was successful, but we need to abort so that DHCP phase starts.")
 
 
-
 if __name__ == "__main__":
     try:
         main()
     except Exception:
         exc_type, exc_value, exc_tb=sys.exc_info()
         poap_log("Exception: {0} {1}".format(exc_type, exc_value))
-        while exc_tb is not None:
+        while exc_tb != None:
             fname=os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             poap_log("Stack - File: {0} Line: {1}"
                      .format(fname, exc_tb.tb_lineno))
