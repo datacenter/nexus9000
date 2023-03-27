@@ -50,6 +50,7 @@ def set_options():
     global options
     options["destination_path"] = "poap/sudi_fs/"
     options["required_space"] = 1000
+    options["final_cert"] = "final_cert.pem"
 
 
 def close_log_handle():
@@ -227,7 +228,7 @@ def trustpoint_already_present():
     cmd = "configure terminal ; show crypto ca trustpoints"
     poap_log("Executing %s" % (cmd))
     ca_check = cli(cmd)
-    if '__securePOAP' in ca_check:
+    if '__securePOAP_USB' in ca_check:
         return True
 
     return False
@@ -244,6 +245,7 @@ def init_globals_and_options():
     syslog_prefix = ""
     options["destination_path"] = "poap/sudi_fs/"
     options["required_space"] = 1000
+    options["final_cert"] = "final_cert.pem"
 
     # --- USB related settings ---
     # USB slot info. By default its USB slot 1, if not specified specifically.
@@ -299,68 +301,118 @@ def set_syslog_prefix():
                     syslog_prefix, poap_syslog_mac)
                 return
 
+def image_supports_pem_bundle():
+    major, minor = get_version()
+    return ((int(major) > 10) or ((int(major) == 10) and int(minor) >=4))
+
+def concatenate_and_make_pem_bundle():
+    certificate_found = False
+    dest_path = "/".join(["/bootflash", options["destination_path"]])
+    poap_log("Destination file is " + str('/'.join([dest_path, options["final_cert"]])))
+    dest_file = open('/'.join([dest_path, options["final_cert"]]), 'a')
+    for file in os.listdir("/usbslot%s" % (options["usb_slot"])):
+            if file.endswith(".pem"):
+                certificate_found=True
+                cert = file
+                usb_path = ("/usbslot%s" % (options["usb_slot"]))
+                src = open('/'.join([usb_path, file]), 'r')
+                poap_log("Pem file found: " + str('/'.join([usb_path, file])))
+                data = src.read()
+                dest_file.write(data)
+                src.close()
+    
+    # The pem file should now be present in the destination. 
+    dest_file.close()
+    return certificate_found
+    
+def copy_certificates_to_dest():
+    certificate_found = False
+    for file in os.listdir("/usbslot%s" % (options["usb_slot"])):
+        if file.endswith(".pem"):
+            certificate_found=True
+            usb_string = ("usb%s" % (options["usb_slot"]))
+            cert = file
+            copy_src = ":".join([usb_string, cert])
+            dest_path = ":".join(["bootflash", options["destination_path"]])
+            poap_log("Copying from %s to %s" % (copy_src, dest_path))
+            cmd = ("copy %s %s" % (copy_src, dest_path))
+            cmd = ("configure terminal ; terminal dont-ask ; copy %s %s" % (copy_src, dest_path))
+            poap_log("Formed cmd string: %s" % (cmd))
+            cp_op = cli(cmd)
+    
+    return certificate_found
+
+
 def copy_certificates():
     '''
     2 separate dest_path variables are required as shutil & os modules
     understand paths as linux paths, while copy cli requires
     path in format of bootflash:<path>
+    CSCwe68911: Concatenate all pem files to form a single pem file.
     '''
-    license_found = ""
+    certificate_found = False
     dest_path = "/".join(["/bootflash", options["destination_path"]])
     shutil.rmtree(dest_path, ignore_errors = True)
     poap_log("Path is %s" %(dest_path))
-    poap_log("Removing the destination directory to prevent installation of malicious certificates")
+    poap_log("Removing the destination directory to prevent installation of malicious certificates.")
 
     os.makedirs(dest_path)
     os.chmod(dest_path,0o777)
-
+    
     #if os.environ.get("POAP_PHASE", None) == "USB":
-    if True: 
-        for file in os.listdir("/usbslot%s" % (options["usb_slot"])):
-            if file.endswith(".pem"):
-                license_found=True
-                usb_string = ("usb%s" % (options["usb_slot"]))
-                cert = file
-                copy_src = ":".join([usb_string, cert])
-                dest_path = ":".join(["bootflash", options["destination_path"]])
-                poap_log("Copying from %s to %s" % (copy_src, dest_path))
-                cmd = ("copy %s %s" % (copy_src, dest_path))
-                cmd = ("configure terminal ; terminal dont-ask ; copy %s %s" % (copy_src, dest_path))
-                poap_log("Formed cmd string: %s" % (cmd))
-                cp_op = cli(cmd)
-        if not license_found:
-            poap_log("No license on USB drive. Please check.")
-            abort("No license on USB drive. Please check.")
+    if image_supports_pem_bundle(): 
+        poap_log("Pem bundle is supported.")
+        certificate_found = concatenate_and_make_pem_bundle()
     else:
-        poap_log("Invalid Environment. Environment is not USB. ")
-        abort("Invalid Environment. Environment is not USB.")
-
+        poap_log("Pem bundle is not supported.")
+        certificate_found = copy_certificates_to_dest()
+        
+    if not certificate_found:
+        poap_log("No Certificate on USB drive. Please check.")
+        abort("No Certificate on USB drive. Please check.")
 
 
 def install_certificates():
     """
     Will install the certificates on the box
     """
-    for file in os.listdir(os.path.join("/bootflash", options['destination_path'])):
-        if file.endswith(".pem"): 
-            certificate = os.path.join(options["destination_path"], file)
-            poap_log("Certificate is %s" %(certificate))
-            cmd = ("configure terminal ; crypto ca trustpoint __securePOAP_trustpoint ; exit")
-            poap_log("Trying: %s " % (cmd))
-            add_trustpoint_op = cli(cmd)
-            major, minor = get_version()
-            
-            if ((int(major) >= 10) and (int(minor) >= 4)):
-                cmd = ("configure terminal ; crypto ca import __securePOAP_trustpoint pkcs7 bootflash:%s force ; exit " % (certificate))
+    
+    if image_supports_pem_bundle():
+        poap_log("Pem bundle is supported.")
+        certificate = os.path.join(options["destination_path"], options["final_cert"])
+        poap_log("Certificate is %s" %(certificate))
+        cmd = ("configure terminal ; crypto ca import __securePOAP_USB_trustpoint pkcs7 bootflash:%s force ; exit " % (certificate))
+        poap_log("Trying %s" %(cmd))
+        install_op = cli(cmd)
+        poap_log("Install output: %s" %(install_op))
+        if "could not perform CA authentication" in install_op:
+            return -1
+        else:
+            return 0
+    else:
+    # Includes the case where major == -1 and minor == -1, default to the CLI which works.
+        poap_log("Pem bundle is not supported.")
+        for file in os.listdir(os.path.join("/bootflash", options['destination_path'])):
+            if file.endswith(".pem"):
+                certificate = os.path.join(options["destination_path"], file)
+                cmd = ("configure terminal ; crypto ca trustpoint __securePOAP_USB_trustpoint ; exit")
+                poap_log("Trying: %s " % (cmd))
+                add_trustpoint_op = cli(cmd)
+                cmd = ("configure terminal ; crypto ca authenticate __securePOAP_USB_trustpoint pemfile bootflash:%s ; exit" % (certificate))
                 poap_log("Trying %s" %(cmd))
                 install_op = cli(cmd)
-            else:
-                # Includes the case where major == -1 and minor == -1, default to the CLI which works.
-                cmd = ("configure terminal ; crypto ca authenticate __securePOAP_trustpoint pemfile bootflash:%s ; exit" % (certificate))
-                poap_log("Trying %s" %(cmd))
-                install_op = cli(cmd)
- 
-            poap_log("Install output: %s" %(install_op))
+                poap_log("Install output: %s" %(install_op))
+                if "could not perform CA authentication" in install_op:
+                    continue
+                else:
+                    return 0
+    
+    # Indicates that no certificate installation was successful
+    if "could not perform CA authentication" in install_op:
+        return -1
+
+                
+    
     
 def main():
     signal.signal(signal.SIGTERM, sigterm_handler)
@@ -393,8 +445,12 @@ def main():
     copy_certificates()
 
     # Install the cerificates
-    install_certificates()
-    abort("Now aborting, process was successful, but we need to abort so that DHCP phase starts.")
+    ret = install_certificates()
+    
+    if (ret == 0):
+        abort("Now aborting, process was successful, but we need to abort so that DHCP phase starts.")
+    else:
+        abort("CA Certificate installation was unsuccessful, please unplug the USB and ensure certificates are proper.")
 
 
 if __name__ == "__main__":
