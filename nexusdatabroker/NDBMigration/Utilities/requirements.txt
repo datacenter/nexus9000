@@ -1,5 +1,0 @@
-pexpect==4.6.0
-pyyaml==3.12
-Requests==2.18.4
-ExScript==2.5.7
-configobj==5.0.6
