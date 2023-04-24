@@ -351,6 +351,7 @@ def copy_certificates():
     CSCwe68911: Concatenate all pem files to form a single pem file.
     '''
     certificate_found = False
+    cert_for_bundle = ''
     dest_path = "/".join(["/bootflash", options["destination_path"]])
     shutil.rmtree(dest_path, ignore_errors = True)
     poap_log("Path is %s" %(dest_path))
@@ -362,10 +363,13 @@ def copy_certificates():
     #if os.environ.get("POAP_PHASE", None) == "USB":
     if image_supports_pem_bundle(): 
         poap_log("Pem bundle is supported.")
-        certificate_found = concatenate_and_make_pem_bundle()
-    else:
-        poap_log("Pem bundle is not supported.")
-        certificate_found = copy_certificates_to_dest()
+        cert_for_bundle = concatenate_and_make_pem_bundle()
+    
+    if (cert_for_bundle == False):
+        poap_log("No Certificate on USB drive. Please check.")
+        abort("No Certificate on USB drive. Please check.")
+
+    certificate_found = copy_certificates_to_dest()
         
     if not certificate_found:
         poap_log("No Certificate on USB drive. Please check.")
