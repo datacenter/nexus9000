@@ -2,8 +2,8 @@
 #md5sum="eb08329071ac99ccc2739640439152a3"
 """
 If any changes are made to this script, please run the below command
-in bash shell to update the above md5sum. This is used for integrity check.
-f=poap_nexus_script.py ; cat $f | sed '/^#md5sum/d' > $f.md5 ; sed -i \
+in bash shell to update the above md5sum. This is used for an integrity check.
+f=poap.py ; cat $f | sed '/^#md5sum/d' > $f.md5 ; sed -i \
 "s/^#md5sum=.*/#md5sum=\"$(md5sum $f.md5 | sed 's/ .*//')\"/" $f
 """
 
