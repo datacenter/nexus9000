@@ -336,6 +336,9 @@ def set_defaults_and_validate_options():
     # MD5 Verification
     set_default("disable_md5", False)
 
+    # force bios upgrade
+    set_default("force_bios_upgrade", False)
+
     # Midway system and kickstart source file name.
     # This should be a 6.x U6 or greater dual image.
     # Required only if moving from pre 6.x U6 image to 7.x/higher image.
@@ -2158,9 +2161,12 @@ def install_bios():
 
 def is_bios_upgrade_needed():
     """
-    Check if bios upgrade is required. It's required when the current
+    Check if bios upgrade is forced or required. It's required when the current
     bios is not 3.x and image upgrade is from 6.x to 7.x or higher
     """
+    if options["force_bios_upgrade"]:
+        return True
+
     global single_image
     last_upgrade_bios = 3
     ver = get_version()
