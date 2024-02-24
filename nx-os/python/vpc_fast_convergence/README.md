@@ -1,7 +1,7 @@
-# Delay VPC Up
+# vPC Fast Convergence
 
 ## Description
-The `vpc_fast_convergence.py` script is designed to introduce a delay in bringing up the VPC (Virtual Port Channel) on Cisco Nexus 9000 switches running NX-OS. This delay is useful in scenarios where you want to ensure that certain conditions are met before the VPC is fully operational. 
+The `vpc_fast_convergence.py` script is designed to introduce a delay in bringing up the VPC (Virtual Port Channel) on Cisco Nexus 9000 switches running NX-OS. This script is useful in scenarios where you want to ensure that certain conditions are met before the VPC is fully operational. 
 
 In version 9.x and previous switches, when the vPC Peer switch reboots up, the peer-link of vPC will switch the traffic over immediately, at this time, because some interfaces have not been fully initialized, it will lead to traffic loss. 
 
