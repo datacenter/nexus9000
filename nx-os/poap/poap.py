@@ -1269,15 +1269,18 @@ def copy_remote_config():
     poap_log("INFO: Completed copy of config file to %s" %
              os.path.join(options["destination_path"], org_file))
 
-def is_image_cs_or_msll():
+def get_image_type():
     
     if (os.path.exists("/isan/etc/cs.txt")):
-        return 2
+        return "-cs"
     
     if (os.path.exists("/isan/etc/noncs.txt")):
-        return 1
+        return "-msll"
 
-    return 0
+    if (os.path.exists("/isan/etc/s1.txt")):
+        return "-s1"
+
+    return ""
     
 def target_system_image_is_currently_running():
     """
@@ -1299,16 +1302,10 @@ def target_system_image_is_currently_running():
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
         
-        is_cs = is_image_cs_or_msll()
+        img_type = get_image_type()
         image_parts64 = [part for part in re.split("[\.()]", version) if part]
-       
-        if is_cs == 2:
-            image_parts64.insert(0, "nxos64-cs")
-        elif is_cs == 1:
-            image_parts64.insert(0, "nxos64-msll")
-        else: 
-            image_parts64.insert(0, "nxos64")
-        
+        img_prefix = "nxos64" + img_type
+        image_parts64.insert(0,img_prefix)
         image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
@@ -1508,12 +1505,15 @@ def install_nxos_issu():
        up with. 
     ''' 
     if global_copy_image:
-        system_image_path = os.path.join(options["destination_path"],
-                                     options["destination_system_image"])
+        if multi_step_install == True:
+            system_image_path = os.path.join(options["destination_path"],options["destination_midway_system_image"])
+        else: 
+            system_image_path = os.path.join(options["destination_path"],options["target_system_image"])
+
         system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
     else:
         system_image_path = os.path.join("bootflash:",get_currently_booted_image_filename())
-    
+
     try:
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
@@ -2312,7 +2312,7 @@ def set_next_upgrade_from_user():
     else:
         poap_log("Already on the midway image, upgrading to %s next." %
                  options["target_system_image"])
-
+        multi_step_install = False
 
 def set_next_upgrade_from_upgrade_path():
     """Checks the currently running image and the target image to see where on the upgrade path
@@ -2592,8 +2592,6 @@ def main():
     # the directory structure needed, if any
     create_destination_directories()
 
-    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
-        parse_poap_yaml()
     check_multilevel_install()
     # In two step install we just copy the midway image and reboot.
     # Config copy and script download happens in the second step.
@@ -2604,16 +2602,18 @@ def main():
         download_scripts_and_agents()
         # End of multi_step_install is False block
 
-    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
-        validate_yaml_file()
-        copy_poap_files()
-        time.sleep(2)
-        install_license()
-        install_rpm()
-        time.sleep(2)
-        install_certificate()
-        time.sleep(2)
-        copy_standby_files()
+        if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
+            parse_poap_yaml()
+            poap_log("Starting the RPM copy and installation section. ")
+            validate_yaml_file()
+            copy_poap_files()
+            time.sleep(2)
+            install_license()
+            install_rpm()
+            time.sleep(2)
+            install_certificate()
+            time.sleep(2)
+            copy_standby_files()
         
     copy_system()
 
@@ -2641,10 +2641,11 @@ def main():
         cli('copy bootflash:%s scheduled-config' % options["split_config_first"])
         poap_log("Done copying the first scheduled cfg")
         remove_file("/bootflash/%s" % options["split_config_first"])
+    if multi_step_install == False:
+        cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
+        poap_log("Done copying the second scheduled cfg")
+        remove_file(os.path.join("/bootflash", options["split_config_second"]))
 
-    cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
-    poap_log("Done copying the second scheduled cfg")
-    remove_file(os.path.join("/bootflash", options["split_config_second"]))
     if (options["use_nxos_boot"] == False):
         install_nxos_issu()
 
