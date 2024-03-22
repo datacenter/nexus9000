@@ -1269,18 +1269,18 @@ def copy_remote_config():
     poap_log("INFO: Completed copy of config file to %s" %
              os.path.join(options["destination_path"], org_file))
 
-def is_image_cs_or_msll():
+def get_image_type():
     
     if (os.path.exists("/isan/etc/cs.txt")):
-        return 2
+        return "-cs"
     
     if (os.path.exists("/isan/etc/noncs.txt")):
-        return 1
+        return "-msll"
 
     if (os.path.exists("/isan/etc/s1.txt")):
-        return 3
+        return "-s1"
 
-    return 0
+    return ""
     
 def target_system_image_is_currently_running():
     """
@@ -1302,18 +1302,10 @@ def target_system_image_is_currently_running():
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
         
-        is_cs = is_image_cs_or_msll()
+        img_type = get_image_type()
         image_parts64 = [part for part in re.split("[\.()]", version) if part]
-       
-        if is_cs == 2:
-            image_parts64.insert(0, "nxos64-cs")
-        elif is_cs == 1:
-            image_parts64.insert(0, "nxos64-msll")
-        elif is_cs == 3:
-            image_parts64.insert(0, "nxos64-s1")
-        else: 
-            image_parts64.insert(0, "nxos64")
-        
+        img_prefix = "nxos64" + img_type
+        image_parts64.insert(0,img_prefix)
         image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
