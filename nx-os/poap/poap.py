@@ -278,6 +278,7 @@ def set_defaults_and_validate_options():
     Also validates that the required options are provided
     """
     global options
+    global single_image
 
     # Initialize globals
     init_globals()
@@ -323,12 +324,14 @@ def set_defaults_and_validate_options():
     set_default("destination_system_image", options["target_system_image"])
     set_default("destination_kickstart_image", options["target_kickstart_image"])
     set_default("destination_midway_system_image", "midway_system.bin")
-    set_default("skip_multi_level", False)
     set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
     set_default("serial_number","");
     set_default("install_path", "")
     set_default("use_nxos_boot", False)
     set_default("https_ignore_certificate", False)
+
+    # Flag to indicate single or dual image
+    set_default("single_image", True)
     
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
@@ -372,6 +375,7 @@ def set_defaults_and_validate_options():
 
     # Check that options are valid
     validate_options()
+    single_image = options["single_image"]
 
     
 def validate_options():
@@ -521,8 +525,7 @@ def init_globals():
     syslog_prefix = ""
     # indicates whether first config file is empty or not
     empty_first_file = 1
-    # flag to indicate single or dual image
-    single_image = False
+   
     # flag to indicate whether or not we need to load intermediate images to get to our target
     multi_step_install = False
 
@@ -1938,7 +1941,7 @@ def verify_freespace():
     poap_log("Verifying freespace in bootflash")
     s = os.statvfs("/bootflash/")
     freespace = (s.f_bavail * s.f_frsize) / 1024
-    poap_log("Free bootflash space is %s" % freespace)
+    poap_log("Free bootflash space is %s KB" % freespace)
 
     if int(options["required_space"]) > freespace:
         abort("*** Not enough bootflash space to continue POAP ***")
@@ -2516,11 +2519,6 @@ def check_multilevel_install():
     """
     global options, single_image
     
-    # User wants to override multi level install
-    if options["skip_multi_level"] == True:
-        single_image = True
-        return
-
     # User wants to override multi level install
     if options["skip_multi_level"] == True:
         single_image = True
