@@ -1661,7 +1661,7 @@ def parse_poap_yaml():
         if not md5_verification:
             exit(1)
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     none_value_found = False
     for k in dictionary.keys():
         if dictionary[k] == None:
@@ -1684,7 +1684,7 @@ def validate_yaml_file():
     for wrong extension/rpm filename format.
     """
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     wrong_files = []
 
     if ("License" in dictionary):
@@ -1718,7 +1718,7 @@ def copy_poap_files():
     Copies all the files as per the yaml file and places them in poap_files
     """
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     os.system("mkdir -p /bootflash/poap_files")
     timeout = options["timeout_copy_system"]
 
@@ -1905,7 +1905,7 @@ def install_certificate():
     Installs the certificate files.
     """
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     config_file_second = open(os.path.join("/bootflash", options["split_config_second"]), "a+")
     
     if ("Trustpoint" in dictionary):
