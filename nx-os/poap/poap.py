@@ -705,10 +705,16 @@ def split_config_not_needed():
 
     """
     Device running in n3k mode still requires splitting of config.
+    In some latest releases, the location has been changed to /nxos/tmp instead of /tmp.
     """
-    if not 'START' in open('/tmp/first_setup.log').readline():
-        poap_log("Split config is required, because box is not in N9K mode.")
-        return False
+    if os.path.exists('/tmp/first_setup.log'):
+        if not 'START' in open('/tmp/first_setup.log').readline():
+            poap_log("Split config is required, because box is not in N9K mode.")
+            return False
+    elif os.path.exists('/nxos/tmp/first_setup.log'):
+        if not 'START' in open('/nxos/tmp/first_setup.log').readline():
+            poap_log("Split config is required, because box is not in N9K mode.")
+            return False
 
     nxos_major = 0
     nxos_rev = 0
@@ -718,14 +724,14 @@ def split_config_not_needed():
 
     parts = options['target_system_image'].split(".")
     
+    # number of parts should above 5 as above for us to check if its supported if not 9.x
+    if len(parts) < 6:
+        return True
+
     # for latest images, it is (nxos, 9, minor, mr, bin)
     if int(parts[1]) >= 9:
         poap_log("Target image supports bootstrap replay. Split config is not required.")
         return True
-    
-    # number of parts should above 7 as above for us to check if its supported if not 9.x
-    if len(parts) < 7:
-        return False
 
     if parts[0] != "nxos":
         return False
