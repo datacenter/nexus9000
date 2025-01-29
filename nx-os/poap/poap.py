@@ -735,7 +735,7 @@ def split_config_not_needed():
             return True
 
     if "nxos" in parts[0]:
-        return False
+        return True
 
     try:
         nxos_major = int(parts[1])
