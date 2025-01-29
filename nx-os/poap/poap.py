@@ -729,11 +729,12 @@ def split_config_not_needed():
         return True
 
     # for latest images, it is (nxos, 9, minor, mr, bin)
-    if int(parts[1]) >= 9:
-        poap_log("Target image supports bootstrap replay. Split config is not required.")
-        return True
+    if parts[1].isdigit():
+        if int(parts[1]) >= 9:
+            poap_log("Target image supports bootstrap replay. Split config is not required.")
+            return True
 
-    if parts[0] != "nxos":
+    if "nxos" in parts[0]:
         return False
 
     try:
