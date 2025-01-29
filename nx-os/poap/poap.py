@@ -726,6 +726,8 @@ def split_config_not_needed():
     
     # number of parts should above 5 as above for us to check if its supported if not 9.x
     if len(parts) < 6:
+        # Beginning from release 10.5(3), the default behaviour has been 
+        # changed to 'split config' not being needed.
         return True
 
     # for latest images, it is (nxos, 9, minor, mr, bin)
@@ -734,7 +736,9 @@ def split_config_not_needed():
             poap_log("Target image supports bootstrap replay. Split config is not required.")
             return True
 
-    if "nxos" in parts[0]:
+    if "nxos" not in parts[0]:
+        # Beginning from release 10.5(3), the default behaviour has been 
+        # changed to 'split config' not being needed.
         return True
 
     try:
