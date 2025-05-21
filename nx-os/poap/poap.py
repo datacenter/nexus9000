@@ -278,6 +278,7 @@ def set_defaults_and_validate_options():
     Also validates that the required options are provided
     """
     global options
+    global single_image
 
     # Initialize globals
     init_globals()
@@ -323,12 +324,14 @@ def set_defaults_and_validate_options():
     set_default("destination_system_image", options["target_system_image"])
     set_default("destination_kickstart_image", options["target_kickstart_image"])
     set_default("destination_midway_system_image", "midway_system.bin")
-    set_default("skip_multi_level", False)
     set_default("destination_midway_kickstart_image", "midway_kickstart.bin")
     set_default("serial_number","");
     set_default("install_path", "")
     set_default("use_nxos_boot", False)
     set_default("https_ignore_certificate", False)
+
+    # Flag to indicate single or dual image
+    set_default("single_image", True)
     
     # User app path
     set_default("user_app_path", "/var/lib/tftpboot/")
@@ -372,6 +375,7 @@ def set_defaults_and_validate_options():
 
     # Check that options are valid
     validate_options()
+    single_image = options["single_image"]
 
     
 def validate_options():
@@ -521,8 +525,7 @@ def init_globals():
     syslog_prefix = ""
     # indicates whether first config file is empty or not
     empty_first_file = 1
-    # flag to indicate single or dual image
-    single_image = False
+   
     # flag to indicate whether or not we need to load intermediate images to get to our target
     multi_step_install = False
 
@@ -702,10 +705,16 @@ def split_config_not_needed():
 
     """
     Device running in n3k mode still requires splitting of config.
+    In some latest releases, the location has been changed to /nxos/tmp instead of /tmp.
     """
-    if not 'START' in open('/tmp/first_setup.log').readline():
-        poap_log("Split config is required, because box is not in N9K mode.")
-        return False
+    if os.path.exists('/tmp/first_setup.log'):
+        if not 'START' in open('/tmp/first_setup.log').readline():
+            poap_log("Split config is required, because box is not in N9K mode.")
+            return False
+    elif os.path.exists('/nxos/tmp/first_setup.log'):
+        if not 'START' in open('/nxos/tmp/first_setup.log').readline():
+            poap_log("Split config is required, because box is not in N9K mode.")
+            return False
 
     nxos_major = 0
     nxos_rev = 0
@@ -714,18 +723,21 @@ def split_config_not_needed():
     # (n9000-dk9, 6, 1, 2, I1, 1, bin)
 
     parts = options['target_system_image'].split(".")
+    # Beginning from release 10.5(3), the default behaviour has been
+    # changed to 'split config' not being needed.
     
-    # for latest images, it is (nxos, 9, minor, mr, bin)
-    if int(parts[1]) >= 9:
-        poap_log("Target image supports bootstrap replay. Split config is not required.")
+    # number of parts should above 5 as above for us to check if its supported if not 9.x
+    if len(parts) < 6:
         return True
-    
-    # number of parts should above 7 as above for us to check if its supported if not 9.x
-    if len(parts) < 7:
-        return False
 
-    if parts[0] != "nxos":
-        return False
+    # for latest images, it is (nxos, 9, minor, mr, bin)
+    if parts[1].isdigit():
+        if int(parts[1]) >= 9:
+            poap_log("Target image supports bootstrap replay. Split config is not required.")
+            return True
+
+    if "nxos" not in parts[0]:
+        return True
 
     try:
         nxos_major = int(parts[1])
@@ -1269,15 +1281,18 @@ def copy_remote_config():
     poap_log("INFO: Completed copy of config file to %s" %
              os.path.join(options["destination_path"], org_file))
 
-def is_image_cs_or_msll():
+def get_image_type():
     
     if (os.path.exists("/isan/etc/cs.txt")):
-        return 2
+        return "-cs"
     
     if (os.path.exists("/isan/etc/noncs.txt")):
-        return 1
+        return "-msll"
 
-    return 0
+    if (os.path.exists("/isan/etc/s1.txt")):
+        return "-s1"
+
+    return ""
     
 def target_system_image_is_currently_running():
     """
@@ -1299,16 +1314,10 @@ def target_system_image_is_currently_running():
         image_parts.insert(0, "nxos")
         image_parts.append("bin")
         
-        is_cs = is_image_cs_or_msll()
+        img_type = get_image_type()
         image_parts64 = [part for part in re.split("[\.()]", version) if part]
-       
-        if is_cs == 2:
-            image_parts64.insert(0, "nxos64-cs")
-        elif is_cs == 1:
-            image_parts64.insert(0, "nxos64-msll")
-        else: 
-            image_parts64.insert(0, "nxos64")
-        
+        img_prefix = "nxos64" + img_type
+        image_parts64.insert(0,img_prefix)
         image_parts64.append("bin")
 
         running_image = ".".join(image_parts)
@@ -1508,12 +1517,15 @@ def install_nxos_issu():
        up with. 
     ''' 
     if global_copy_image:
-        system_image_path = os.path.join(options["destination_path"],
-                                     options["destination_system_image"])
+        if multi_step_install == True:
+            system_image_path = os.path.join(options["destination_path"],options["destination_midway_system_image"])
+        else: 
+            system_image_path = os.path.join(options["destination_path"],options["target_system_image"])
+
         system_image_path = system_image_path.replace("/bootflash", "bootflash:", 1)
     else:
         system_image_path = os.path.join("bootflash:",get_currently_booted_image_filename())
-    
+
     try:
         os.system("touch /tmp/poap_issu_started")
         poap_log("terminal dont-ask ; install all nxos %s no-reload non-interruptive" % system_image_path)
@@ -1658,7 +1670,7 @@ def parse_poap_yaml():
         if not md5_verification:
             exit(1)
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     none_value_found = False
     for k in dictionary.keys():
         if dictionary[k] == None:
@@ -1681,7 +1693,7 @@ def validate_yaml_file():
     for wrong extension/rpm filename format.
     """
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     wrong_files = []
 
     if ("License" in dictionary):
@@ -1715,7 +1727,7 @@ def copy_poap_files():
     Copies all the files as per the yaml file and places them in poap_files
     """
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     os.system("mkdir -p /bootflash/poap_files")
     timeout = options["timeout_copy_system"]
 
@@ -1902,7 +1914,7 @@ def install_certificate():
     Installs the certificate files.
     """
     stream = open("/bootflash/poap_device_recipe.yaml", 'r')
-    dictionary = yaml.load(stream)
+    dictionary = yaml.safe_load(stream)
     config_file_second = open(os.path.join("/bootflash", options["split_config_second"]), "a+")
     
     if ("Trustpoint" in dictionary):
@@ -1938,7 +1950,7 @@ def verify_freespace():
     poap_log("Verifying freespace in bootflash")
     s = os.statvfs("/bootflash/")
     freespace = (s.f_bavail * s.f_frsize) / 1024
-    poap_log("Free bootflash space is %s" % freespace)
+    poap_log("Free bootflash space is %s KB" % freespace)
 
     if int(options["required_space"]) > freespace:
         abort("*** Not enough bootflash space to continue POAP ***")
@@ -2312,7 +2324,7 @@ def set_next_upgrade_from_user():
     else:
         poap_log("Already on the midway image, upgrading to %s next." %
                  options["target_system_image"])
-
+        multi_step_install = False
 
 def set_next_upgrade_from_upgrade_path():
     """Checks the currently running image and the target image to see where on the upgrade path
@@ -2521,11 +2533,6 @@ def check_multilevel_install():
         single_image = True
         return
 
-    # User wants to override multi level install
-    if options["skip_multi_level"] == True:
-        single_image = True
-        return
-
     # User wants to override the midway image
     if options["midway_system_image"] != "":
         set_next_upgrade_from_user()
@@ -2592,8 +2599,6 @@ def main():
     # the directory structure needed, if any
     create_destination_directories()
 
-    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
-        parse_poap_yaml()
     check_multilevel_install()
     # In two step install we just copy the midway image and reboot.
     # Config copy and script download happens in the second step.
@@ -2604,16 +2609,18 @@ def main():
         download_scripts_and_agents()
         # End of multi_step_install is False block
 
-    if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
-        validate_yaml_file()
-        copy_poap_files()
-        time.sleep(2)
-        install_license()
-        install_rpm()
-        time.sleep(2)
-        install_certificate()
-        time.sleep(2)
-        copy_standby_files()
+        if (len(options["install_path"]) != 0 and options["mode"] != "personality"):
+            parse_poap_yaml()
+            poap_log("Starting the RPM copy and installation section. ")
+            validate_yaml_file()
+            copy_poap_files()
+            time.sleep(2)
+            install_license()
+            install_rpm()
+            time.sleep(2)
+            install_certificate()
+            time.sleep(2)
+            copy_standby_files()
         
     copy_system()
 
@@ -2641,10 +2648,11 @@ def main():
         cli('copy bootflash:%s scheduled-config' % options["split_config_first"])
         poap_log("Done copying the first scheduled cfg")
         remove_file("/bootflash/%s" % options["split_config_first"])
+    if multi_step_install == False:
+        cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
+        poap_log("Done copying the second scheduled cfg")
+        remove_file(os.path.join("/bootflash", options["split_config_second"]))
 
-    cli('copy bootflash:%s scheduled-config' % options["split_config_second"])
-    poap_log("Done copying the second scheduled cfg")
-    remove_file(os.path.join("/bootflash", options["split_config_second"]))
     if (options["use_nxos_boot"] == False):
         install_nxos_issu()
 
