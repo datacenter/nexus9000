@@ -1470,7 +1470,7 @@ def install_images_7_x():
     set appropriately and the startup config is updated.
     """
     poap_log("Checking if bios upgrade is needed")
-    if is_bios_upgrade_needed():
+    if global_upgrade_bios and is_bios_upgrade_needed():
         poap_log("Installing new BIOS (will take up to 5 minutes. Don't abort)")
         install_bios()
 
