@@ -1,6 +1,6 @@
 Django==1.6.5
 django-bootstrap3==4.8.2
-django-debug-toolbar==1.2.1
+django-debug-toolbar==1.11.1
 python-nvd3==0.12.2
 lxml==3.3.5
 xmltodict==0.9.0
