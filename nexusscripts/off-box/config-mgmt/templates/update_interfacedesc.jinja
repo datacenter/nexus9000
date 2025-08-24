@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+  <style>thead {color:green;} tbody {color:blue;text-align:center;} table,th,td {border:1px solid black; text-align:center;margin-top:50px;margin-left:100px;} </style>
+</head>
+
+<body>
+
+<center>
+<div id="nexusver">
+  <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
+  <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+  <p><font face=verdana size=5 color=orange> Hostname  :  {{ hostname }} </font></p>
+
+</div>
+
+<div id="status">
+
+{% if status %}
+<br><br>
+<p><font face=verdana size=5 color=grey> {{ status }} </font></p>
+{% endif %}
+
+</div>
+
+<div id="inter_message">
+
+
+{% if message %}
+
+<table border=1 style=width:300px><thead><tr><th><font size=3 color=green>Interface</font></th><th><font size=3 color=green>Updated Description</font></th></tr></thead>
+<tbody>
+
+{% for key,value in message.items() %}
+
+
+
+<tr><td>
+<label> {{ key }}</label>
+</td>
+<td>
+<label>{{ value }}</label>
+</td>
+</tr>
+{%endfor %}
+{% endif %}
+</tbody>
+
+</table>
+</div>
+
+
+
+</center>
+
+</body>
+</html>
+

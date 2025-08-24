@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+  <style>thead {color:green;} tbody {color:blue;text-align:center;} table,th,td {border:1px solid black; text-align:center;margin-top:50px;margin-left:100px;} </style>
+</head>
+
+<body>
+
+<center>
+<div id="nexusver">
+  <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
+  <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+
+</div>
+
+<div id="fex_status">
+
+
+<table border=1 style=width:300px><thead><tr><td colspan=2 bgcolor=#5D7B9D><center><font size=4 color=black>FEX Status</font></center></td></tr></thead>
+
+<tbody>
+{% if status %}
+
+<tr><label> {{ status }}</label>
+</tr>
+{%endif  %}
+{%if interface_stat %}
+<tr>
+<label>{{ interface_stat }}</label>
+</tr>
+{%endif  %}
+
+
+</tbody>
+
+</table>
+
+
+
+{%if interface_list %}
+<label><font size=4 color=coral>Interfaces configured are : </font></label>
+{% for j in interface_list %}
+<label><font size=3 color=black>{{ j }}</font></label><br>
+
+{% endfor %}
+{%endif  %}
+
+
+
+</div>
+
+
+
+</center>
+
+</body>
+</html>
+

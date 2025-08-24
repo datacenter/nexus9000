@@ -1,0 +1,56 @@
+! Management IPAddress 10.1.1.1
+nv overlay evpn
+feature ospf
+feature pim
+feature bgp
+feature interface-vlan
+feature nv overlay
+feature vn-segment-vlan-based
+router ospf 1
+router-id 10.1.1.1
+ip pim rp-address 100.1.1.1  group-list 225.0.0.0/8
+ip pim rp-candidate loopback301 group-list 225.0.0.0/8
+ip pim anycast-rp 100.1.1.1 10.1.1.1
+ip pim ssm range 232.0.0.0/8
+interface loopback0
+ip address 10.1.1.1/32
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+interface loopback301
+ip address 100.1.1.1/32
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+interface ethernet 1/1
+no shutdown
+no switchport
+ip address 192.169.1.2/30
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+interface ethernet 1/2
+no shutdown
+no switchport
+ip address 192.169.2.2/30
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+router bgp 65535
+router-id 10.1.1.1
+neighbor 3.3.3.3 remote-as 65535
+update-source loopback0
+address-family ipv4 unicast
+send-community both
+route-reflector-client
+address-family l2vpn evpn
+send-community both
+route-reflector-client
+neighbor 4.4.4.4 remote-as 65535
+update-source loopback0
+address-family ipv4 unicast
+send-community both
+route-reflector-client
+address-family l2vpn evpn
+send-community both
+route-reflector-client
+vrf vrf_tenant_1
+address-family ipv4 unicast
+no advertise l2vpn evpn
+advertise l2vpn evpn

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+  <style>thead {color:green;} tbody {color:blue;text-align:center;} table,th,td {border:1px solid black; text-align:center;margin-top:50px;margin-left:100px;} </style>
+</head>
+
+<body>
+
+<center>
+<div id="nexusver">
+  <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
+  <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+
+</div>
+</center>
+
+<div id="resc_percent">
+
+<label><font size=3 color=coral>Overall CPU Utilization : {{cpu_percent }} % </font></label><br>
+<label><font size=3 color=coral>Overall Memory Usage : {{mem_percent }} % </font></label>
+
+</div>
+
+
+
+
+<center>
+<div id="nexuscpu_util">
+
+
+<table border=1 style=width:300px><thead><tr><td colspan=2 bgcolor=#5D7B9D><center><font size=4 color=black>CPU Utilization( % )</font></center></td></tr><tr><th>Parameters</th><th>Overview</th></tr></thead>
+<tbody>
+
+{% for key,value in cpu_util.items() %}
+
+<tr><td>
+<label> {{ key }}</label>
+</td>
+<td>
+<label>{{ value }}</label>
+</td>
+</tr>
+{%endfor %}
+
+</tbody>
+
+</table>
+</div>
+
+
+<div id="nexusmem_usage">
+
+
+<br><br><table border=1 style=width:300px><thead><tr><td colspan=2 bgcolor=#5D7B9D><center><font size=4 color=black>Memory Usage( Bytes )</font></center></td></tr><tr><th>Parameters</th><th>Overview</th></tr></thead>
+<tbody>
+
+{% for key,value in mem_usage.items() %}
+
+<tr><td>
+<label> {{ key }}</label>
+</td>
+<td>
+<label>{{ value }}</label>
+</td>
+</tr>
+{%endfor %}
+
+</tbody>
+
+</table>
+</div>
+
+</center>
+
+</body>
+</html>
+

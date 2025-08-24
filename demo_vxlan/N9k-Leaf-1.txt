@@ -1,0 +1,88 @@
+! Management IPAddress 10.1.1.3
+nv overlay evpn
+feature ospf
+feature pim
+feature bgp
+feature interface-vlan
+feature nv overlay
+feature vn-segment-vlan-based
+router ospf 1
+router-id 3.3.3.3
+ip pim rp-address 100.1.1.1 group-list 225.0.0.0/8
+ip pim ssm range 232.0.0.0/8
+interface loopback0
+ip address 3.3.3.3/32
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+interface ethernet 1/47
+no shutdown
+no switchport
+ip address 192.169.1.1/30
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+interface ethernet 1/48
+no shutdown
+no switchport
+ip address 192.169.1.5/30
+ip router ospf 1 area 0.0.0.0
+ip pim sparse-mode
+interface ethernet 1/1
+switchport
+switchport access vlan 303
+no shutdown
+vrf context vrf_tenant_1
+vni 4900
+rd auto
+address-family ipv4 unicast
+route-target import 39000:39000 evpn
+route-target export 39000:39000 evpn
+route-target both auto evpn
+vlan 3900
+name l3-vni-vlan-for-vrf_tenant_1
+vn-segment 39000
+no shutdown
+interface vlan3900
+description l3-vni-for-vrf_tenant_1-routing
+no shutdown
+vrf member vrf_tenant_1
+ip forward
+vlan 303
+no shutdown
+vn-segment 200303
+evpn
+vni 200303 l2
+rd auto
+route-target import auto
+route-target export auto
+interface vlan303
+no shutdown
+vrf member vrf_tenant_1 
+ip address 1.1.3.254/24
+fabric forwarding mode anycast-gateway
+fabric forwarding anycast-gateway-mac 0000.2222.3333
+interface nve1
+no shutdown
+source-interface loopback0
+host-reachability protocol bgp
+member vni 39000 associate-vrf
+member vni 200303
+suppress-arp
+mcast-group 225.1.1.3
+router bgp 65535
+router-id 3.3.3.3
+neighbor 10.1.1.1 remote-as 65535
+update-source loopback0
+address-family ipv4 unicast
+send-community both
+address-family l2vpn evpn
+send-community extended
+neighbor 10.1.1.1 remote-as 65535
+update-source loopback0
+address-family ipv4 unicast
+send-community both
+address-family l2vpn evpn
+send-community extended
+vrf vrf_tenant_1
+address-family ipv4 unicast
+no advertise l2vpn evpn
+advertise l2vpn evpn

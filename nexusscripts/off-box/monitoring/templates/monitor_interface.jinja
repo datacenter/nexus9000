@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+  <style>thead {color:green;} tbody {color:blue;text-align:center;} table,th,td {border:1px solid black; text-align:center;margin-top:50px;margin-left:100px;} </style>
+</head>
+
+<body>
+
+<center>
+<div id="nexusver">
+  <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
+  <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+
+</div>
+
+<div id="nexusintererr">
+
+{% if input_counter == 0 %}
+<label><font size=4 color=coral>Number of Interfaces with Input Errors is : {{ input_counter }}</font></label><br>
+{% else %}
+<label><font size=4 color=brown>Number of Interfaces with Input Errors is : {{ input_counter }}</font></label><br>
+{% for i in inerr_interface %}
+<label><font size=3 color=black>{{ i }}</font></label><br>
+
+{% endfor %}
+{% endif %}
+
+{% if output_counter == 0 %}
+<label><font size=4 color=coral>Number of Interfaces with Output Errors is : {{ output_counter }}</font></label><br>
+{% else %}
+<label><font size=4 color=brown>Number of Interfaces with Ouput Errors is : {{ output_counter }}</font></label><br>
+{% for j in outerr_interface %}
+<label><font size=3 color=black>{{ j }}</font></label><br>
+
+{% endfor %}
+{% endif %}
+
+</div>
+
+<div id="interrxtx">
+
+<table border=1 style=width:300px><thead><tr><td colspan=9 bgcolor=#5D7B9D><center><font size=4 color=black>Interface Monitoring (Drops, Utilization, Errors)</font></center></td></tr><tr><th>Interface</th><th>Rx Mbps</th><th>Rx %</th><th>Rx pps</th><th>Tx Mbps</th><th>Tx %</th><th>Tx pps</th><th>In Error</th><th>Out Error</th></tr></thead>
+<tbody>
+
+{% for key,value in rx_tx_dict.items() %}
+<tr>
+<td><label> {{ key }} </label></td>
+{% for k,v in value.items() %}
+{% if k == 'counter' %}
+{% set testvar = 'it worked' %}
+{% else %}
+<td><label> {{ v }} </label></td>
+{% endif %}
+{% endfor %}
+
+</tr>
+{% endfor %}
+
+
+
+</tbody>
+</table>
+</div>
+
+</center>
+
+</body>
+</html>
+

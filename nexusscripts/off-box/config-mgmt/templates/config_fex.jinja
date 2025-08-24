@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <title>{{ title }}</title>
+  <meta name="description" content="{{ description }}" />
+  <style>thead {color:green;} tbody {color:blue;text-align:center;} table,th,td {border:1px solid black; text-align:center;margin-top:50px;margin-left:100px;} </style>
+</head>
+
+<body>
+
+<center>
+<div id="nexusver">
+  <p><font face=verdana size=5 color=orange>Nexus Switch Chassis id  :   {{ chassis_id }}</font></p>
+  <p><font face=verdana size=5 color=orange> OS Version  :  {{ os_version }} </font></p>
+  <p><font face=verdana size=5 color=orange> Hostname  :  {{ hostname }} </font></p>
+
+</div>
+
+<div id="fex_status">
+
+
+<table border=1 style=width:300px><thead><tr><th><font size=3 color=green>Status</font></th><th><font size=3 color=green>Updated Status</font></th></tr></thead>
+<tbody>
+
+{% if earlierstat %}
+
+<tr><td>
+<label> {{ earlierstat }}</label>
+</td>
+{%endif  %}
+{%if currentstat %}
+<td>
+<label>{{ currentstat }}</label>
+</td>
+
+{%else %}
+
+<td>
+<label>FEX is already enabled</label>
+</td>
+
+{%endif %}
+
+</tr>
+
+</tbody>
+
+</table>
+
+<br><br>
+
+{%if interface_list %}
+<label><font size=4 color=coral>Interfaces configured to FEX : </font></label>
+{% for j in interface_list %}
+<label><font size=3 color=black>{{ j }}</font></label><br>
+
+{% endfor %}
+{%endif  %}
+
+
+
+
+</div>
+
+
+
+</center>
+
+</body>
+</html>
+
